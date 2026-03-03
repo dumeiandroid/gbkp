@@ -1,0 +1,499 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Church Team Grid</title>
+
+<link href="css\bootstrap.css" rel="stylesheet">
+<link href="css\font-awesome.css" rel="stylesheet">
+<link href="css\flaticon.css" rel="stylesheet">
+<link href="css\slick-slider.css" rel="stylesheet">
+<link href="css\fancybox.css" rel="stylesheet">
+<link href="css\jplayer.css" rel="stylesheet">
+<link href="style.css" rel="stylesheet">
+<link href="css\color.css" rel="stylesheet">
+<link href="css\responsive.css" rel="stylesheet">
+
+
+<!--[if lt IE 9]>
+		 <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+		 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	 <![endif]-->
+</head>
+<body>
+
+<div class="church-main-wrapper">
+
+<header id="church-header" class="church-header-one">
+<div class="church-main-header">
+<div class="container">
+<div class="row">
+<aside class="col-md-3"> <a href="index.html" class="logo"><img src="images\logo.png" alt=""></a> </aside>
+<aside class="col-md-9">
+<div class="church-navigation">
+
+<a href="#menu" class="menu-link active"><span></span></a>
+<nav id="menu" class="menu navbar navbar-default">
+<ul class="level-1 navbar-nav">
+<li><a href="index.html">Home</a></li>
+<li><a href="#">Blog</a><span class="has-subnav"><i class="fa fa-angle-down"></i></span>
+<ul class="sub-menu level-2">
+<li><a href="blog-grid.html">Blog Grid <i class=" fa fa-angle-right"></i></a><span class="has-subnav"><i class="fa fa-angle-down"></i></span>
+<ul class="sub-menu">
+<li><a href="blog-grid-wls.html">Blog Grid W/L/S</a></li>
+<li><a href="blog-grid-wrs.html">Blog Grid W/R/S</a></li>
+</ul>
+</li>
+<li><a href="blog-large.html">Blog Large <i class=" fa fa-angle-right"></i></a><span class="has-subnav"><i class="fa fa-angle-down"></i></span>
+<ul class="sub-menu">
+<li><a href="blog-large-wls.html">Blog Large W/L/S</a></li>
+</ul>
+</li>
+<li><a href="blog-detail.html">Blog Detail <i class=" fa fa-angle-right"></i></a><span class="has-subnav"><i class="fa fa-angle-down"></i></span>
+<ul class="sub-menu">
+<li><a href="blog-detail-wls.html">Blog Detail W/L/S</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#">Causes</a><span class="has-subnav"><i class="fa fa-angle-down"></i></span>
+<ul class="sub-menu level-2">
+<li><a href="cause-grid.html">Cause Grid <i class=" fa fa-angle-right"></i></a><span class="has-subnav"><i class="fa fa-angle-down"></i></span>
+<ul class="sub-menu">
+<li><a href="cause-grid-wls.html">Cause Grid W/L/S</a></li>
+<li><a href="cause-grid-wrs.html">Cause Grid W/R/S</a></li>
+</ul>
+</li>
+<li><a href="cause-modern.html">Cause Modern <i class=" fa fa-angle-right"></i></a><span class="has-subnav"><i class="fa fa-angle-down"></i></span>
+<ul class="sub-menu">
+<li><a href="cause-modern-wls.html">Cause Modern W/L/S</a></li>
+<li><a href="cause-modern-wrs.html">Cause Modern W/R/S</a></li>
+</ul>
+</li>
+<li><a href="cause-list.html">Cause List <i class=" fa fa-angle-right"></i></a><span class="has-subnav"><i class="fa fa-angle-down"></i></span>
+<ul class="sub-menu">
+<li><a href="cause-list-wls.html">Cause List W/L/S</a></li>
+</ul>
+</li>
+<li><a href="cause-detail.html">Cause Detail <i class=" fa fa-angle-right"></i></a><span class="has-subnav"><i class="fa fa-angle-down"></i></span>
+<ul class="sub-menu">
+<li><a href="cause-detail-wls.html">Cause Detail W/L/S</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#">Events</a><span class="has-subnav"><i class="fa fa-angle-down"></i></span>
+<ul class="sub-menu level-2">
+<li><a href="event-grid.html">Event Grid <i class=" fa fa-angle-right"></i></a><span class="has-subnav"><i class="fa fa-angle-down"></i></span>
+<ul class="sub-menu">
+<li><a href="event-grid-wls.html">Event Grid W/L/S</a></li>
+<li><a href="event-grid-wrs.html">Event Grid W/R/S</a></li>
+</ul>
+</li>
+<li><a href="event-list.html">Event List <i class=" fa fa-angle-right"></i></a><span class="has-subnav"><i class="fa fa-angle-down"></i></span>
+<ul class="sub-menu">
+<li><a href="event-list-wls.html">Event List W/L/S</a></li>
+</ul>
+</li>
+<li><a href="event-detail.html">Event Detail <i class=" fa fa-angle-right"></i></a><span class="has-subnav"><i class="fa fa-angle-down"></i></span>
+<ul class="sub-menu">
+<li><a href="event-detail-wls.html">Event Detail W/L/S</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#">Sermon</a><span class="has-subnav"><i class="fa fa-angle-down"></i></span>
+<ul class="sub-menu level-2">
+<li><a href="sermon-grid.html">Sermon Grid <i class=" fa fa-angle-right"></i></a><span class="has-subnav"><i class="fa fa-angle-down"></i></span>
+<ul class="sub-menu">
+<li><a href="sermon-grid-wls.html">Sermon Grid W/L/S</a></li>
+<li><a href="sermon-grid-wrs.html">Sermon Grid W/R/S</a></li>
+</ul>
+</li>
+<li><a href="sermon-list.html">Sermon List <i class=" fa fa-angle-right"></i></a><span class="has-subnav"><i class="fa fa-angle-down"></i></span>
+<ul class="sub-menu">
+<li><a href="sermon-list-wls.html">Sermon List W/L/S</a></li>
+</ul>
+</li>
+<li><a href="sermon-detail.html">Sermon Detail <i class=" fa fa-angle-right"></i></a><span class="has-subnav"><i class="fa fa-angle-down"></i></span>
+<ul class="sub-menu">
+<li><a href="sermon-detail-wls.html">Sermon Detail W/L/S</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="active"><a href="#">Team</a><span class="has-subnav"><i class="fa fa-angle-down"></i></span>
+<ul class="sub-menu level-2">
+<li><a href="team-grid.html">Team Grid <i class=" fa fa-angle-right"></i></a><span class="has-subnav"><i class="fa fa-angle-down"></i></span>
+<ul class="sub-menu">
+<li><a href="team-grid-wls.html">Team Grid W/L/S</a></li>
+<li><a href="team-grid-wrs.html">Team Grid W/R/S</a></li>
+</ul>
+</li>
+<li><a href="team-detail.html">Team Detail</a></li>
+</ul>
+</li>
+<li><a href="#">Pages</a><span class="has-subnav"><i class="fa fa-angle-down"></i></span>
+<ul class="sub-menu level-2">
+<li><a href="about-us.html">About Us</a></li>
+<li><a href="gallery.html">Gallery</a></li>
+<li><a href="contact-us.html">Contact Us</a></li>
+<li><a href="faq.html">FAQ</a></li>
+<li><a href="404.html">Error Page</a></li>
+<li><a href="search-result.html">Search Result</a></li>
+</ul>
+</li>
+</ul>
+</nav>
+
+<ul class="church-user-list">
+<li><a href="#" class="fa fa-search" data-toggle="modal" data-target="#searchmodal"></a></li>
+</ul>
+<a href="404.html" class="church-btn">Give Online</a>
+</div>
+</aside>
+</div>
+</div>
+</div>
+</header>
+
+
+<div class="church-subheader">
+<div class="church-subheader-text">
+<span class="church-subheader-transparent"></span>
+<div class="container">
+<div class="row">
+<div class="col-md-12">
+<h1>Team Grid</h1>
+<div class="clearfix"></div>
+<p>Lorem ipsum dolor sit amet, consectetur adipi scing elit. Aliquam ac egestas velit</p>
+</div>
+</div>
+</div>
+</div>
+<div class="church-breadcrumb">
+<div class="container">
+<div class="row">
+<div class="col-md-12">
+<ul>
+<li><a href="index.html">Homepage</a></li>
+<li class="active">Team Grid</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+<div class="church-main-content">
+
+<div class="church-main-section">
+<div class="container">
+<div class="row">
+<div class="col-md-12">
+<div class="church-team church-team-grid">
+<ul class="row">
+<li class="col-md-3">
+<div class="church-team-grid-wrap">
+<figure><a href="team-detail.html"><img src="extra-images\team-grid-img1.jpg" alt=""></a>
+<figcaption>
+<ul class="church-team-social">
+<li><a href="https://www.facebook.com/" class="fa fa-facebook-square"></a></li>
+<li><a href="https://twitter.com/login?lang=en" class="fa fa-twitter-square"></a></li>
+<li><a href="https://plus.google.com/" class="fa fa-google-plus-square"></a></li>
+<li><a href="https://www.youtube.com/signin" class="fa fa-youtube-square"></a></li>
+</ul>
+</figcaption>
+</figure>
+<div class="church-team-grid-text">
+<h2><a href="team-detail.html">David Jorden</a></h2>
+<span>Web Designer</span>
+<p>Sed vulputate elementum aliq Nunc vel efficitur ante. Ut gri nulla id ornare sodales.</p>
+</div>
+</div>
+</li>
+<li class="col-md-3">
+<div class="church-team-grid-wrap">
+<figure><a href="team-detail.html"><img src="extra-images\team-grid-img2.jpg" alt=""></a>
+<figcaption>
+<ul class="church-team-social">
+<li><a href="https://www.facebook.com/" class="fa fa-facebook-square"></a></li>
+<li><a href="https://twitter.com/login?lang=en" class="fa fa-twitter-square"></a></li>
+<li><a href="https://plus.google.com/" class="fa fa-google-plus-square"></a></li>
+<li><a href="https://www.youtube.com/signin" class="fa fa-youtube-square"></a></li>
+</ul>
+</figcaption>
+</figure>
+<div class="church-team-grid-text">
+<h2><a href="team-detail.html">Marlon Smith</a></h2>
+<span>Web Designer</span>
+<p>Sed vulputate elementum aliq Nunc vel efficitur ante. Ut gri nulla id ornare sodales.</p>
+</div>
+</div>
+</li>
+<li class="col-md-3">
+<div class="church-team-grid-wrap">
+<figure><a href="team-detail.html"><img src="extra-images\team-grid-img3.jpg" alt=""></a>
+<figcaption>
+<ul class="church-team-social">
+<li><a href="https://www.facebook.com/" class="fa fa-facebook-square"></a></li>
+<li><a href="https://twitter.com/login?lang=en" class="fa fa-twitter-square"></a></li>
+<li><a href="https://plus.google.com/" class="fa fa-google-plus-square"></a></li>
+<li><a href="https://www.youtube.com/signin" class="fa fa-youtube-square"></a></li>
+</ul>
+</figcaption>
+</figure>
+<div class="church-team-grid-text">
+<h2><a href="team-detail.html">Sarena Doe</a></h2>
+<span>Web Designer</span>
+<p>Sed vulputate elementum aliq Nunc vel efficitur ante. Ut gri nulla id ornare sodales.</p>
+</div>
+</div>
+</li>
+<li class="col-md-3">
+<div class="church-team-grid-wrap">
+<figure><a href="team-detail.html"><img src="extra-images\team-grid-img4.jpg" alt=""></a>
+<figcaption>
+<ul class="church-team-social">
+<li><a href="https://www.facebook.com/" class="fa fa-facebook-square"></a></li>
+<li><a href="https://twitter.com/login?lang=en" class="fa fa-twitter-square"></a></li>
+<li><a href="https://plus.google.com/" class="fa fa-google-plus-square"></a></li>
+<li><a href="https://www.youtube.com/signin" class="fa fa-youtube-square"></a></li>
+</ul>
+</figcaption>
+</figure>
+<div class="church-team-grid-text">
+<h2><a href="team-detail.html">Merry Stewart</a></h2>
+<span>Web Designer</span>
+<p>Sed vulputate elementum aliq Nunc vel efficitur ante. Ut gri nulla id ornare sodales.</p>
+</div>
+</div>
+</li>
+<li class="col-md-3">
+<div class="church-team-grid-wrap">
+<figure><a href="team-detail.html"><img src="extra-images\team-grid-img5.jpg" alt=""></a>
+<figcaption>
+<ul class="church-team-social">
+<li><a href="https://www.facebook.com/" class="fa fa-facebook-square"></a></li>
+<li><a href="https://twitter.com/login?lang=en" class="fa fa-twitter-square"></a></li>
+<li><a href="https://plus.google.com/" class="fa fa-google-plus-square"></a></li>
+<li><a href="https://www.youtube.com/signin" class="fa fa-youtube-square"></a></li>
+</ul>
+</figcaption>
+</figure>
+<div class="church-team-grid-text">
+<h2><a href="team-detail.html">David Jorden</a></h2>
+<span>Web Designer</span>
+<p>Sed vulputate elementum aliq Nunc vel efficitur ante. Ut gri nulla id ornare sodales.</p>
+</div>
+</div>
+</li>
+<li class="col-md-3">
+<div class="church-team-grid-wrap">
+<figure><a href="team-detail.html"><img src="extra-images\team-grid-img6.jpg" alt=""></a>
+<figcaption>
+<ul class="church-team-social">
+<li><a href="https://www.facebook.com/" class="fa fa-facebook-square"></a></li>
+<li><a href="https://twitter.com/login?lang=en" class="fa fa-twitter-square"></a></li>
+<li><a href="https://plus.google.com/" class="fa fa-google-plus-square"></a></li>
+<li><a href="https://www.youtube.com/signin" class="fa fa-youtube-square"></a></li>
+</ul>
+</figcaption>
+</figure>
+<div class="church-team-grid-text">
+<h2><a href="team-detail.html">Marlon Smith</a></h2>
+<span>Web Designer</span>
+<p>Sed vulputate elementum aliq Nunc vel efficitur ante. Ut gri nulla id ornare sodales.</p>
+</div>
+</div>
+</li>
+<li class="col-md-3">
+<div class="church-team-grid-wrap">
+<figure><a href="team-detail.html"><img src="extra-images\team-grid-img7.jpg" alt=""></a>
+<figcaption>
+<ul class="church-team-social">
+<li><a href="https://www.facebook.com/" class="fa fa-facebook-square"></a></li>
+<li><a href="https://twitter.com/login?lang=en" class="fa fa-twitter-square"></a></li>
+<li><a href="https://plus.google.com/" class="fa fa-google-plus-square"></a></li>
+<li><a href="https://www.youtube.com/signin" class="fa fa-youtube-square"></a></li>
+</ul>
+</figcaption>
+</figure>
+<div class="church-team-grid-text">
+<h2><a href="team-detail.html">Sarena Doe</a></h2>
+<span>Web Designer</span>
+<p>Sed vulputate elementum aliq Nunc vel efficitur ante. Ut gri nulla id ornare sodales.</p>
+</div>
+</div>
+</li>
+<li class="col-md-3">
+<div class="church-team-grid-wrap">
+<figure><a href="team-detail.html"><img src="extra-images\team-grid-img8.jpg" alt=""></a>
+<figcaption>
+<ul class="church-team-social">
+<li><a href="https://www.facebook.com/" class="fa fa-facebook-square"></a></li>
+<li><a href="https://twitter.com/login?lang=en" class="fa fa-twitter-square"></a></li>
+<li><a href="https://plus.google.com/" class="fa fa-google-plus-square"></a></li>
+<li><a href="https://www.youtube.com/signin" class="fa fa-youtube-square"></a></li>
+</ul>
+</figcaption>
+</figure>
+<div class="church-team-grid-text">
+<h2><a href="team-detail.html">Merry Stewart</a></h2>
+<span>Web Designer</span>
+<p>Sed vulputate elementum aliq Nunc vel efficitur ante. Ut gri nulla id ornare sodales.</p>
+</div>
+</div>
+</li>
+</ul>
+</div>
+
+<div class="church-pagination">
+<ul class="page-numbers">
+<li><a class="previous page-numbers" href="404.html"><span aria-label="Next"><i class="fa fa-angle-left"></i></span></a></li>
+<li><span class="page-numbers current">01</span></li>
+<li><a class="page-numbers" href="404.html">02</a></li>
+<li><a class="page-numbers" href="404.html">03</a></li>
+<li><a class="page-numbers" href="404.html">04</a></li>
+<li><a class="next page-numbers" href="404.html"><span aria-label="Next"><i class="fa fa-angle-right"></i></span></a></li>
+</ul>
+</div>
+
+</div>
+</div>
+</div>
+</div>
+
+</div>
+
+
+<footer id="church-footer" class="church-footer-one">
+<span class="church-footer-transparent"></span>
+
+<div class="church-footer-widget">
+<div class="container">
+<div class="row">
+
+<aside class="col-md-3 widget widget_service_time">
+<h2 class="church-footer-heading">[ Church Service Times ]</h2>
+<ul>
+<li><time datetime="2008-02-14 20:00"><span>Saturday:</span> 5:00pm - 8:00pm</time></li>
+<li><time datetime="2008-02-14 20:00"><span>Sunday:</span> 8:30am - 6:00pm</time></li>
+<li><time datetime="2008-02-14 20:00"><span>Wednesday:</span> 7:30pm - 9:00pm</time></li>
+<li><time datetime="2008-02-14 20:00"><span>Thursday:</span> 7:00pm - 8:00pm</time></li>
+<li><time datetime="2008-02-14 20:00"><span>Friday:</span> 8:00pm - 7:00pm</time></li>
+</ul>
+<div class="widget_service_note">
+<p><i class="icon church-exclamation"></i>Childcare Event available during every weekend and on Wednesday service.</p>
+<span></span>
+</div>
+</aside>
+
+
+<aside class="col-md-3 widget widget_latest_sermons">
+<h2 class="church-footer-heading">[ Latest Sermons ]</h2>
+<ul>
+<li>
+<figure><a href="sermon-detail.html"><img src="extra-images\widget-sermon-img1.jpg" alt=""></a></figure>
+<div class="widget-sermon-text">
+<h6><a href="sermon-detail.html">Complete Pray Just To You</a></h6>
+<span>Lorem ipsum dolor sit...</span>
+</div>
+</li>
+<li>
+<figure><a href="sermon-detail.html"><img src="extra-images\widget-sermon-img2.jpg" alt=""></a></figure>
+<div class="widget-sermon-text">
+<h6><a href="sermon-detail.html">Jesus Prays For All Children</a></h6>
+<span>Cresciam nunc brevis...</span>
+</div>
+</li>
+<li>
+<figure><a href="sermon-detail.html"><img src="extra-images\widget-sermon-img3.jpg" alt=""></a></figure>
+<div class="widget-sermon-text">
+<h6><a href="sermon-detail.html">Give Water To Everyone</a></h6>
+<span>Aeneat justo cresum et...</span>
+</div>
+</li>
+</ul>
+</aside>
+
+
+<aside class="col-md-4 widget widget_contact">
+<h2 class="church-footer-heading">[ Get in Touch ]</h2>
+<p>Anything you want to share with us:</p>
+<form>
+<ul>
+<li><input value="Your Name" onblur="if(this.value == '') { this.value ='Your Name'; }" onfocus="if(this.value =='Your Name') { this.value = ''; }" tabindex="0" type="text"></li>
+<li><input value="Your Email" onblur="if(this.value == '') { this.value ='Your Email'; }" onfocus="if(this.value =='Your Email') { this.value = ''; }" tabindex="0" type="email"></li>
+<li><textarea placeholder="Your Message"></textarea></li>
+<li><input type="submit" value="Send"></li>
+</ul>
+</form>
+</aside>
+
+
+<aside class="col-md-2 widget widget_gallery">
+<h2 class="church-footer-heading">[ Gallery ]</h2>
+<ul>
+<li><figure><a data-fancybox-group="group" href="extra-images\widget-gallery-img1.jpg" class="fancybox"><img src="extra-images\widget-gallery-img1.jpg" alt=""></a></figure></li>
+<li><figure><a data-fancybox-group="group" href="extra-images\widget-gallery-img2.jpg" class="fancybox"><img src="extra-images\widget-gallery-img2.jpg" alt=""></a></figure></li>
+<li><figure><a data-fancybox-group="group" href="extra-images\widget-gallery-img3.jpg" class="fancybox"><img src="extra-images\widget-gallery-img3.jpg" alt=""></a></figure></li>
+<li><figure><a data-fancybox-group="group" href="extra-images\widget-gallery-img4.jpg" class="fancybox"><img src="extra-images\widget-gallery-img4.jpg" alt=""></a></figure></li>
+<li><figure><a data-fancybox-group="group" href="extra-images\widget-gallery-img5.jpg" class="fancybox"><img src="extra-images\widget-gallery-img5.jpg" alt=""></a></figure></li>
+<li><figure><a data-fancybox-group="group" href="extra-images\widget-gallery-img6.jpg" class="fancybox"><img src="extra-images\widget-gallery-img6.jpg" alt=""></a></figure></li>
+</ul>
+</aside>
+
+</div>
+</div>
+</div>
+
+
+<div class="container">
+<div class="row">
+<div class="col-md-12">
+<div class="church-copyright">
+<p><span>Copyright 2017.</span> All Rights Reserved <a href="index.html">Webmarce</a>.</p>
+</div>
+</div>
+</div>
+</div>
+
+</footer>
+
+<div class="clearfix"></div>
+</div>
+
+
+<div class="modal fade searchmodal" id="searchmodal" tabindex="-1" role="dialog">
+<div class="modal-dialog" role="document">
+<div class="modal-body">
+<a href="#" class="church-close-btn" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></a>
+<form>
+<input type="text" value="Type Your Keyword" onblur="if(this.value == '') { this.value ='Type Your Keyword'; }" onfocus="if(this.value =='Type Your Keyword') { this.value = ''; }">
+<input type="submit" value="">
+<i class="fa fa-search"></i>
+</form>
+</div>
+</div>
+</div>
+
+<script src="script\jquery.js"></script>
+<script src="script\bootstrap.min.js"></script>
+<script src="script\slick.slider.min.js"></script>
+<script src="script\fancybox.pack.js"></script>
+<script src="script\isotope.min.js"></script>
+<script src="script\progressbar.js"></script>
+<script src="script\jquery.countdown.min.js"></script>
+<script src="script\jplayer.functions.js"></script>
+<script src="script\jquery.countdown.one.js"></script>
+<script src="script\jquery.jplayer.js"></script>
+<script src="script\jplayer.playlist.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js"></script>
+<script src="script\functions.js"></script>
+</body>
+</html>
