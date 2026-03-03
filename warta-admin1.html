@@ -195,7 +195,7 @@
   .btn-logout { background: transparent; color: var(--gold); border: 1px solid var(--gold); padding: 6px 14px; font-size: 0.7rem; }
   .btn-logout:hover { background: rgba(201,151,58,0.1); }
 
-  /* ── Table card ── */
+  /* ── Table ── */
   .table-card {
     background: var(--white);
     border: 1px solid var(--border);
@@ -210,7 +210,6 @@
     justify-content: space-between;
     gap: 12px;
     flex-wrap: wrap;
-    background: var(--warm);
   }
   .table-title {
     font-family: 'Playfair Display', serif;
@@ -219,7 +218,7 @@
   }
   .search-box {
     padding: 8px 14px;
-    background: var(--white);
+    background: var(--warm);
     border: 1.5px solid var(--border);
     border-radius: 4px;
     font-size: 0.82rem;
@@ -227,7 +226,6 @@
     outline: none;
     width: 200px;
     transition: border-color 0.2s;
-    font-family: 'Lato', sans-serif;
   }
   .search-box:focus { border-color: var(--gold); }
   .table-wrap { overflow-x: auto; }
@@ -258,55 +256,13 @@
   .td-id { font-size: 0.75rem; color: var(--muted); font-weight: 700; }
   .td-date { font-family: 'Playfair Display', serif; color: var(--brown); }
   .td-file { font-family: monospace; font-size: 0.75rem; color: var(--muted); }
-  .td-actions { white-space: nowrap; }
-  .td-actions-inner { display: flex; gap: 6px; }
+  .td-actions { white-space: nowrap; display: flex; gap: 6px; }
   .empty-row { text-align: center; padding: 48px 20px; color: var(--muted); font-size: 0.85rem; }
 
   /* ── Loading row ── */
   .loading-row { text-align: center; padding: 40px; color: var(--muted); }
   .spin { display: inline-block; animation: spin 1s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* ── Pagination ── */
-  .pagination {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 24px;
-    border-top: 1px solid var(--border);
-    background: var(--warm);
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-  .pagination-info {
-    font-size: 0.75rem;
-    color: var(--muted);
-  }
-  .pagination-btns {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-  }
-  .page-btn {
-    width: 32px;
-    height: 32px;
-    border: 1px solid var(--border);
-    background: var(--white);
-    color: var(--brown);
-    font-size: 0.78rem;
-    font-weight: 700;
-    border-radius: 3px;
-    cursor: pointer;
-    transition: all 0.15s;
-    font-family: 'Lato', sans-serif;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .page-btn:hover:not(:disabled) { background: var(--warm); border-color: var(--gold); }
-  .page-btn.active { background: var(--brown); color: var(--cream); border-color: var(--brown); }
-  .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-  .page-ellipsis { font-size: 0.78rem; color: var(--muted); padding: 0 2px; }
 
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(20px); }
@@ -317,7 +273,6 @@
     .form-grid { grid-template-columns: 1fr; }
     .form-grid-full { grid-column: 1; }
     .search-box { width: 140px; }
-    .pagination { justify-content: center; }
   }
 </style>
 </head>
@@ -405,8 +360,8 @@
         <table>
           <thead>
             <tr>
-              <th style="width:48px;">No</th>
-              <th style="width:60px;">ID</th>
+              <th>No</th>
+              <th>ID</th>
               <th>Tanggal (x_01)</th>
               <th>Gambar (x_02)</th>
               <th>PDF (x_03)</th>
@@ -417,10 +372,6 @@
             <tr><td colspan="6" class="loading-row"><span class="spin">⏳</span> Memuat data...</td></tr>
           </tbody>
         </table>
-      </div>
-      <div class="pagination" id="tablePagination" style="display:none;">
-        <div class="pagination-info" id="tablePagInfo"></div>
-        <div class="pagination-btns" id="tablePagBtns"></div>
       </div>
     </div>
 
@@ -438,7 +389,6 @@ const TABLE      = 'warta';
 const UI_USER    = 'admin';
 const UI_PASS    = 'admin';
 const STORE_KEY  = 'warta_admin_login';
-const PAGE_SIZE  = 20;
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 function authHeaders(extra = {}) {
@@ -450,10 +400,6 @@ function showToast(msg, type = 'success') {
   el.textContent = msg;
   el.className   = `show ${type}`;
   setTimeout(() => el.className = '', 2800);
-}
-
-function shortName(str, max) {
-  return str.length > max ? str.slice(0, max) + '…' : str;
 }
 
 // ─── AUTH ────────────────────────────────────────────────────────────────────
@@ -481,128 +427,64 @@ function startApp(user) {
 }
 
 // ─── DATA STATE ──────────────────────────────────────────────────────────────
-let allRows      = [];
-let filteredRows = [];
-let currentPage  = 1;
+let allRows = [];
 
 // ─── LOAD TABLE ──────────────────────────────────────────────────────────────
 async function loadTable() {
   const tbody = document.getElementById('tableBody');
   tbody.innerHTML = '<tr><td colspan="6" class="loading-row"><span class="spin">⏳</span> Memuat data...</td></tr>';
-  document.getElementById('tablePagination').style.display = 'none';
-
   try {
     const res = await fetch(`${API_BASE}?table=${TABLE}`, { headers: authHeaders() });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const result = await res.json();
     allRows = result.data || [];
-    filteredRows = [...allRows];
-    currentPage = 1;
-    renderTable();
+    renderTable(allRows);
   } catch (e) {
     tbody.innerHTML = `<tr><td colspan="6" class="empty-row" style="color:var(--danger);">Gagal memuat: ${e.message}</td></tr>`;
   }
 }
 
+function renderTable(rows) {
+  const tbody = document.getElementById('tableBody');
+  document.getElementById('rowCount').textContent = `(${rows.length} data)`;
+
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-row">Belum ada data warta.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = '';
+  rows.forEach((row, i) => {
+    const tr = document.createElement('tr');
+    const imgPreview = row.x_02 ? row.x_02.split('|').length + ' gambar' : '—';
+    tr.innerHTML = `
+      <td class="td-id">${i+1}</td>
+      <td class="td-id">#${row.id_x}</td>
+      <td class="td-date">${row.x_01 || '—'}</td>
+      <td class="td-file" title="${row.x_02||''}">${imgPreview}</td>
+      <td class="td-file" title="${row.x_03||''}">${row.x_03 ? shortName(row.x_03,20) : '—'}</td>
+      <td><div class="td-actions">
+        <button class="btn btn-edit" onclick="editRow(${row.id_x})">✏ Edit</button>
+        <button class="btn btn-del"  onclick="deleteRow(${row.id_x})">🗑 Hapus</button>
+        <button class="btn btn-view" onclick="viewWarta(${row.id_x})">👁 View</button>
+      </div></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function shortName(str, max) {
+  return str.length > max ? str.slice(0, max) + '…' : str;
+}
+
 function filterTable() {
   const q = document.getElementById('searchInput').value.toLowerCase();
-  filteredRows = allRows.filter(r =>
+  const filtered = allRows.filter(r =>
     (r.x_01 || '').toLowerCase().includes(q) ||
     (r.x_02 || '').toLowerCase().includes(q) ||
     (r.x_03 || '').toLowerCase().includes(q)
   );
-  currentPage = 1;
-  renderTable();
-}
-
-function renderTable() {
-  const tbody = document.getElementById('tableBody');
-  const total = filteredRows.length;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  if (currentPage > totalPages) currentPage = totalPages;
-
-  const start    = (currentPage - 1) * PAGE_SIZE;
-  const end      = Math.min(start + PAGE_SIZE, total);
-  const pageRows = filteredRows.slice(start, end);
-
-  document.getElementById('rowCount').textContent = `(${total} data)`;
-
-  tbody.innerHTML = '';
-  if (!pageRows.length) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty-row">Belum ada data warta.</td></tr>';
-  } else {
-    pageRows.forEach((row, i) => {
-      const tr = document.createElement('tr');
-      const imgPreview = row.x_02 ? row.x_02.split('|').length + ' gambar' : '—';
-      tr.innerHTML = `
-        <td class="td-id">${start + i + 1}</td>
-        <td class="td-id">#${row.id_x}</td>
-        <td class="td-date">${row.x_01 || '—'}</td>
-        <td class="td-file" title="${row.x_02||''}">${imgPreview}</td>
-        <td class="td-file" title="${row.x_03||''}">${row.x_03 ? shortName(row.x_03, 20) : '—'}</td>
-        <td><div class="td-actions-inner">
-          <button class="btn btn-edit" onclick="editRow(${row.id_x})">✏ Edit</button>
-          <button class="btn btn-del"  onclick="deleteRow(${row.id_x})">🗑 Hapus</button>
-          <button class="btn btn-view" onclick="viewWarta(${row.id_x})">👁 View</button>
-        </div></td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
-
-  // Pagination
-  const pagEl  = document.getElementById('tablePagination');
-  const infoEl = document.getElementById('tablePagInfo');
-  const btnsEl = document.getElementById('tablePagBtns');
-
-  if (total === 0) {
-    pagEl.style.display = 'none';
-    return;
-  }
-
-  pagEl.style.display = '';
-  infoEl.textContent  = `Menampilkan ${start + 1}–${end} dari ${total} data`;
-  btnsEl.innerHTML    = '';
-
-  // Prev
-  const prev = document.createElement('button');
-  prev.className = 'page-btn';
-  prev.textContent = '‹';
-  prev.disabled = currentPage === 1;
-  prev.onclick = () => { currentPage--; renderTable(); };
-  btnsEl.appendChild(prev);
-
-  // Page numbers
-  const pages = getPageRange(currentPage, totalPages);
-  pages.forEach(p => {
-    if (p === '…') {
-      const el = document.createElement('span');
-      el.className = 'page-ellipsis';
-      el.textContent = '…';
-      btnsEl.appendChild(el);
-    } else {
-      const btn = document.createElement('button');
-      btn.className = 'page-btn' + (p === currentPage ? ' active' : '');
-      btn.textContent = p;
-      btn.onclick = () => { currentPage = p; renderTable(); };
-      btnsEl.appendChild(btn);
-    }
-  });
-
-  // Next
-  const next = document.createElement('button');
-  next.className = 'page-btn';
-  next.textContent = '›';
-  next.disabled = currentPage === totalPages;
-  next.onclick = () => { currentPage++; renderTable(); };
-  btnsEl.appendChild(next);
-}
-
-function getPageRange(current, total) {
-  if (total <= 7) return Array.from({length: total}, (_, i) => i + 1);
-  if (current <= 4) return [1, 2, 3, 4, 5, '…', total];
-  if (current >= total - 3) return [1, '…', total-4, total-3, total-2, total-1, total];
-  return [1, '…', current-1, current, current+1, '…', total];
+  renderTable(filtered);
 }
 
 // ─── SAVE (POST) ──────────────────────────────────────────────────────────────
