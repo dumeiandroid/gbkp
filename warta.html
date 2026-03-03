@@ -486,7 +486,7 @@ const API_BASE  = 'https://lidan-co-id.pages.dev/api/db_gbkp1';
 const API_KEY   = 'admin';
 const TABLE     = 'warta';
 const BASE_IMG  = 'https://gbkp-my-id.pages.dev/gambar/warta/';
-const BASE_PDF  = 'warta/';
+const BASE_PDF  = 'https://gbkp-my-id.pages.dev/gambar/warta/';
 const PAGE_SIZE = 20;
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
@@ -520,8 +520,6 @@ function showView(view) {
   document.getElementById('navWarta').classList.toggle('active', isWarta);
   document.getElementById('navArsip').classList.toggle('active', !isWarta);
 
-  console.log('[DEBUG] showView:', view, '| arsipLoaded:', arsipLoaded);
-  console.log('[DEBUG] arsipSection offsetHeight:', document.getElementById('arsipSection').offsetHeight);
 
   if (!isWarta) {
     if (!arsipLoaded) {
@@ -548,7 +546,6 @@ async function loadWartaTerbaru(id_x = null) {
     if (id_x) params['id_x'] = id_x;
 
     const result = await apiFetch(params);
-    console.log('[DEBUG] loadWartaTerbaru result:', JSON.stringify(result).slice(0, 300));
     // API returns array when no id_x, single object when id_x specified
     let row;
     if (Array.isArray(result.data)) {
@@ -556,14 +553,12 @@ async function loadWartaTerbaru(id_x = null) {
     } else if (result.data && typeof result.data === 'object') {
       row = result.data;
     }
-    console.log('[DEBUG] row:', row ? JSON.stringify(row).slice(0, 200) : 'undefined');
     if (!row) throw new Error('Data warta tidak ditemukan.');
 
     renderWarta(row);
     loadEl.style.display = 'none';
     contEl.style.display = '';
   } catch (e) {
-    console.error('[DEBUG] loadWartaTerbaru ERROR:', e.message);
     loadEl.style.display  = 'none';
     errEl.style.display   = '';
     errEl.textContent     = `Gagal memuat warta: ${e.message}`;
@@ -575,7 +570,7 @@ function renderWarta(row) {
 
   const pdfLink = document.getElementById('btnDownload');
   if (row.x_03) {
-    pdfLink.href = BASE_PDF + row.x_03;
+    pdfLink.href = BASE_PDF + row.x_03.trim();
   } else {
     pdfLink.style.display = 'none';
   }
@@ -605,8 +600,6 @@ async function loadArsip() {
   const wrapEl  = document.getElementById('arsipTableWrap');
   const errEl   = document.getElementById('arsipError');
 
-  console.log('[DEBUG] loadArsip START');
-  console.log('[DEBUG] arsipSection offsetHeight at start:', document.getElementById('arsipSection').offsetHeight);
 
   loadEl.style.display = '';
   wrapEl.style.display = 'none';
@@ -620,12 +613,8 @@ async function loadArsip() {
     arsipCurrentPage = 1;
     loadEl.style.display = 'none';
     wrapEl.style.display = '';
-    console.log('[DEBUG] arsipSection offsetHeight after show:', document.getElementById('arsipSection').offsetHeight);
     renderArsipTable();
-    console.log('[DEBUG] after render - tbody rows:', document.getElementById('arsipTableBody').children.length);
-    console.log('[DEBUG] wrapEl offsetHeight after render:', wrapEl.offsetHeight);
   } catch (e) {
-    console.error('[DEBUG] ERROR:', e);
     loadEl.style.display = 'none';
     errEl.style.display  = '';
     errEl.textContent    = `Gagal memuat arsip: ${e.message}`;
@@ -638,8 +627,6 @@ function showArsipTable() {
   wrapEl.style.display = '';
   loadEl.style.display = 'none';
   renderArsipTable();
-  console.log('[DEBUG] showArsipTable - wrapEl offsetHeight:', wrapEl.offsetHeight);
-  console.log('[DEBUG] showArsipTable - tbody rows:', document.getElementById('arsipTableBody').children.length);
 }
 
 function filterArsip() {
