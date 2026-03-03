@@ -1,1 +1,1497 @@
-hai
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- <title></title> -->
+  <script>
+  $(document).ready(function(){
+    $(".inputs").keyup(function () {
+      if (this.value.length == this.maxLength) {
+        $(this).next('.inputs').focus();
+      }
+    });
+  })
+</script>
+</head>   
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<!-- Bootstrap CSS -->
+<link href="beloved-god\css\bootstrap.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap4.min.css">
+
+</head>
+<style type="text/css">
+  /* ============================================
+   GALLERY PRO CSS - GBKP Bambu Raya
+   Professional Gallery Styles
+   ============================================ */
+
+/* ── IMPORT FONT ───────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Jost:wght@300;400;500;600&display=swap');
+
+/* ── CSS VARIABLES ─────────────────────────── */
+:root {
+  --gallery-gold:       #b8973e;
+  --gallery-gold-light: #d4b065;
+  --gallery-dark:       #1a1a1a;
+  --gallery-mid:        #2e2e2e;
+  --gallery-overlay:    rgba(20, 16, 10, 0.72);
+  --gallery-radius:     6px;
+  --gallery-gap:        10px;
+  --gallery-transition: 0.42s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* ============================================
+   SECTION TITLE
+   ============================================ */
+.church-masonry-galleryfull .church-fancy-title {
+  text-align: center;
+  margin-bottom: 42px;
+  position: relative;
+  padding-bottom: 22px;
+}
+
+.church-masonry-galleryfull .church-fancy-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gallery-gold), transparent);
+}
+
+.church-masonry-galleryfull .church-fancy-title h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--gallery-dark);
+  margin-bottom: 6px;
+}
+
+.church-masonry-galleryfull .church-fancy-title span {
+  font-family: 'Jost', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gallery-gold);
+}
+
+/* ============================================
+   MAIN GALLERY GRID
+   ============================================ */
+.church-masonry-gallery {
+  overflow: hidden;
+}
+
+.church-masonry-gallery > ul.row {
+  display: grid !important;
+  grid-template-columns: repeat(12, 1fr);
+  grid-auto-rows: 220px;
+  gap: var(--gallery-gap);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* col-md-3  → 3 cols → spans 3 grid cols */
+.church-masonry-gallery > ul.row > li.col-md-3 {
+  grid-column: span 3;
+  padding: 0;
+  float: none;
+}
+
+/* col-md-6  → 6 cols → spans 6 grid cols, 2 rows tall */
+.church-masonry-gallery > ul.row > li.col-md-6 {
+  grid-column: span 6;
+  grid-row: span 2;
+  padding: 0;
+  float: none;
+}
+
+/* ── FIGURE ────────────────────────────────── */
+.church-masonry-gallery figure {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  border-radius: var(--gallery-radius);
+  background: var(--gallery-mid);
+  box-shadow: 0 4px 18px rgba(0,0,0,0.18);
+}
+
+.church-masonry-gallery figure img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  transition: transform var(--gallery-transition),
+              filter var(--gallery-transition);
+  filter: brightness(0.96) saturate(1.05);
+}
+
+/* ── OVERLAY ───────────────────────────────── */
+.church-masonry-gallery figure::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--gallery-overlay);
+  opacity: 0;
+  z-index: 1;
+  transition: opacity var(--gallery-transition);
+  border-radius: var(--gallery-radius);
+}
+
+/* ── HOVER ICON ────────────────────────────── */
+.church-masonry-gallery figure::after {
+  content: '＋';
+  font-family: 'Jost', sans-serif;
+  font-size: 2rem;
+  font-weight: 300;
+  color: #fff;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -60%) scale(0.7);
+  opacity: 0;
+  z-index: 2;
+  transition: opacity var(--gallery-transition),
+              transform var(--gallery-transition);
+  pointer-events: none;
+  letter-spacing: 0;
+}
+
+/* ── GOLD BORDER ON HOVER ──────────────────── */
+.church-masonry-gallery figure a {
+  display: block;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.church-masonry-gallery figure a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--gallery-gold-light);
+  border-radius: var(--gallery-radius);
+  opacity: 0;
+  z-index: 3;
+  transition: opacity var(--gallery-transition);
+}
+
+/* ── HOVER STATES ──────────────────────────── */
+.church-masonry-gallery li:hover figure img {
+  transform: scale(1.07);
+  filter: brightness(0.80) saturate(1.1);
+}
+
+.church-masonry-gallery li:hover figure::before {
+  opacity: 1;
+}
+
+.church-masonry-gallery li:hover figure::after {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.church-masonry-gallery li:hover figure a::after {
+  opacity: 1;
+}
+
+/* ── FIGCAPTION (hidden by default via jQuery) */
+.church-masonry-gallery figcaption {
+  display: none;
+}
+
+/* ── SUBTLE ANIMATE ON LOAD ────────────────── */
+.church-masonry-gallery li {
+  animation: galleryFadeUp 0.55s ease both;
+}
+
+.church-masonry-gallery li:nth-child(1) { animation-delay: 0.05s; }
+.church-masonry-gallery li:nth-child(2) { animation-delay: 0.15s; }
+.church-masonry-gallery li:nth-child(3) { animation-delay: 0.25s; }
+.church-masonry-gallery li:nth-child(4) { animation-delay: 0.32s; }
+.church-masonry-gallery li:nth-child(5) { animation-delay: 0.40s; }
+
+@keyframes galleryFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   FOOTER WIDGET GALLERY
+   ============================================ */
+.widget_gallery ul {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.widget_gallery ul li {
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.widget_gallery ul li figure {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.widget_gallery ul li figure img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  transition: transform 0.38s ease, filter 0.38s ease;
+  filter: brightness(0.9) saturate(0.95);
+}
+
+.widget_gallery ul li figure::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(184, 151, 62, 0.55);
+  opacity: 0;
+  z-index: 1;
+  transition: opacity 0.38s ease;
+  border-radius: 4px;
+}
+
+.widget_gallery ul li:hover figure img {
+  transform: scale(1.10);
+  filter: brightness(0.75) saturate(1.1);
+}
+
+.widget_gallery ul li:hover figure::before {
+  opacity: 1;
+}
+
+/* ============================================
+   RESPONSIVE — TABLET (≤ 991px)
+   ============================================ */
+@media (max-width: 991px) {
+
+  .church-masonry-gallery > ul.row {
+    grid-template-columns: repeat(6, 1fr);
+    grid-auto-rows: 180px;
+  }
+
+  .church-masonry-gallery > ul.row > li.col-md-3 {
+    grid-column: span 3;
+  }
+
+  .church-masonry-gallery > ul.row > li.col-md-6 {
+    grid-column: span 6;
+    grid-row: span 2;
+  }
+
+  .church-masonry-galleryfull .church-fancy-title h2 {
+    font-size: 2.2rem;
+  }
+}
+
+/* ============================================
+   RESPONSIVE — MOBILE (≤ 600px)
+   ============================================ */
+@media (max-width: 600px) {
+
+  .church-masonry-gallery > ul.row {
+    grid-template-columns: repeat(2, 1fr) !important;
+    grid-auto-rows: 150px !important;
+    gap: 8px;
+  }
+
+  /* All items take full row on mobile */
+  .church-masonry-gallery > ul.row > li.col-md-3,
+  .church-masonry-gallery > ul.row > li.col-md-6 {
+    grid-column: span 1 !important;
+    grid-row: span 1 !important;
+  }
+
+  /* Wide item gets 2 columns */
+  .church-masonry-gallery > ul.row > li.col-md-6 {
+    grid-column: span 2 !important;
+    grid-row: span 1 !important;
+  }
+
+  .church-masonry-galleryfull .church-fancy-title h2 {
+    font-size: 1.8rem;
+  }
+
+  .church-masonry-galleryfull .church-fancy-title span {
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+  }
+
+  /* Widget gallery: 3 col still fine on mobile but smaller */
+  .widget_gallery ul {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+  }
+}
+
+/* ============================================
+   VERY SMALL PHONES (≤ 380px)
+   ============================================ */
+@media (max-width: 380px) {
+
+  .church-masonry-gallery > ul.row {
+    grid-template-columns: 1fr 1fr !important;
+    grid-auto-rows: 130px !important;
+  }
+
+  .widget_gallery ul {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+</style>
+<body>
+
+ 
+
+
+
+<!-- contoh untuk teks gambar dan tautan/lilnk -->
+  
+   <head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="icon" type="image/ico" href="fav-icon.png">
+<link href="beloved-god\css\bootstrap.css" rel="stylesheet">
+<link href="beloved-god\css\font-awesome.css" rel="stylesheet">
+<link href="beloved-god\css\flaticon.css" rel="stylesheet">
+<link href="beloved-god\css\slick-slider.css" rel="stylesheet">
+<link href="beloved-god\css\fancybox.css" rel="stylesheet">
+<link href="beloved-god\css\jplayer.css" rel="stylesheet">
+<link href="beloved-god\css\style.css" rel="stylesheet">
+<link href="beloved-god\css\color.css" rel="stylesheet">
+<link href="beloved-god\css\responsive.css" rel="stylesheet">
+<!-- ✦ GALLERY PRO CSS ✦ -->
+<link href="gallery.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+     <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+     <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+   <![endif]-->
+</head>
+  <header id="church-header" class="church-header-one">
+<div class="church-main-header">
+<div class="container">
+<div class="row">
+<aside class="col-md-3"> <a href="index.php" class="logo"><img src="gambar/header/1.jpg?beloved-god\images\logo.png" alt=""></a> </aside>
+<aside class="col-md-9">
+<div class="church-navigation">
+
+<a href="#menu" class="menu-link active"><span></span></a>
+<nav id="menu" class="menu navbar navbar-default">
+<ul class="level-1 navbar-nav">
+<li class="active"><a href="index.php">Home</a></li>
+<li><a href="#">Aktivitas</a><span class="has-subnav"><i class="fa fa-angle-down"></i></span>
+<ul class="sub-menu level-2">
+<li><a href="">Kebaktian Minggu</a></li>
+<li><a href="">KAKR</a></li>
+<li><a href="">PJJ</a></li>
+<li><a href="">Sermon</a></li>
+<li><a href="">PA Kategorial</a></li>
+<li><a href="">Retreat</a></li>
+</ul>
+</li>
+<li><a href="#">Keuangan</a><span class="has-subnav"><i class="fa fa-angle-down"></i></span>
+<ul class="sub-menu level-2">
+<li><a href="">Kas Runggun</a></li>
+<li><a href="">Kas Kategorial</a></li>
+<li><a href="">Kas PJJ</a></li>
+<li><a href="">Laporan Perpuluhan</a></li>
+<li><a href="">Kas Pembangunan Gereja</a></li>
+<li><a href=""></a></li>
+</ul>
+</li>
+<li><a href="#">Informasi</a><span class="has-subnav"><i class="fa fa-angle-down"></i></span>
+<ul class="sub-menu level-2">
+<li><a href="index.php?p=warta">Warta Jemaat</a></li>
+<li><a href="">Inventaris Gereja</a></li>
+<li><a href=""></a></li>
+<li><a href=""></a></li>
+<li><a href=""></a></li>
+<li><a href=""></a></li>
+</ul>
+</li> 
+<li><a href="#">Blog</a><span class="has-subnav"><i class="fa fa-angle-down"></i></span>
+<ul class="sub-menu level-2">
+<li><a href="">KA KR</a></li>
+<li><a href="">MAMRE</a></li>
+<li><a href="">MORIA</a></li>
+<li><a href="">LANSIA</a></li>
+<li><a href=""></a></li>
+<li><a href=""></a></li>
+</ul>
+</li>
+</ul>
+</nav>
+
+<ul class="church-user-list">
+<li><a href="#" class="fa fa-search" data-toggle="modal" data-target="#searchmodal"></a></li>
+</ul>
+<a href="index.php?p=login" class="church-btn">Login</a>
+</div>
+</aside>
+</div>
+</div>
+</div>
+</header>
+  
+
+  <html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>GBKP Bambu Raya</title>
+
+<link rel="icon" type="image/ico" href="fav-icon.png">
+<link href="beloved-god\css\bootstrap.css" rel="stylesheet">
+<link href="beloved-god\css\font-awesome.css" rel="stylesheet">
+<link href="beloved-god\css\flaticon.css" rel="stylesheet">
+<link href="beloved-god\css\slick-slider.css" rel="stylesheet">
+<link href="beloved-god\css\fancybox.css" rel="stylesheet">
+<link href="beloved-god\css\jplayer.css" rel="stylesheet">
+<link href="beloved-god\css\style.css" rel="stylesheet">
+<link href="beloved-god\css\color.css" rel="stylesheet">
+<link href="beloved-god\css\responsive.css" rel="stylesheet">
+
+
+<!--[if lt IE 9]>
+     <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+     <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+   <![endif]-->
+</head>
+<body>
+
+<div class="church-main-wrapper">
+
+
+
+
+<div class="church-banner">
+
+<div class="church-banner-layer">
+<span class="church-banner-transparent"></span><br><br>
+<img src="gambar/index/1.jpg?beloved-god\extra-images\banner-1.jpg" alt="">
+<div class="church-banner-caption">
+<div class="container">
+<div class="row">
+<div class="col-md-8">
+<div class="church-banner-text">
+<h1>Kasihilah Tuhan, Allahmu, dengan segenap hatimu dan dengan segenap jiwamu dan dengan segenap akal budimu dan dengan segenap kekuatanmu.</h1>
+<span><i class="icon church-right-arrow"></i>Markus 12:30</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="church-banner-description">
+<img src="gambar/index/2.jpg?beloved-god\images\title-img1.png" alt="">
+<h2>Pujilah Tuhan, hai jiwaku! aku hendak memuliakan Tuhan selama aku hidup dan bermazmur bagiNya selama aku ada sebab Tuhan menegakkan keadilan, memberkati dan mengasihi. </h2>
+<h6>TUHAN itu baik kepada semua orang, dan penuh rahmat terhadap segala yang dijadikan-Nya.</h6>
+<a href="" class="church-btn">View</a>
+</div>
+</div>
+<div class="church-banner-layer">
+<span class="church-banner-transparent"></span><br><br>
+<img src="gambar/index/1.jpg?beloved-god\extra-images\banner-1.jpg" alt="">
+<div class="church-banner-caption">
+<div class="container">
+<div class="row">
+<div class="col-md-8">
+<div class="church-banner-text">
+<h1>Kasihilah sesamamu manusia seperti dirimu sendiri. Tidak ada hukum lain yang lebih utama dari pada kedua hukum ini.</h1>
+<span><i class="icon church-right-arrow"></i>Markus 12:31</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="church-banner-description">
+<img src="gambar/index/4.jpg?beloved-god\images\title-img1.png" alt="">
+<h2>Pujilah Tuhan, hai jiwaku! aku hendak memuliakan Tuhan selama aku hidup dan bermazmur bagiNya selama aku ada sebab Tuhan menegakkan keadilan, memberkati dan mengasihi. </h2>
+<h6>TUHAN itu baik kepada semua orang, dan penuh rahmat terhadap segala yang dijadikan-Nya.</h6>
+<a href="" class="church-btn">View</a>
+</div>
+</div>
+
+</div>
+
+
+<div class="church-main-content church-content-padding">
+
+<div class="church-main-section church-about-servicefull">
+<div class="container">
+<div class="row">
+<div class="col-md-8">
+<div class="church-callto-action">
+<h4>Mari Bergabung Ibadah Minggu</h4>
+<time datetime="2008-02-14 20:00">Pukul : 07:00 , 10:00 , 18:00 WIB</time>
+</div>
+</div>
+<div class="col-md-12">
+<div class="church-service church-about-service">
+<ul class="row">
+<li class="col-md-4">
+<figure><a href=""><img src="gambar/index/5.jpg?beloved-god\extra-images\about-service-img1.jpg" alt=""></a></figure>
+<a href="" class="church-simple-btn">Tentang Kami</a>
+</li>
+<li class="col-md-4">
+<figure><a href=""><img src="beloved-god\extra-images\about-service-img2.jpg" alt=""></a></figure>
+<a href="" class="church-simple-btn">Selamat Datang</a>
+</li>
+<li class="col-md-4">
+<figure><a href=""><img src="gambar/index/7.jpg?beloved-god\extra-images\about-service-img3.jpg" alt=""></a></figure>
+<a href="" class="church-simple-btn">Pelayan Tuhan</a>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+<div class="church-main-section church-authorfull">
+<div class="container">
+<div class="row">
+<div class="col-md-5"><figure class="church-author-thumb"><img src="gambar/index/8.png?beloved-god\extra-images\author-thumb-img.jpg" alt=""></figure></div>
+<div class="col-md-7">
+<div class="church-author-text">
+<h6>Selamat Datang di GBKP Runggun Bambu Raya</h6>
+<img src="beloved-god\images\title-img2.png" alt="">
+<p>Marilah kepada-Ku, semua yang letih lesu dan berbeban berat, Aku akan memberi kelegaan kepadamu.</p>
+<span>Matius 11:28</span>
+<a href="" class="church-btn">Pelayan Tuhan Rg Bambu Raya</a>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+<div class="church-main-section church-countdown-full">
+<span class="church-countdown-transparent"></span>
+<div class="container">
+<div class="row">
+<div class="col-md-12">
+<div class="church-countdown-text">
+<h2>Ibadah Minggu Runggun Bambu Raya</h2>
+<time datetime="2008-02-14 20:00">Pukul : 07:00 , 10:00 , 18:00</time>
+<div class="church-countdown" id="church-countdown"></div>
+<div class="clearfix"></div>
+<a href="" class="church-btn">Mari Bergabung</a>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+
+
+
+<div class="church-main-section church-location-full">
+<div class="container">
+<div class="row">
+<div class="col-md-12">
+<div class="church-meet-location">
+<h2>Informasi & Kegiatan GBKP Bambu Raya</h2>
+<div class="church-location-city">
+<a href="index.php?p=warta" class="church-simple-btn">Warta Jemaat</a>
+<a href="" class="church-simple-btn">Daftar Inventaris</a>
+<a href="index.php?p=keuangan" class="church-simple-btn">Laporan Kas</a>
+<a href="" class="church-simple-btn">Perpuluhan</a>
+<a href="" class="church-simple-btn">Daftar Anggota</a>
+<a href="" class="church-simple-btn">Pengakuan Iman</a>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="church-pray-timing">
+<div class="container">
+<div class="row">
+<div class="col-md-12">
+<a href="" class="church-simple-btn">KA/KR</a>
+<a href="" class="church-simple-btn">PERMATA</a>
+<a href="" class="church-simple-btn">MAMRE</a>
+<a href="" class="church-simple-btn">MORIA</a>
+<a href="" class="church-simple-btn">ZAITUN</a>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+<div class="church-main-section church-masonry-galleryfull">
+<div class="container">
+<div class="row">
+<div class="col-md-12">
+<div class="church-fancy-title">
+<h2>Gallery</h2>
+<span>Photo & Videos</span>
+</div>
+
+</div>
+<div class="col-md-12">
+<!-- ═══ CSS ═══════════════════════════════════════════════ -->
+<style>
+:root {
+  --gl-gold:    #c9a84c;
+  --gl-gold-lt: #e2c97e;
+  --gl-dark3:   #27241d;
+  --gl-cream:   #f5f0e8;
+  --gl-radius:  8px;
+  --gl-gap:     10px;
+  --gl-ease:    cubic-bezier(.25,.8,.25,1);
+}
+
+/* ── GRID ─────────────────────────────────────────────── */
+.gl-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--gl-gap);
+}
+
+.gl-item        { grid-column: span 3;  height: 230px; }
+.gl-item.w2     { grid-column: span 6;  height: 230px; }
+.gl-item.w2tall { grid-column: span 6;  height: 470px; grid-row: span 2; }
+
+/* ── CARD ─────────────────────────────────────────────── */
+.gl-card {
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: var(--gl-radius);
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--gl-dark3);
+  box-shadow: 0 6px 28px rgba(0,0,0,.45);
+  transition: box-shadow .4s var(--gl-ease), transform .4s var(--gl-ease);
+}
+.gl-card:hover {
+  box-shadow: 0 16px 48px rgba(0,0,0,.65);
+  transform: translateY(-2px);
+}
+
+/* ── GAMBAR — dipaksa mengisi kotak apapun ukuran aslinya */
+.gl-img-wrap {
+  position: absolute !important;
+  top: 0 !important; right: 0 !important;
+  bottom: 0 !important; left: 0 !important;
+  overflow: hidden !important;
+}
+.gl-img-wrap img {
+  position: absolute !important;
+  top: 0 !important; left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center 20% !important;
+  display: block !important;
+  max-width: none !important;
+  max-height: none !important;
+  transition: transform .55s var(--gl-ease), filter .55s var(--gl-ease) !important;
+  filter: brightness(.93) !important;
+}
+.gl-card:hover .gl-img-wrap img {
+  transform: scale(1.07) !important;
+  filter: brightness(.72) saturate(1.1) !important;
+}
+
+/* ── OVERLAY ──────────────────────────────────────────── */
+.gl-overlay {
+  position: absolute !important; inset: 0 !important;
+  background: linear-gradient(160deg, transparent 30%, rgba(15,14,12,.80) 100%);
+  opacity: 0; z-index: 2;
+  transition: opacity .4s var(--gl-ease);
+}
+.gl-card:hover .gl-overlay { opacity: 1; }
+
+/* ── BORDER EMAS ──────────────────────────────────────── */
+.gl-border {
+  position: absolute !important; inset: 0 !important;
+  border: 1.5px solid rgba(201,168,76,0);
+  border-radius: var(--gl-radius);
+  z-index: 4; pointer-events: none;
+  transition: border-color .4s var(--gl-ease);
+}
+.gl-card:hover .gl-border { border-color: rgba(201,168,76,.55); }
+
+/* ── CAPTION ──────────────────────────────────────────── */
+.gl-caption {
+  position: absolute !important;
+  bottom: 0 !important; left: 0 !important; right: 0 !important;
+  padding: 16px 14px 12px !important;
+  z-index: 3;
+  transform: translateY(10px); opacity: 0;
+  transition: transform .38s var(--gl-ease), opacity .38s var(--gl-ease);
+}
+.gl-card:hover .gl-caption { opacity: 1; transform: translateY(0); }
+.gl-caption h3 {
+  font-size: 1rem; font-weight: 600;
+  color: var(--gl-cream); line-height: 1.3; margin: 0 !important;
+}
+
+/* ── IKON ZOOM ────────────────────────────────────────── */
+.gl-zoom-ico {
+  position: absolute !important;
+  top: 12px !important; right: 12px !important;
+  width: 34px; height: 34px; border-radius: 50%;
+  border: 1.5px solid rgba(201,168,76,.55);
+  background: rgba(15,14,12,.55);
+  backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 4; opacity: 0; transform: scale(.6);
+  transition: opacity .32s var(--gl-ease), transform .32s var(--gl-ease);
+}
+.gl-zoom-ico svg {
+  width: 14px; height: 14px;
+  stroke: var(--gl-gold-lt); fill: none;
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+.gl-card:hover .gl-zoom-ico { opacity: 1; transform: scale(1); }
+
+/* ── ANIMASI MASUK ────────────────────────────────────── */
+.gl-item { animation: glIn .5s var(--gl-ease) both; }
+@keyframes glIn {
+  from { opacity: 0; transform: translateY(18px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);   }
+}
+
+/* ═══════════════════════════════════════════════════════
+   LIGHTBOX
+═══════════════════════════════════════════════════════ */
+.gl-lb {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(8,7,5,.97);
+  backdrop-filter: blur(20px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity .32s var(--gl-ease);
+}
+.gl-lb.open { opacity: 1; pointer-events: all; }
+
+.gl-lb-inner {
+  max-width: 92vw; max-height: 90vh;
+  display: flex; flex-direction: column; align-items: center;
+  transform: scale(.93); transition: transform .35s var(--gl-ease);
+}
+.gl-lb.open .gl-lb-inner { transform: scale(1); }
+
+.gl-lb-img {
+  display: block !important;
+  max-width: 88vw !important;
+  max-height: 82vh !important;
+  width: auto !important; height: auto !important;
+  object-fit: contain !important;
+  border-radius: var(--gl-radius);
+  box-shadow: 0 30px 80px rgba(0,0,0,.75);
+  transition: opacity .22s ease, transform .22s ease;
+}
+
+.gl-lb-close {
+  position: fixed; top: 20px; right: 22px;
+  width: 42px; height: 42px; border-radius: 50%;
+  background: rgba(201,168,76,.12);
+  border: 1.5px solid rgba(201,168,76,.3);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; z-index: 10000;
+  transition: background .22s ease, transform .22s ease;
+}
+.gl-lb-close:hover { background: var(--gl-gold); transform: rotate(90deg); }
+.gl-lb-close svg { width: 16px; height: 16px; stroke: var(--gl-cream); fill: none; stroke-width: 2; stroke-linecap: round; }
+
+.gl-lb-nav {
+  position: fixed; top: 50%; transform: translateY(-50%);
+  width: 46px; height: 46px; border-radius: 50%;
+  background: rgba(201,168,76,.08);
+  border: 1.5px solid rgba(201,168,76,.25);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; z-index: 10000;
+  transition: background .22s ease, border-color .22s ease;
+}
+.gl-lb-nav:hover { background: rgba(201,168,76,.18); border-color: var(--gl-gold); }
+.gl-lb-nav svg { width: 18px; height: 18px; stroke: var(--gl-gold-lt); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.gl-lb-prev { left: 14px; }
+.gl-lb-next { right: 14px; }
+
+.gl-lb-counter {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  font-size: .65rem; letter-spacing: .14em;
+  color: rgba(160,152,128,.45);
+}
+
+/* ── RESPONSIVE ───────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .gl-grid { grid-template-columns: repeat(6, 1fr); }
+  .gl-item        { grid-column: span 3; height: 195px; }
+  .gl-item.w2     { grid-column: span 6; height: 195px; }
+  .gl-item.w2tall { grid-column: span 6; height: 400px; }
+}
+
+@media (max-width: 640px) {
+  .gl-grid { grid-template-columns: repeat(2, 1fr); gap: 7px; }
+  .gl-item,
+  .gl-item.w2,
+  .gl-item.w2tall { grid-column: span 1 !important; grid-row: span 1 !important; height: 150px !important; }
+  .gl-item.w2tall,
+  .gl-item.w2     { grid-column: span 2 !important; height: 168px !important; }
+  .gl-caption, .gl-zoom-ico { display: none; }
+  .gl-lb-nav { display: none; }
+}
+
+@media (max-width: 380px) {
+  .gl-item        { height: 125px !important; }
+  .gl-item.w2tall,
+  .gl-item.w2     { height: 142px !important; }
+}
+</style>
+
+
+<!-- ═══ HTML ══════════════════════════════════════════════ -->
+<!--
+  DENAH GRID (12 kolom):
+  Baris 1-2: [w2tall=6] + [3]+[3] / [6] + [3]+[3]  ← 12 ✓
+  Baris 3:   [3]+[3]+[3]+[3]                         ← 12 ✓
+  Baris 4:   [w2=6]+[3]+[3]                          ← 12 ✓
+  Baris 5:   [3]+[3]+[3]+[3]                         ← 12 ✓
+-->
+<div class="gl-grid" id="glGrid">
+
+  <!-- ① besar kiri -->
+  <div class="gl-item w2tall">
+    <div class="gl-card">
+      <div class="gl-img-wrap"><img src="gambar/index/14.jpg" alt="Kebaktian Minggu" loading="lazy"></div>
+      <div class="gl-overlay"></div>
+      <span class="gl-zoom-ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <div class="gl-caption"><h3>Kebaktian Minggu</h3></div>
+      <div class="gl-border"></div>
+    </div>
+  </div>
+
+  <!-- ② -->
+  <div class="gl-item">
+    <div class="gl-card">
+      <div class="gl-img-wrap"><img src="gambar/index/17.jpg" alt="Gotong Royong" loading="lazy"></div>
+      <div class="gl-overlay"></div>
+      <span class="gl-zoom-ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <div class="gl-caption"><h3>Gotong Royong</h3></div>
+      <div class="gl-border"></div>
+    </div>
+  </div>
+
+  <!-- ③ -->
+  <div class="gl-item">
+    <div class="gl-card">
+      <div class="gl-img-wrap"><img src="gambar/index/20.jpg" alt="Paskah KAKR" loading="lazy"></div>
+      <div class="gl-overlay"></div>
+      <span class="gl-zoom-ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <div class="gl-caption"><h3>Paskah KAKR</h3></div>
+      <div class="gl-border"></div>
+    </div>
+  </div>
+
+  <!-- ④ -->
+  <div class="gl-item">
+    <div class="gl-card">
+      <div class="gl-img-wrap"><img src="gambar/footer/3.jpg" alt="Bakti Sosial" loading="lazy"></div>
+      <div class="gl-overlay"></div>
+      <span class="gl-zoom-ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <div class="gl-caption"><h3>Bakti Sosial</h3></div>
+      <div class="gl-border"></div>
+    </div>
+  </div>
+
+  <!-- ⑤ -->
+  <div class="gl-item">
+    <div class="gl-card">
+      <div class="gl-img-wrap"><img src="gambar/index/29.jpg" alt="PA Kategorial" loading="lazy"></div>
+      <div class="gl-overlay"></div>
+      <span class="gl-zoom-ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <div class="gl-caption"><h3>PA Kategorial</h3></div>
+      <div class="gl-border"></div>
+    </div>
+  </div>
+
+  <!-- ⑥⑦⑧⑨ baris-3 -->
+  <!-- <div class="gl-item">
+    <div class="gl-card">
+      <div class="gl-img-wrap"><img src="gambar/index/30.jpg" alt="Kebaktian Anak Remaja" loading="lazy"></div>
+      <div class="gl-overlay"></div>
+      <span class="gl-zoom-ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <div class="gl-caption"><h3>Kebaktian Anak / Remaja</h3></div>
+      <div class="gl-border"></div>
+    </div>
+  </div>
+
+  <div class="gl-item">
+    <div class="gl-card">
+      <div class="gl-img-wrap"><img src="gambar/index/25.jpg" alt="MAMRE" loading="lazy"></div>
+      <div class="gl-overlay"></div>
+      <span class="gl-zoom-ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <div class="gl-caption"><h3>MAMRE</h3></div>
+      <div class="gl-border"></div>
+    </div>
+  </div>
+
+  <div class="gl-item">
+    <div class="gl-card">
+      <div class="gl-img-wrap"><img src="gambar/index/26.jpg" alt="MORIA" loading="lazy"></div>
+      <div class="gl-overlay"></div>
+      <span class="gl-zoom-ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <div class="gl-caption"><h3>MORIA</h3></div>
+      <div class="gl-border"></div>
+    </div>
+  </div>
+
+  <div class="gl-item">
+    <div class="gl-card">
+      <div class="gl-img-wrap"><img src="gambar/index/27.jpg" alt="PERMATA" loading="lazy"></div>
+      <div class="gl-overlay"></div>
+      <span class="gl-zoom-ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <div class="gl-caption"><h3>PERMATA</h3></div>
+      <div class="gl-border"></div>
+    </div>
+  </div> -->
+
+  <!-- ⑩⑪⑫ baris-4 -->
+  <!-- <div class="gl-item w2">
+    <div class="gl-card">
+      <div class="gl-img-wrap"><img src="gambar/index/31.jpg" alt="Sermon" loading="lazy"></div>
+      <div class="gl-overlay"></div>
+      <span class="gl-zoom-ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <div class="gl-caption"><h3>Sermon & PA</h3></div>
+      <div class="gl-border"></div>
+    </div>
+  </div>
+
+  <div class="gl-item">
+    <div class="gl-card">
+      <div class="gl-img-wrap"><img src="gambar/index/28.jpg" alt="KAKR" loading="lazy"></div>
+      <div class="gl-overlay"></div>
+      <span class="gl-zoom-ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <div class="gl-caption"><h3>Kebaktian Remaja</h3></div>
+      <div class="gl-border"></div>
+    </div>
+  </div>
+
+  <div class="gl-item">
+    <div class="gl-card">
+      <div class="gl-img-wrap"><img src="gambar/footer/1.jpg" alt="Retreat" loading="lazy"></div>
+      <div class="gl-overlay"></div>
+      <span class="gl-zoom-ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <div class="gl-caption"><h3>Retreat Jemaat</h3></div>
+      <div class="gl-border"></div>
+    </div>
+  </div> -->
+
+  <!-- ⑬⑭⑮⑯ baris-5 -->
+  <!-- <div class="gl-item">
+    <div class="gl-card">
+      <div class="gl-img-wrap"><img src="gambar/footer/2.jpg" alt="Kegiatan Gereja" loading="lazy"></div>
+      <div class="gl-overlay"></div>
+      <span class="gl-zoom-ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <div class="gl-caption"><h3>Kegiatan Gereja</h3></div>
+      <div class="gl-border"></div>
+    </div>
+  </div>
+
+  <div class="gl-item">
+    <div class="gl-card">
+      <div class="gl-img-wrap"><img src="gambar/footer/3.jpg" alt="Bakti Sosial 2" loading="lazy"></div>
+      <div class="gl-overlay"></div>
+      <span class="gl-zoom-ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <div class="gl-caption"><h3>Bakti Sosial</h3></div>
+      <div class="gl-border"></div>
+    </div>
+  </div>
+
+  <div class="gl-item">
+    <div class="gl-card">
+      <div class="gl-img-wrap"><img src="gambar/footer/5.jpg" alt="Dokumentasi" loading="lazy"></div>
+      <div class="gl-overlay"></div>
+      <span class="gl-zoom-ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <div class="gl-caption"><h3>Dokumentasi</h3></div>
+      <div class="gl-border"></div>
+    </div>
+  </div>
+
+  <div class="gl-item">
+    <div class="gl-card">
+      <div class="gl-img-wrap"><img src="gambar/footer/7.jpg" alt="Persekutuan" loading="lazy"></div>
+      <div class="gl-overlay"></div>
+      <span class="gl-zoom-ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <div class="gl-caption"><h3>Persekutuan</h3></div>
+      <div class="gl-border"></div>
+    </div>
+  </div> -->
+
+</div><!-- /gl-grid -->
+
+
+<!-- ═══ LIGHTBOX ══════════════════════════════════════════ -->
+<div class="gl-lb" id="glLb">
+  <button class="gl-lb-close" id="glClose">
+    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+  <button class="gl-lb-nav gl-lb-prev" id="glPrev">
+    <svg viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6"/></svg>
+  </button>
+  <div class="gl-lb-inner">
+    <img class="gl-lb-img" id="glLbImg" src="" alt="">
+  </div>
+  <button class="gl-lb-nav gl-lb-next" id="glNext">
+    <svg viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
+  </button>
+  <div class="gl-lb-counter" id="glLbCtr"></div>
+</div>
+
+
+<!-- ═══ JS ════════════════════════════════════════════════ -->
+<script>
+(function(){
+  const items = Array.from(document.querySelectorAll('#glGrid .gl-item'));
+  let cur = 0;
+
+  items.forEach((el, i) => { el.style.animationDelay = (i * 0.06) + 's'; });
+
+  const lb    = document.getElementById('glLb');
+  const lbImg = document.getElementById('glLbImg');
+  const lbCtr = document.getElementById('glLbCtr');
+
+  function show(i) {
+    const img = items[i].querySelector('img');
+    lbImg.style.opacity = '0'; lbImg.style.transform = 'scale(.94)';
+    setTimeout(() => {
+      lbImg.src = img ? img.src : '';
+      lbImg.alt = img ? img.alt : '';
+      lbCtr.textContent = (i + 1) + ' / ' + items.length;
+      lbImg.style.transition = 'opacity .25s ease, transform .25s ease';
+      lbImg.style.opacity = '1'; lbImg.style.transform = 'scale(1)';
+    }, 110);
+  }
+
+  function open(i)  { cur = i; show(cur); lb.classList.add('open'); document.body.style.overflow = 'hidden'; }
+  function close()  { lb.classList.remove('open'); document.body.style.overflow = ''; }
+  function nav(d)   { cur = (cur + d + items.length) % items.length; show(cur); }
+
+  items.forEach((el, i) => el.querySelector('.gl-card').addEventListener('click', () => open(i)));
+  document.getElementById('glClose').addEventListener('click', close);
+  document.getElementById('glPrev' ).addEventListener('click', () => nav(-1));
+  document.getElementById('glNext' ).addEventListener('click', () => nav(1));
+  lb.addEventListener('click', e => { if (e.target === lb) close(); });
+  document.addEventListener('keydown', e => {
+    if (!lb.classList.contains('open')) return;
+    if (e.key === 'ArrowRight') nav(1);
+    if (e.key === 'ArrowLeft')  nav(-1);
+    if (e.key === 'Escape')     close();
+  });
+  let tx = 0;
+  lb.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, {passive:true});
+  lb.addEventListener('touchend',   e => { const d = e.changedTouches[0].clientX - tx; if (Math.abs(d) > 48) nav(d < 0 ? 1 : -1); });
+})();
+</script>
+</div>
+</div>
+</div>
+</div>
+
+
+<div class="church-main-section church-testimonialfull">
+<div class="container">
+<div class="row">
+<div class="col-md-12">
+<div class="church-fancy-title">
+<h2>Kategorial</h2>
+<span>GBKP Bambu Raya</span>
+</div>
+<div class="clearfix"></div>
+<div class="church-testimonial">
+<div class="church-testimonial-list">
+<div class="church-testimonial-list-layer"><span><img src="gambar/index/25.jpg?beloved-god\extra-images\testimonial-img3.jpg" alt=""></span></div>
+<div class="church-testimonial-list-layer"><span><img src="gambar/index/26.jpg?beloved-god\extra-images\testimonial-img1.jpg" alt=""></span></div>
+<div class="church-testimonial-list-layer"><span><img src="gambar/index/27.jpg?beloved-god\extra-images\testimonial-img2.jpg" alt=""></span></div>
+<div class="church-testimonial-list-layer"><span><img src="gambar/index/28.jpg?beloved-god\extra-images\testimonial-img1.jpg" alt=""></span></div>
+</div>
+<div class="church-testimonial-thumb">
+<div class="church-testimonial-thumb-layer">
+<div class="church-testimonial-text">
+<p>MAMRE</p>
+<a href="">Mamre Gereja Batak Karo Kristen protestan(GBKP) adalah sebuah Lembaga kategorial kaum Bapak, sesuai dengan amanat sidang sinode GBKP XXXI tanggal 21 s.d 30 Nopember 1994</a>
+</div>
+</div>
+<div class="church-testimonial-thumb-layer">
+<div class="church-testimonial-text">
+<p>MORIA</p>
+<a href="">Moria adalah salah satu persekutuan kategorial kaum ibu di GBKP yang bertujuan untuk melaksanakan pembinaan, pelayanan bagi anggotanya serta memperjuangkan hak-hak perempuan di keluarga, gereja dan masyarakat.</a>
+</div>
+</div>
+<div class="church-testimonial-thumb-layer">
+<div class="church-testimonial-text">
+<p>PERMATA</p>
+<a href="">Persadan Man Anak Gerejanta (PERMATA GBKP) adalah persekutuan kategorial bagi Pemuda GBKP (Gereja Batak Karo Protestan)</a>
+</div>
+</div>
+<div class="church-testimonial-thumb-layer">
+<div class="church-testimonial-text">
+<p>KAKR</p>
+<a href="">Kebaktian Anak Kebaktian Remaja (KAKR) adalah salah satu wadah beribadah dan pengembangan iman para anak dan remaja GBKP</a>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+<div class="church-main-section church-cause-strip-full">
+<span class="church-transparent-layer"></span>
+<div class="container">
+<div class="row">
+
+<div class="col-md-12">
+<div class="church-cause-strip">
+<h2>Mari Mengambil Bagian</h2>
+<span>Dalam pembangunan rumah Tuhan</span>
+<div class="church-causestrip-section">
+<div class="skillst"><div class="progressbar1" data-width="40" data-target="40"></div></div>
+<span class="church-left-section">50</span>
+<span class="church-right-section">t04_51</span>
+</div>
+<div class="clearfix"></div>
+<a href="" class="church-btn">View</a>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+
+
+<div class="church-main-section church-blog-gridfull">
+<div class="container">
+<div class="row">
+<div class="col-md-12">
+<div class="church-fancy-title">
+<h2>Kegiatan Gereja</h2>
+<span>Ibadah Umum, Kebaktian Anak Kebaktian Remaja, PA</span>
+</div>
+<div class="church-blog church-bloggrid-slider">
+<div class="church-bloggrid-slider-layer">
+<figure><a href=""><img src="gambar/index/29.jpg?beloved-god\extra-images\blog-grid-slider-1.jpg" alt=""></a> <figcaption><span>t04_55</span> <small>t04_56</small></figcaption> </figure>
+<div class="church-bloggrid-slidetext">
+<h5><a href="">Kebaktian Umum</a></h5>
+<ul class="church-blog-option">
+<li>t04_58 <a href="">t04_59</a></li>
+<li><i class="fa fa-comments-o"></i> <a href="">t04_60</a></li>
+</ul>
+<p>Dilaksanakan setiap Minggu dengan 3 kali ibadah (pukul 07:00, 10:00 & 18:00 WIB)</p>
+<a href="" class="church-blog-readmore church-bgcolor">View</a>
+</div>
+</div>
+<div class="church-bloggrid-slider-layer">
+<figure><a href=""><img src="gambar/index/30.jpg?beloved-god\extra-images\blog-grid-slider-2.jpg" alt=""></a> <figcaption><span>t04_63</span> <small>t04_64</small></figcaption> </figure>
+<div class="church-bloggrid-slidetext">
+<h5><a href="">Kebaktian Anak / Kebaktian Remaja</a></h5>
+<ul class="church-blog-option">
+<li>by <a href="">t04_66</a></li>
+<li><i class="fa fa-comments-o"></i> <a href="">t04_67</a></li>
+</ul>
+<p>Dilaksanakan setiap Minggu dengan pembagian Anak Kecil, Anak Tanggung dan Anak Remaja</p>
+<a href="" class="church-blog-readmore church-bgcolor">View</a>
+</div>
+</div>
+<div class="church-bloggrid-slider-layer">
+<figure><a href=""><img src="gambar/index/31.jpg?beloved-god\extra-images\blog-grid-slider-3.jpg" alt=""></a> <figcaption><span>17</span> <small>t04_70</small></figcaption> </figure>
+<div class="church-bloggrid-slidetext">
+<h5><a href="">PA Kategorial</a></h5>
+<ul class="church-blog-option">
+<li>t04_72 <a href="">t04_73</a></li>
+<li><i class="fa fa-comments-o"></i> <a href="">t04_74</a></li>
+</ul>
+<p>PA dilaksanakan sesuai dengan hari yang telah ditentukan, dengan pembagian PA Mamre, Moria, Permata, KAKR dan Saitun</p>
+<a href="" class="church-blog-readmore church-bgcolor">View</a>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+</div>
+
+
+
+
+<div class="clearfix"></div>
+</div>
+
+
+<div class="modal fade searchmodal" id="searchmodal" tabindex="-1" role="dialog">
+<div class="modal-dialog" role="document">
+<div class="modal-body">
+<a href="#" class="church-close-btn" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></a>
+<form>
+<input type="text" value="Type Your Keyword" onblur="if(this.value == '') { this.value ='Type Your Keyword'; }" onfocus="if(this.value =='Type Your Keyword') { this.value = ''; }">
+<input type="submit" value="">
+<i class="fa fa-search"></i>
+</form>
+</div>
+</div>
+</div>
+
+<script src="beloved-god\script\jquery.js"></script>
+<script src="beloved-god\script\bootstrap.min.js"></script>
+<script src="beloved-god\script\slick.slider.min.js"></script>
+<script src="beloved-god\script\fancybox.pack.js"></script>
+<script src="beloved-god\script\isotope.min.js"></script>
+<script src="beloved-god\script\progressbar.js"></script>
+<script src="beloved-god\script\jquery.countdown.min.js"></script>
+<script src="beloved-god\script\jplayer.functions.js"></script>
+<script src="beloved-god\script\jquery.countdown.one.js"></script>
+<script src="beloved-god\script\jquery.jplayer.js"></script>
+<script src="beloved-god\script\jplayer.playlist.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js"></script>
+<script src="beloved-god\script\functions.js"></script>
+</body>
+</html>
+  
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="icon" type="image/ico" href="fav-icon.png">
+<link href="beloved-god\css\bootstrap.css" rel="stylesheet">
+<link href="beloved-god\css\font-awesome.css" rel="stylesheet">
+<link href="beloved-god\css\flaticon.css" rel="stylesheet">
+<link href="beloved-god\css\slick-slider.css" rel="stylesheet">
+<link href="beloved-god\css\fancybox.css" rel="stylesheet">
+<link href="beloved-god\css\jplayer.css" rel="stylesheet">
+<link href="beloved-god\css\style.css" rel="stylesheet">
+<link href="beloved-god\css\color.css" rel="stylesheet">
+<link href="beloved-god\css\responsive.css" rel="stylesheet">
+
+
+<!--[if lt IE 9]>
+     <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+     <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+   <![endif]-->
+</head>
+  <footer id="church-footer" class="church-footer-one">
+<span class="church-footer-transparent"></span>
+
+<div class="church-footer-widget">
+<div class="container">
+<div class="row">
+
+<aside class="col-md-3 widget widget_service_time">
+<h2 class="church-footer-heading">Jadwal Ibadah</h2>
+<ul>
+<li><time datetime="2008-02-14 20:00"><span>Kebaktian Minggu 1:</span>07:00 WIB</time></li>
+<li><time datetime="2008-02-14 20:00"><span>Kebaktian Minggu 2:</span>10:00 WIB</time></li>
+<li><time datetime="2008-02-14 20:00"><span>Kebaktian Minggu 3:</span>18:00 WIB</time></li>
+<li><time datetime="2008-02-14 20:00"><span>Kebaktian Anak:</span>08:00 WIB</time></li>
+<li><time datetime="2008-02-14 20:00"><span>Kebaktian Remaja:</span>09:00 WIB</time></li>
+</ul>
+<div class="widget_service_note">
+<p><i class="icon church-exclamation"></i>Mari Beribadah tepat waktu, Puji dan muliakanlah Tuhan</p>
+<span></span>
+</div>
+</aside>
+
+
+<aside class="col-md-3 widget widget_latest_sermons">
+<h2 class="church-footer-heading">Kegiatan Gereja</h2>
+<ul>
+<li>
+<figure><a href=""><img src="gambar/footer/1.jpg?beloved-god\extra-images\widget-sermon-img1.jpg" alt=""></a></figure>
+<div class="widget-sermon-text">
+<h6><a href="">Paskah KAKR</a></h6>
+<span>Ibadah Paskah ...</span>
+</div>
+</li>
+<li>
+<figure><a href=""><img src="gambar/footer/2.jpg?beloved-god\extra-images\widget-sermon-img2.jpg" alt=""></a></figure>
+<div class="widget-sermon-text">
+<h6><a href="">Gotong Royong</a></h6>
+<span>Pelaksanaan bersih-bersih...</span>
+</div>
+</li>
+<li>
+<figure><a href=""><img src="gambar/footer/3.jpg?beloved-god\extra-images\widget-sermon-img3.jpg" alt=""></a></figure>
+<div class="widget-sermon-text">
+<h6><a href="">Bakti Sosial</a></h6>
+<span>Bakti sosial dilakukan ...</span>
+</div>
+</li>
+</ul>
+</aside>
+<aside class="col-md-3 widget widget_latest_sermons">
+<h2 class="church-footer-heading">Kegiatan Gereja</h2>
+<ul>
+<li>
+<figure><a href=""><img src="gambar/footer/1.jpg?beloved-god\extra-images\widget-sermon-img1.jpg" alt=""></a></figure>
+<div class="widget-sermon-text">
+<h6><a href="">Paskah KAKR</a></h6>
+<span>Ibadah Paskah ...</span>
+</div>
+</li>
+<li>
+<figure><a href=""><img src="gambar/footer/2.jpg?beloved-god\extra-images\widget-sermon-img2.jpg" alt=""></a></figure>
+<div class="widget-sermon-text">
+<h6><a href="">Gotong Royong</a></h6>
+<span>Pelaksanaan bersih-bersih...</span>
+</div>
+</li>
+<li>
+<figure><a href=""><img src="gambar/footer/3.jpg?beloved-god\extra-images\widget-sermon-img3.jpg" alt=""></a></figure>
+<div class="widget-sermon-text">
+<h6><a href="">Bakti Sosial</a></h6>
+<span>Bakti sosial dilakukan ...</span>
+</div>
+</li>
+</ul>
+</aside>
+
+<aside class="col-md-3 widget widget_contact">
+<h2 class="church-footer-heading">Ingin Melayani</h2>
+<p>Mari bersama melayani Tuhan</p>
+<form>
+<ul>
+<li><input value="Your Name" onblur="if(this.value == '') { this.value ='Your Name'; }" onfocus="if(this.value =='Your Name') { this.value = ''; }" tabindex="0" type="text"></li>
+<li><input value="Your Email" onblur="if(this.value == '') { this.value ='Your Email'; }" onfocus="if(this.value =='Your Email') { this.value = ''; }" tabindex="0" type="email"></li>
+<li><textarea placeholder="Your Message"></textarea></li>
+<li><input type="submit" value="kirim"></li>
+</ul>
+</form>
+</aside>
+
+
+
+
+</div>
+</div>
+</div>
+
+
+<div class="container">
+<div class="row">
+<div class="col-md-12">
+<div class="church-copyright">
+<p><span>Copyright 2022.</span> All Rights Reserved <a href="">bamburaya</a>.</p>
+</div>
+</div>
+</div>
+</div>
+
+</footer>
+  
+
+
+
+
+
+
+  
+
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+  <!-- <script src="https://code.jquery.com/jquery-3.5.1.js"></script> -->
+  <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
+  
+<script>
+$(document).ready(function(){
+  $("#church-countdown").remove();
+  $(".church-causestrip-section").remove();
+  $(".church-blog-option").remove();
+  $(".hapus").remove();
+  $("figcaption").remove();
+  // $("header").remove();
+  // $("footer").remove();
+  // $("#church-countdown").remove();
+  // $("img").attr('src','https://lipsi.my.id/link/gambar/10.png');
+  // $("a > img").attr('src','https://lipsi.my.id/link/gambar/10.png');
+  // $(".update").load("gbkp.php");
+});
+</script>
+
+<script>
+$(document).ready(function() {
+
+// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+    $('.myTable1').DataTable( {
+// mengaktifkan scroll vertical horizontal
+        "scrollY": 200,
+        // "scrollX": true,   
+
+// mengurutkan berdasarkan kolom yg ditentukan
+        "order": [[ 0, "asc" ]],
+
+// menyembunyikan kolom 2 dan 3
+        "columnDefs": [
+            {
+                "targets": [0,1,3, 4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21],
+                "visible": false,
+            }
+        ]   
+    } );
+
+// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+
+    $('.myTablexxx').DataTable( {
+// mengaktifkan scroll vertical horizontal
+        "scrollY": 200,
+        // "scrollX": true,   
+
+// mengurutkan berdasarkan kolom yg ditentukan
+        "order": [[ 0, "asc" ]],
+
+// menyembunyikan kolom 2 dan 3
+        "columnDefs": [
+            {
+                "targets": [ 4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21 ],
+                "visible": false,
+            }
+        ]   
+    } );
+} );
+</script></body>
+</html>

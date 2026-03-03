@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Data Warta Jemaat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #faf7f2;
+    --warm: #f5efe4;
+    --gold: #c9973a;
+    --gold-light: #e8c06d;
+    --brown: #5c3d1e;
+    --brown-dark: #3a2510;
+    --text: #2c1f0e;
+    --muted: #8a7260;
+    --border: #e0d4c0;
+    --white: #ffffff;
+    --success: #276749;
+    --success-bg: #f0fff4;
+    --danger: #9b2335;
+    --danger-bg: #fff5f5;
+    --warn: #7b4f12;
+    --warn-bg: #fffbeb;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--cream);
+    color: var(--text);
+    font-family: 'Lato', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+  }
+
+  /* ── Login ── */
+  .login-wrap {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--brown-dark);
+    padding: 20px;
+    background-image:
+      radial-gradient(ellipse at 30% 40%, rgba(201,151,58,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse at 70% 70%, rgba(201,151,58,0.08) 0%, transparent 60%);
+  }
+  .login-box {
+    background: var(--cream);
+    border-radius: 8px;
+    padding: 48px 40px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    text-align: center;
+    animation: fadeUp 0.5s ease both;
+  }
+  .login-cross { font-size: 2.5rem; color: var(--gold); margin-bottom: 12px; display: block; }
+  .login-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    color: var(--brown-dark);
+    margin-bottom: 4px;
+  }
+  .login-sub { font-size: 0.75rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 30px; }
+  .form-field { margin-bottom: 16px; text-align: left; }
+  .form-field label { display: block; font-size: 0.72rem; font-weight: 700; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+  .form-field input {
+    width: 100%;
+    padding: 11px 14px;
+    background: var(--warm);
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    font-family: 'Lato', sans-serif;
+    font-size: 0.9rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-field input:focus { border-color: var(--gold); }
+  .login-err { font-size: 0.8rem; color: var(--danger); margin-bottom: 12px; display: none; padding: 8px 12px; background: var(--danger-bg); border-radius: 4px; }
+
+  /* ── Main layout ── */
+  #mainApp { display: none; }
+  .top-bar { height: 5px; background: linear-gradient(90deg, var(--brown-dark), var(--gold), var(--gold-light), var(--gold), var(--brown-dark)); }
+  .app-header {
+    background: var(--brown-dark);
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .app-header-left { display: flex; align-items: center; gap: 14px; }
+  .app-logo { font-size: 1.4rem; }
+  .app-title { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--cream); }
+  .app-sub { font-size: 0.7rem; color: var(--gold); letter-spacing: 0.1em; }
+  .header-user { font-size: 0.78rem; color: var(--gold); }
+
+  /* ── Content ── */
+  .container { max-width: 960px; margin: 0 auto; padding: 30px 20px 80px; }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed;
+    bottom: 30px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--brown-dark);
+    color: var(--cream);
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 999;
+    border-left: 4px solid var(--gold);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #toast.success { border-left-color: #48bb78; }
+  #toast.error   { border-left-color: #fc8181; }
+
+  /* ── Form card ── */
+  .form-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 28px;
+    margin-bottom: 28px;
+    border-top: 3px solid var(--gold);
+    transition: border-color 0.2s;
+  }
+  .form-card.edit-mode { border-top-color: var(--warn); }
+  .form-card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    color: var(--brown);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-grid-full { grid-column: 1 / -1; }
+  .field label { display: block; font-size: 0.72rem; font-weight: 700; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+  .field input, .field textarea {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--warm);
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    font-family: 'Lato', sans-serif;
+    font-size: 0.88rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .field input:focus, .field textarea:focus { border-color: var(--gold); background: #fff; }
+  .field-hint { font-size: 0.68rem; color: var(--muted); margin-top: 4px; }
+
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+
+  /* ── Buttons ── */
+  .btn {
+    padding: 10px 22px;
+    border-radius: 3px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Lato', sans-serif;
+  }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-save   { background: var(--brown); color: var(--cream); box-shadow: 0 2px 8px rgba(58,37,16,0.2); }
+  .btn-save:hover:not(:disabled)   { background: var(--brown-dark); }
+  .btn-update { background: var(--warn-bg); color: var(--warn); border: 1.5px solid #d97706; }
+  .btn-update:hover:not(:disabled) { background: #fef3c7; }
+  .btn-cancel { background: var(--warm); color: var(--muted); border: 1px solid var(--border); }
+  .btn-cancel:hover { background: var(--border); }
+  .btn-edit   { background: var(--warn-bg); color: var(--warn); border: 1px solid #d97706; padding: 5px 12px; font-size: 0.7rem; }
+  .btn-del    { background: var(--danger-bg); color: var(--danger); border: 1px solid #fca5a5; padding: 5px 12px; font-size: 0.7rem; }
+  .btn-del:hover { background: #fee2e2; }
+  .btn-view   { background: #ebf8ff; color: #2b6cb0; border: 1px solid #90cdf4; padding: 5px 12px; font-size: 0.7rem; }
+  .btn-logout { background: transparent; color: var(--gold); border: 1px solid var(--gold); padding: 6px 14px; font-size: 0.7rem; }
+  .btn-logout:hover { background: rgba(201,151,58,0.1); }
+
+  /* ── Table ── */
+  .table-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .table-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .table-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    color: var(--brown);
+  }
+  .search-box {
+    padding: 8px 14px;
+    background: var(--warm);
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    font-size: 0.82rem;
+    color: var(--text);
+    outline: none;
+    width: 200px;
+    transition: border-color 0.2s;
+  }
+  .search-box:focus { border-color: var(--gold); }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  thead { background: var(--warm); }
+  th {
+    padding: 12px 14px;
+    text-align: left;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  td {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fdfaf6; }
+  .td-id { font-size: 0.75rem; color: var(--muted); font-weight: 700; }
+  .td-date { font-family: 'Playfair Display', serif; color: var(--brown); }
+  .td-file { font-family: monospace; font-size: 0.75rem; color: var(--muted); }
+  .td-actions { white-space: nowrap; display: flex; gap: 6px; }
+  .empty-row { text-align: center; padding: 48px 20px; color: var(--muted); font-size: 0.85rem; }
+
+  /* ── Loading row ── */
+  .loading-row { text-align: center; padding: 40px; color: var(--muted); }
+  .spin { display: inline-block; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 600px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .form-grid-full { grid-column: 1; }
+    .search-box { width: 140px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════ LOGIN ═══════ -->
+<div class="login-wrap" id="loginSection">
+  <div class="login-box">
+    <span class="login-cross">✝</span>
+    <h2 class="login-title">Admin Panel</h2>
+    <p class="login-sub">Warta Jemaat · GBKP</p>
+    <div class="login-err" id="loginErr">Username atau password salah.</div>
+    <div class="form-field">
+      <label>Username</label>
+      <input type="text" id="loginUser" placeholder="admin" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="form-field">
+      <label>Password</label>
+      <input type="password" id="loginPass" placeholder="••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn btn-save" style="width:100%;justify-content:center;padding:13px;" onclick="doLogin()">
+      Masuk
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ MAIN ════════ -->
+<div id="mainApp">
+  <div class="top-bar"></div>
+  <div class="app-header">
+    <div class="app-header-left">
+      <span class="app-logo">✝</span>
+      <div>
+        <div class="app-title">Data Warta Jemaat</div>
+        <div class="app-sub">Admin Panel · GBKP</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span class="header-user">👤 <span id="headerUser"></span></span>
+      <button class="btn btn-logout" onclick="doLogout()">Keluar</button>
+      <a href="warta.html" target="_blank" class="btn btn-view" style="text-decoration:none;">Lihat Warta →</a>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- ── FORM CRUD ── -->
+    <div class="form-card" id="formCard">
+      <div class="form-card-title">
+        <span id="formIcon">➕</span>
+        <span id="formTitle">Tambah Warta Baru</span>
+      </div>
+      <input type="hidden" id="f_id_x" value="">
+      <div class="form-grid">
+        <div class="field">
+          <label>Tanggal Minggu (x_01)</label>
+          <input type="text" id="f_x01" placeholder="cth: 2024-01-07">
+          <div class="field-hint">Format: YYYY-MM-DD</div>
+        </div>
+        <div class="field">
+          <label>File PDF (x_03)</label>
+          <input type="text" id="f_x03" placeholder="cth: warta20240107.pdf">
+          <div class="field-hint">Nama file PDF untuk download</div>
+        </div>
+        <div class="field form-grid-full">
+          <label>Nama File Gambar (x_02)</label>
+          <input type="text" id="f_x02" placeholder="cth: foto1.jpg|foto2.jpg|foto3.jpg">
+          <div class="field-hint">Pisahkan nama file gambar dengan tanda | (pipe)</div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-save" id="btnSimpan" onclick="saveData()">💾 Simpan</button>
+        <button class="btn btn-update" id="btnUpdate" style="display:none;" onclick="updateData()">✏️ Update</button>
+        <button class="btn btn-cancel" id="btnBatal" style="display:none;" onclick="resetForm()">✕ Batal</button>
+      </div>
+    </div>
+
+    <!-- ── TABLE ── -->
+    <div class="table-card">
+      <div class="table-header">
+        <div class="table-title">Daftar Warta &nbsp;<span style="font-size:0.75rem;font-family:'Lato';color:var(--muted);" id="rowCount"></span></div>
+        <input type="text" class="search-box" placeholder="🔍 Cari tanggal..." id="searchInput" oninput="filterTable()">
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>ID</th>
+              <th>Tanggal (x_01)</th>
+              <th>Gambar (x_02)</th>
+              <th>PDF (x_03)</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="6" class="loading-row"><span class="spin">⏳</span> Memuat data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div id="toast"></div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+const API_BASE   = 'https://lidan-co-id.pages.dev/api/db_gbkp1';
+const API_KEY    = 'admin';
+const TABLE      = 'warta';
+const UI_USER    = 'admin';
+const UI_PASS    = 'admin';
+const STORE_KEY  = 'warta_admin_login';
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function authHeaders(extra = {}) {
+  return { 'X-Custom-Auth': API_KEY, ...extra };
+}
+
+function showToast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className   = `show ${type}`;
+  setTimeout(() => el.className = '', 2800);
+}
+
+// ─── AUTH ────────────────────────────────────────────────────────────────────
+function doLogin() {
+  const u = document.getElementById('loginUser').value;
+  const p = document.getElementById('loginPass').value;
+  if (u === UI_USER && p === UI_PASS) {
+    sessionStorage.setItem(STORE_KEY, u);
+    startApp(u);
+  } else {
+    document.getElementById('loginErr').style.display = 'block';
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem(STORE_KEY);
+  location.reload();
+}
+
+function startApp(user) {
+  document.getElementById('loginSection').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+  document.getElementById('headerUser').textContent = user;
+  loadTable();
+}
+
+// ─── DATA STATE ──────────────────────────────────────────────────────────────
+let allRows = [];
+
+// ─── LOAD TABLE ──────────────────────────────────────────────────────────────
+async function loadTable() {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '<tr><td colspan="6" class="loading-row"><span class="spin">⏳</span> Memuat data...</td></tr>';
+  try {
+    const res = await fetch(`${API_BASE}?table=${TABLE}`, { headers: authHeaders() });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const result = await res.json();
+    allRows = result.data || [];
+    renderTable(allRows);
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-row" style="color:var(--danger);">Gagal memuat: ${e.message}</td></tr>`;
+  }
+}
+
+function renderTable(rows) {
+  const tbody = document.getElementById('tableBody');
+  document.getElementById('rowCount').textContent = `(${rows.length} data)`;
+
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-row">Belum ada data warta.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = '';
+  rows.forEach((row, i) => {
+    const tr = document.createElement('tr');
+    const imgPreview = row.x_02 ? row.x_02.split('|').length + ' gambar' : '—';
+    tr.innerHTML = `
+      <td class="td-id">${i+1}</td>
+      <td class="td-id">#${row.id_x}</td>
+      <td class="td-date">${row.x_01 || '—'}</td>
+      <td class="td-file" title="${row.x_02||''}">${imgPreview}</td>
+      <td class="td-file" title="${row.x_03||''}">${row.x_03 ? shortName(row.x_03,20) : '—'}</td>
+      <td><div class="td-actions">
+        <button class="btn btn-edit" onclick="editRow(${row.id_x})">✏ Edit</button>
+        <button class="btn btn-del"  onclick="deleteRow(${row.id_x})">🗑 Hapus</button>
+        <button class="btn btn-view" onclick="viewWarta(${row.id_x})">👁 View</button>
+      </div></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function shortName(str, max) {
+  return str.length > max ? str.slice(0, max) + '…' : str;
+}
+
+function filterTable() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const filtered = allRows.filter(r =>
+    (r.x_01 || '').toLowerCase().includes(q) ||
+    (r.x_02 || '').toLowerCase().includes(q) ||
+    (r.x_03 || '').toLowerCase().includes(q)
+  );
+  renderTable(filtered);
+}
+
+// ─── SAVE (POST) ──────────────────────────────────────────────────────────────
+async function saveData() {
+  const payload = buildPayload();
+  if (!payload.x_01) { showToast('Tanggal wajib diisi!', 'error'); return; }
+
+  const btn = document.getElementById('btnSimpan');
+  btn.disabled = true; btn.textContent = '⏳ Menyimpan...';
+
+  try {
+    const res = await fetch(`${API_BASE}?table=${TABLE}`, {
+      method: 'POST',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    showToast('✓ Data berhasil ditambahkan!', 'success');
+    resetForm();
+    loadTable();
+  } catch (e) {
+    showToast(`Gagal: ${e.message}`, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '💾 Simpan';
+  }
+}
+
+// ─── UPDATE (PUT) ─────────────────────────────────────────────────────────────
+async function updateData() {
+  const id = document.getElementById('f_id_x').value;
+  const payload = buildPayload();
+  if (!payload.x_01) { showToast('Tanggal wajib diisi!', 'error'); return; }
+
+  const btn = document.getElementById('btnUpdate');
+  btn.disabled = true; btn.textContent = '⏳ Updating...';
+
+  try {
+    const res = await fetch(`${API_BASE}?table=${TABLE}&id_x=${id}`, {
+      method: 'PUT',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    showToast('✓ Data berhasil diperbarui!', 'success');
+    resetForm();
+    loadTable();
+  } catch (e) {
+    showToast(`Gagal: ${e.message}`, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '✏️ Update';
+  }
+}
+
+// ─── DELETE ───────────────────────────────────────────────────────────────────
+async function deleteRow(id) {
+  if (!confirm('Yakin hapus data warta ini? Tindakan ini tidak bisa dibatalkan.')) return;
+  try {
+    const res = await fetch(`${API_BASE}?table=${TABLE}&id_x=${id}`, {
+      method: 'DELETE',
+      headers: authHeaders()
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    showToast('🗑 Data berhasil dihapus.', 'success');
+    loadTable();
+  } catch (e) {
+    showToast(`Gagal hapus: ${e.message}`, 'error');
+  }
+}
+
+// ─── EDIT ────────────────────────────────────────────────────────────────────
+function editRow(id) {
+  const row = allRows.find(r => r.id_x == id);
+  if (!row) return;
+
+  document.getElementById('f_id_x').value = id;
+  document.getElementById('f_x01').value  = row.x_01 || '';
+  document.getElementById('f_x02').value  = row.x_02 || '';
+  document.getElementById('f_x03').value  = row.x_03 || '';
+
+  document.getElementById('formIcon').textContent  = '✏️';
+  document.getElementById('formTitle').textContent = `Edit Warta — ID #${id}`;
+  document.getElementById('formCard').classList.add('edit-mode');
+  document.getElementById('btnSimpan').style.display  = 'none';
+  document.getElementById('btnUpdate').style.display  = '';
+  document.getElementById('btnBatal').style.display   = '';
+
+  document.getElementById('formCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function resetForm() {
+  document.getElementById('f_id_x').value = '';
+  document.getElementById('f_x01').value  = '';
+  document.getElementById('f_x02').value  = '';
+  document.getElementById('f_x03').value  = '';
+
+  document.getElementById('formIcon').textContent  = '➕';
+  document.getElementById('formTitle').textContent = 'Tambah Warta Baru';
+  document.getElementById('formCard').classList.remove('edit-mode');
+  document.getElementById('btnSimpan').style.display  = '';
+  document.getElementById('btnUpdate').style.display  = 'none';
+  document.getElementById('btnBatal').style.display   = 'none';
+}
+
+// ─── VIEW ────────────────────────────────────────────────────────────────────
+function viewWarta(id) {
+  window.open(`warta.html?id_x=${id}`, '_blank');
+}
+
+// ─── BUILD PAYLOAD ────────────────────────────────────────────────────────────
+function buildPayload() {
+  return {
+    x_01: document.getElementById('f_x01').value.trim(),
+    x_02: document.getElementById('f_x02').value.trim(),
+    x_03: document.getElementById('f_x03').value.trim(),
+  };
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+const savedUser = sessionStorage.getItem(STORE_KEY);
+if (savedUser) {
+  startApp(savedUser);
+}
+</script>
+</body>
+</html>

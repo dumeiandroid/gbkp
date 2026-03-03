@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Warta Jemaat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #faf7f2;
+    --warm: #f5efe4;
+    --gold: #c9973a;
+    --gold-light: #e8c06d;
+    --brown: #5c3d1e;
+    --brown-dark: #3a2510;
+    --text: #2c1f0e;
+    --muted: #8a7260;
+    --border: #e0d4c0;
+    --white: #ffffff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--cream);
+    color: var(--text);
+    font-family: 'Lato', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+  }
+
+  /* ── Top ornament ── */
+  .top-bar {
+    height: 5px;
+    background: linear-gradient(90deg, var(--brown-dark), var(--gold), var(--gold-light), var(--gold), var(--brown-dark));
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--brown-dark);
+    padding: 40px 20px 32px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(201,151,58,0.15) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 50%, rgba(201,151,58,0.15) 0%, transparent 60%);
+  }
+  .cross-ornament {
+    color: var(--gold);
+    font-size: 1.6rem;
+    letter-spacing: 0.3em;
+    display: block;
+    margin-bottom: 10px;
+    opacity: 0.7;
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.8rem, 5vw, 3rem);
+    color: var(--cream);
+    letter-spacing: 0.05em;
+    line-height: 1.2;
+    position: relative;
+  }
+  header h1 em {
+    color: var(--gold-light);
+    font-style: normal;
+  }
+  .church-name {
+    font-size: 0.8rem;
+    color: var(--gold);
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin-top: 8px;
+    position: relative;
+  }
+
+  /* ── Nav ── */
+  nav {
+    background: var(--warm);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  nav a {
+    padding: 14px 20px;
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--muted);
+    text-decoration: none;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  nav a:hover, nav a.active {
+    color: var(--brown);
+    border-bottom-color: var(--gold);
+  }
+
+  /* ── Main layout ── */
+  .container {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+
+  /* ── Date header ── */
+  .date-section {
+    text-align: center;
+    margin-bottom: 32px;
+    animation: fadeIn 0.6s ease both;
+  }
+  .date-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .date-value {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.4rem, 4vw, 2rem);
+    color: var(--brown);
+  }
+  .date-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 16px auto;
+    max-width: 300px;
+  }
+  .date-divider::before, .date-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--gold));
+  }
+  .date-divider::after {
+    background: linear-gradient(to left, transparent, var(--gold));
+  }
+  .date-divider span { color: var(--gold); font-size: 1rem; }
+
+  /* ── Action buttons ── */
+  .action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 36px;
+  }
+  .btn {
+    padding: 10px 24px;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-primary {
+    background: var(--brown);
+    color: var(--cream);
+    box-shadow: 0 2px 8px rgba(58,37,16,0.3);
+  }
+  .btn-primary:hover { background: var(--brown-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(58,37,16,0.4); }
+  .btn-outline {
+    background: transparent;
+    color: var(--brown);
+    border: 1.5px solid var(--gold);
+  }
+  .btn-outline:hover { background: var(--warm); }
+
+  /* ── Warta images ── */
+  .warta-images {
+    animation: fadeIn 0.5s ease both 0.2s;
+  }
+  .warta-images img {
+    display: block;
+    width: 100%;
+    max-width: 680px;
+    margin: 0 auto 16px;
+    border-radius: 4px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    border: 1px solid var(--border);
+  }
+
+  /* ── Arsip section ── */
+  #arsipSection { display: none; }
+  .arsip-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 14px;
+    margin-top: 20px;
+  }
+  .arsip-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    color: inherit;
+  }
+  .arsip-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); border-color: var(--gold); }
+  .arsip-thumb {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    background: var(--warm);
+    display: block;
+  }
+  .arsip-thumb-placeholder {
+    width: 100%;
+    height: 120px;
+    background: var(--warm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: var(--border);
+  }
+  .arsip-info {
+    padding: 10px 12px;
+  }
+  .arsip-date {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--brown);
+    font-family: 'Playfair Display', serif;
+  }
+  .arsip-sub { font-size: 0.68rem; color: var(--muted); margin-top: 2px; }
+
+  /* ── Section title ── */
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    color: var(--brown);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* ── Loading ── */
+  .loading {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+  .loading-cross {
+    font-size: 2rem;
+    animation: spinCross 2s linear infinite;
+    display: block;
+    margin-bottom: 16px;
+    color: var(--gold);
+  }
+  @keyframes spinCross {
+    0%   { transform: rotate(0deg);   opacity: 1; }
+    50%  { transform: rotate(180deg); opacity: 0.4; }
+    100% { transform: rotate(360deg); opacity: 1; }
+  }
+
+  /* ── Error ── */
+  .error-box {
+    background: #fff5f5;
+    border: 1px solid #ffd0d0;
+    border-left: 4px solid #e53e3e;
+    padding: 16px 20px;
+    border-radius: 4px;
+    color: #742a2a;
+    font-size: 0.85rem;
+    margin: 20px 0;
+  }
+
+  /* ── Footer ── */
+  footer {
+    background: var(--brown-dark);
+    color: var(--muted);
+    text-align: center;
+    padding: 20px;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    margin-top: 40px;
+  }
+  footer span { color: var(--gold); }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 480px) {
+    .arsip-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top-bar"></div>
+
+<header>
+  <span class="cross-ornament">✦ ✝ ✦</span>
+  <h1>Warta <em>Jemaat</em></h1>
+  <p class="church-name">Gereja Batak Karo Protestan</p>
+</header>
+
+<nav>
+  <a class="active" id="navWarta" onclick="showView('warta')">📖 Warta Minggu</a>
+  <a id="navArsip" onclick="showView('arsip')">🗂 Arsip Warta</a>
+</nav>
+
+<div class="container">
+
+  <!-- ── WARTA TERBARU ── -->
+  <div id="wartaSection">
+    <div class="loading" id="loadingWarta">
+      <span class="loading-cross">✝</span>
+      Mengambil warta terbaru...
+    </div>
+    <div id="wartaContent" style="display:none;">
+      <div class="date-section">
+        <div class="date-label">Warta Minggu</div>
+        <div class="date-value" id="wartaTanggal">—</div>
+        <div class="date-divider"><span>✦</span></div>
+      </div>
+      <div class="action-buttons">
+        <a id="btnDownload" href="#" target="_blank" class="btn btn-primary">
+          ⬇ Download PDF
+        </a>
+        <button class="btn btn-outline" onclick="showView('arsip')">
+          ◀ Minggu Sebelumnya
+        </button>
+      </div>
+      <div class="warta-images" id="wartaImages"></div>
+    </div>
+    <div class="error-box" id="wartaError" style="display:none;"></div>
+  </div>
+
+  <!-- ── ARSIP ── -->
+  <div id="arsipSection">
+    <div class="section-title">Arsip Warta Jemaat</div>
+    <div class="loading" id="loadingArsip" style="display:none;">
+      <span class="loading-cross">✝</span>
+      Memuat arsip...
+    </div>
+    <div class="arsip-grid" id="arsipGrid"></div>
+    <div class="error-box" id="arsipError" style="display:none;"></div>
+  </div>
+
+</div>
+
+<footer>
+  &copy; 2024 &nbsp;<span>GBKP</span> &nbsp;·&nbsp; Warta Jemaat Online
+</footer>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+const API_BASE  = 'https://lidan-co-id.pages.dev/api/db_gbkp1';
+const API_KEY   = 'admin';
+const TABLE     = 'warta';
+// Base URL untuk file gambar & PDF (sesuaikan dengan lokasi server kamu)
+const BASE_IMG  = 'gambar/warta/';
+const BASE_PDF  = 'warta/';
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function headers() {
+  return { 'X-Custom-Auth': API_KEY };
+}
+
+async function apiFetch(params) {
+  const url = `${API_BASE}?${new URLSearchParams(params)}`;
+  const res = await fetch(url, { headers: headers() });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+function formatTanggal(val) {
+  if (!val) return '—';
+  // Coba parse sebagai date
+  const d = new Date(val);
+  if (!isNaN(d)) {
+    return d.toLocaleDateString('id-ID', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  }
+  return val;
+}
+
+// ─── VIEWS ───────────────────────────────────────────────────────────────────
+let arsipLoaded = false;
+
+function showView(view) {
+  const isWarta = view === 'warta';
+  document.getElementById('wartaSection').style.display = isWarta ? '' : 'none';
+  document.getElementById('arsipSection').style.display = isWarta ? 'none' : '';
+  document.getElementById('navWarta').classList.toggle('active', isWarta);
+  document.getElementById('navArsip').classList.toggle('active', !isWarta);
+
+  if (!isWarta && !arsipLoaded) loadArsip();
+}
+
+// ─── LOAD WARTA TERBARU ───────────────────────────────────────────────────────
+async function loadWartaTerbaru(id_x = null) {
+  const loadEl  = document.getElementById('loadingWarta');
+  const contEl  = document.getElementById('wartaContent');
+  const errEl   = document.getElementById('wartaError');
+
+  loadEl.style.display = '';
+  contEl.style.display = 'none';
+  errEl.style.display  = 'none';
+
+  try {
+    const params = { table: TABLE };
+    if (id_x) params['id_x'] = id_x;
+
+    const result = await apiFetch(params);
+    const rows = result.data || [];
+
+    // Jika ada id_x → cari row itu, else ambil row pertama (terbaru karena desc)
+    const row = rows[0];
+    if (!row) throw new Error('Data warta tidak ditemukan.');
+
+    renderWarta(row);
+    loadEl.style.display = 'none';
+    contEl.style.display = '';
+  } catch (e) {
+    loadEl.style.display  = 'none';
+    errEl.style.display   = '';
+    errEl.textContent     = `Gagal memuat warta: ${e.message}`;
+  }
+}
+
+function renderWarta(row) {
+  document.getElementById('wartaTanggal').textContent = formatTanggal(row.x_01);
+
+  // PDF download
+  const pdfLink = document.getElementById('btnDownload');
+  if (row.x_03) {
+    pdfLink.href = BASE_PDF + row.x_03;
+  } else {
+    pdfLink.style.display = 'none';
+  }
+
+  // Images
+  const imgContainer = document.getElementById('wartaImages');
+  imgContainer.innerHTML = '';
+  if (row.x_02) {
+    const imgs = row.x_02.split('|').filter(s => s.trim());
+    imgs.forEach(src => {
+      const img = document.createElement('img');
+      img.src = BASE_IMG + src.trim();
+      img.alt = 'Warta Jemaat';
+      img.loading = 'lazy';
+      imgContainer.appendChild(img);
+    });
+  }
+}
+
+// ─── LOAD ARSIP ───────────────────────────────────────────────────────────────
+async function loadArsip() {
+  const loadEl = document.getElementById('loadingArsip');
+  const gridEl = document.getElementById('arsipGrid');
+  const errEl  = document.getElementById('arsipError');
+
+  loadEl.style.display = '';
+  errEl.style.display  = 'none';
+
+  try {
+    const result = await apiFetch({ table: TABLE });
+    const rows = result.data || [];
+    arsipLoaded = true;
+    loadEl.style.display = 'none';
+    renderArsip(rows);
+  } catch (e) {
+    loadEl.style.display  = 'none';
+    errEl.style.display   = '';
+    errEl.textContent     = `Gagal memuat arsip: ${e.message}`;
+  }
+}
+
+function renderArsip(rows) {
+  const grid = document.getElementById('arsipGrid');
+  grid.innerHTML = '';
+
+  if (!rows.length) {
+    grid.innerHTML = '<p style="color:var(--muted);font-size:0.85rem;">Belum ada arsip warta.</p>';
+    return;
+  }
+
+  rows.forEach(row => {
+    const card = document.createElement('div');
+    card.className = 'arsip-card';
+    card.onclick = () => {
+      loadWartaTerbaru(row.id_x);
+      showView('warta');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const firstImg = row.x_02 ? row.x_02.split('|')[0].trim() : '';
+    const thumbHtml = firstImg
+      ? `<img class="arsip-thumb" src="${BASE_IMG}${firstImg}" alt="Warta" loading="lazy">`
+      : `<div class="arsip-thumb-placeholder">✝</div>`;
+
+    card.innerHTML = `
+      ${thumbHtml}
+      <div class="arsip-info">
+        <div class="arsip-date">${formatTanggal(row.x_01)}</div>
+        <div class="arsip-sub">ID #${row.id_x}</div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+// Cek URL param ?id_x=
+const urlParams = new URLSearchParams(window.location.search);
+const initId = urlParams.get('id_x');
+
+// Check p=arsip
+if (urlParams.get('p') === 'arsip') {
+  showView('arsip');
+} else {
+  loadWartaTerbaru(initId || null);
+}
+</script>
+</body>
+</html>
