@@ -505,6 +505,7 @@
 </footer>
 
 <script>
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
 const API_BASE  = 'https://lidan-co-id.pages.dev/api/db_gbkp1';
 const API_KEY   = 'admin';
 const TABLE     = 'warta';
@@ -512,23 +513,28 @@ const BASE_IMG  = 'https://gbkp-my-id.pages.dev/gambar/warta/';
 const BASE_PDF  = 'https://gbkp-my-id.pages.dev/gambar/warta/';
 const PAGE_SIZE = 20;
 
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function headers() {
+  return { 'X-Custom-Auth': API_KEY };
+}
+
 async function apiFetch(params) {
-  const res = await fetch(`${API_BASE}?${new URLSearchParams(params)}`, {
-    headers: { 'X-Custom-Auth': API_KEY }
-  });
+  const url = `${API_BASE}?${new URLSearchParams(params)}`;
+  const res = await fetch(url, { headers: headers() });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
 
-// Tampilkan x_01 sebagai teks apa adanya, tanpa parsing tanggal
-function asText(val) {
-  return (val !== null && val !== undefined) ? String(val).trim() || '—' : '—';
+function formatTanggal(val) {
+  if (!val) return '—';
+  const d = new Date(val);
+  if (!isNaN(d)) {
+    return d.toLocaleDateString('id-ID', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  }
+  return val;
 }
 
-function sortByIdDesc(rows) {
-  return [...rows].sort((a, b) => Number(b.id_x || 0) - Number(a.id_x || 0));
-}
-
+// ─── VIEWS ───────────────────────────────────────────────────────────────────
 let arsipLoaded = false;
 
 function showView(view) {
@@ -537,72 +543,97 @@ function showView(view) {
   document.getElementById('arsipSection').style.display = isWarta ? 'none' : 'block';
   document.getElementById('navWarta').classList.toggle('active', isWarta);
   document.getElementById('navArsip').classList.toggle('active', !isWarta);
-  if (!isWarta) arsipLoaded ? showArsipTable() : loadArsip();
+
+
+  if (!isWarta) {
+    if (!arsipLoaded) {
+      loadArsip();
+    } else {
+      // Data sudah ada, render ulang sekarang section sudah visible
+      showArsipTable();
+    }
+  }
 }
 
+// ─── LOAD WARTA TERBARU ───────────────────────────────────────────────────────
 async function loadWartaTerbaru(id_x = null) {
-  const loadEl = document.getElementById('loadingWarta');
-  const contEl = document.getElementById('wartaContent');
-  const errEl  = document.getElementById('wartaError');
+  const loadEl  = document.getElementById('loadingWarta');
+  const contEl  = document.getElementById('wartaContent');
+  const errEl   = document.getElementById('wartaError');
+
   loadEl.style.display = '';
   contEl.style.display = 'none';
   errEl.style.display  = 'none';
+
   try {
     const params = { table: TABLE };
     if (id_x) params['id_x'] = id_x;
+
     const result = await apiFetch(params);
-    const row = Array.isArray(result.data)
-      ? sortByIdDesc(result.data)[0]
-      : result.data;
+    // API returns array when no id_x, single object when id_x specified
+    let row;
+    if (Array.isArray(result.data)) {
+      row = result.data[0];
+    } else if (result.data && typeof result.data === 'object') {
+      row = result.data;
+    }
     if (!row) throw new Error('Data warta tidak ditemukan.');
+
     renderWarta(row);
     loadEl.style.display = 'none';
     contEl.style.display = '';
   } catch (e) {
-    loadEl.style.display = 'none';
-    errEl.style.display  = '';
-    errEl.textContent    = `Gagal memuat warta: ${e.message}`;
+    loadEl.style.display  = 'none';
+    errEl.style.display   = '';
+    errEl.textContent     = `Gagal memuat warta: ${e.message}`;
   }
 }
 
 function renderWarta(row) {
-  document.getElementById('wartaTanggal').textContent = asText(row.x_01);
+  document.getElementById('wartaTanggal').textContent = formatTanggal(row.x_01);
+
   const pdfLink = document.getElementById('btnDownload');
   if (row.x_03) {
-    pdfLink.href = BASE_PDF + String(row.x_03).trim();
-    pdfLink.style.display = '';
+    pdfLink.href = BASE_PDF + row.x_03.trim();
   } else {
     pdfLink.style.display = 'none';
   }
+
   const imgContainer = document.getElementById('wartaImages');
   imgContainer.innerHTML = '';
   if (row.x_02) {
-    String(row.x_02).split('|').filter(s => s.trim()).forEach(src => {
+    const imgs = row.x_02.split('|').filter(s => s.trim());
+    imgs.forEach(src => {
       const img = document.createElement('img');
-      img.src     = BASE_IMG + src.trim();
-      img.alt     = 'Warta Jemaat';
+      img.src = BASE_IMG + src.trim();
+      img.alt = 'Warta Jemaat';
       img.loading = 'lazy';
       imgContainer.appendChild(img);
     });
   }
 }
 
-let arsipAllRows     = [];
-let arsipFiltered    = [];
+// ─── ARSIP STATE ─────────────────────────────────────────────────────────────
+let arsipAllRows    = [];
+let arsipFiltered   = [];
 let arsipCurrentPage = 1;
 
+// ─── LOAD ARSIP ───────────────────────────────────────────────────────────────
 async function loadArsip() {
-  const loadEl = document.getElementById('loadingArsip');
-  const wrapEl = document.getElementById('arsipTableWrap');
-  const errEl  = document.getElementById('arsipError');
+  const loadEl  = document.getElementById('loadingArsip');
+  const wrapEl  = document.getElementById('arsipTableWrap');
+  const errEl   = document.getElementById('arsipError');
+
+
   loadEl.style.display = '';
   wrapEl.style.display = 'none';
   errEl.style.display  = 'none';
+
   try {
     const result = await apiFetch({ table: TABLE });
-    arsipAllRows     = sortByIdDesc(result.data || []);
-    arsipFiltered    = [...arsipAllRows];
-    arsipLoaded      = true;
+    arsipAllRows  = result.data || [];
+    arsipFiltered = [...arsipAllRows];
+    arsipLoaded   = true;
     arsipCurrentPage = 1;
     loadEl.style.display = 'none';
     wrapEl.style.display = '';
@@ -615,68 +646,83 @@ async function loadArsip() {
 }
 
 function showArsipTable() {
-  document.getElementById('arsipTableWrap').style.display = '';
-  document.getElementById('loadingArsip').style.display   = 'none';
+  const wrapEl = document.getElementById('arsipTableWrap');
+  const loadEl = document.getElementById('loadingArsip');
+  wrapEl.style.display = '';
+  loadEl.style.display = 'none';
   renderArsipTable();
 }
 
 function filterArsip() {
   const q = document.getElementById('arsipSearch').value.toLowerCase();
-  arsipFiltered    = sortByIdDesc(arsipAllRows.filter(r => asText(r.x_01).toLowerCase().includes(q)));
+  arsipFiltered = arsipAllRows.filter(r =>
+    (r.x_01 || '').toLowerCase().includes(q) ||
+    formatTanggal(r.x_01).toLowerCase().includes(q)
+  );
   arsipCurrentPage = 1;
   renderArsipTable();
 }
 
 function renderArsipTable() {
-  const tbody      = document.getElementById('arsipTableBody');
-  const total      = arsipFiltered.length;
+  const tbody   = document.getElementById('arsipTableBody');
+  const total   = arsipFiltered.length;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   if (arsipCurrentPage > totalPages) arsipCurrentPage = totalPages;
 
-  const start    = (arsipCurrentPage - 1) * PAGE_SIZE;
-  const end      = Math.min(start + PAGE_SIZE, total);
+  const start = (arsipCurrentPage - 1) * PAGE_SIZE;
+  const end   = Math.min(start + PAGE_SIZE, total);
   const pageRows = arsipFiltered.slice(start, end);
 
+  // Count label
   document.getElementById('arsipCount').textContent = `(${total} data)`;
 
+  // Table body
   tbody.innerHTML = '';
   if (!pageRows.length) {
     tbody.innerHTML = '<tr><td colspan="3" class="empty-row">Belum ada data warta.</td></tr>';
   } else {
     pageRows.forEach((row, i) => {
       const tr = document.createElement('tr');
-      const td1 = document.createElement('td'); td1.className = 'td-no'; td1.textContent = start + i + 1;
-      const td2 = document.createElement('td'); td2.className = 'td-date'; td2.textContent = asText(row.x_01);
-      const td3 = document.createElement('td'); td3.className = 'td-actions'; td3.style.textAlign = 'center';
-      const btn = document.createElement('button'); btn.className = 'btn-view-sm';
-      btn.textContent = '👁 Lihat';
-      btn.onclick = () => openWarta(row.id_x);
-      td3.appendChild(btn);
-      tr.append(td1, td2, td3);
+      tr.innerHTML = `
+        <td class="td-no">${start + i + 1}</td>
+        <td class="td-date">${formatTanggal(row.x_01)}</td>
+        <td class="td-actions" style="text-align:center;">
+          <button class="btn-view-sm" onclick="openWarta(${row.id_x})">👁 Lihat</button>
+        </td>
+      `;
       tbody.appendChild(tr);
     });
   }
 
+  // Pagination
   const pagEl  = document.getElementById('arsipPagination');
   const infoEl = document.getElementById('arsipPagInfo');
   const btnsEl = document.getElementById('arsipPagBtns');
 
-  if (total === 0) { pagEl.style.display = 'none'; return; }
+  if (total === 0) {
+    pagEl.style.display = 'none';
+    return;
+  }
 
   pagEl.style.display = '';
   infoEl.textContent  = `Menampilkan ${start + 1}–${end} dari ${total} data`;
   btnsEl.innerHTML    = '';
 
+  // Prev
   const prev = document.createElement('button');
-  prev.className = 'page-btn'; prev.textContent = '‹';
+  prev.className = 'page-btn';
+  prev.textContent = '‹';
   prev.disabled = arsipCurrentPage === 1;
   prev.onclick = () => { arsipCurrentPage--; renderArsipTable(); };
   btnsEl.appendChild(prev);
 
-  getPageRange(arsipCurrentPage, totalPages).forEach(p => {
+  // Page numbers
+  const pages = getPageRange(arsipCurrentPage, totalPages);
+  pages.forEach(p => {
     if (p === '…') {
       const el = document.createElement('span');
-      el.className = 'page-ellipsis'; el.textContent = '…';
+      el.className = 'page-ellipsis';
+      el.textContent = '…';
       btnsEl.appendChild(el);
     } else {
       const btn = document.createElement('button');
@@ -687,8 +733,10 @@ function renderArsipTable() {
     }
   });
 
+  // Next
   const next = document.createElement('button');
-  next.className = 'page-btn'; next.textContent = '›';
+  next.className = 'page-btn';
+  next.textContent = '›';
   next.disabled = arsipCurrentPage === totalPages;
   next.onclick = () => { arsipCurrentPage++; renderArsipTable(); };
   btnsEl.appendChild(next);
@@ -707,8 +755,10 @@ function openWarta(id) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// ─── INIT ────────────────────────────────────────────────────────────────────
 const urlParams = new URLSearchParams(window.location.search);
-const initId    = urlParams.get('id_x');
+const initId = urlParams.get('id_x');
+
 if (urlParams.get('p') === 'arsip') {
   showView('arsip');
 } else {
