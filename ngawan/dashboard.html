@@ -495,7 +495,7 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 12px;
-    overflow: hidden;
+    overflow-x: auto;
   }
 
   .riwayat-header {
@@ -517,6 +517,7 @@
 
   .riwayat-table {
     width: 100%; border-collapse: collapse; font-size: 13px;
+    min-width: 560px;
   }
 
   .riwayat-table th {
@@ -617,6 +618,165 @@
   #toast.show { transform: translateX(-50%) translateY(0); }
   #toast.err  { background: var(--danger); }
 
+  /* Quiz Modal */
+  .quiz-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,.6);
+    z-index: 500;
+    display: none;
+    align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .quiz-overlay.open { display: flex; }
+
+  .quiz-modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    width: 100%; max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 22px;
+  }
+
+  .quiz-header { margin-bottom: 4px; }
+  .quiz-header h2 { font-size: 17px; font-weight: 800; }
+  .quiz-header p { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+  .quiz-progress {
+    font-size: 11px; color: var(--accent); font-weight: 700;
+    text-transform: uppercase; letter-spacing: .5px;
+    margin: 16px 0 8px;
+  }
+
+  .quiz-question {
+    font-size: 14px; font-weight: 600;
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+
+  .quiz-options { display: flex; flex-direction: column; gap: 8px; }
+
+  .quiz-option {
+    display: flex; align-items: flex-start; gap: 10px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 13px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .quiz-option:hover { border-color: var(--accent); }
+  .quiz-option.selected {
+    border-color: var(--accent);
+    background: rgba(37,99,235,.12);
+  }
+  .quiz-option .qo-letter {
+    flex-shrink: 0;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 800;
+    color: var(--muted);
+  }
+  .quiz-option.selected .qo-letter {
+    background: var(--accent); color: #fff;
+  }
+
+  /* result state colors */
+  .quiz-option.correct {
+    border-color: var(--success);
+    background: rgba(16,185,129,.12);
+  }
+  .quiz-option.correct .qo-letter { background: var(--success); color: #fff; }
+  .quiz-option.wrong {
+    border-color: var(--danger);
+    background: rgba(239,68,68,.12);
+  }
+  .quiz-option.wrong .qo-letter { background: var(--danger); color: #fff; }
+
+  .quiz-nav {
+    display: flex; justify-content: space-between; gap: 10px;
+    margin-top: 18px;
+  }
+
+  .quiz-btn {
+    flex: 1;
+    padding: 11px 16px;
+    border-radius: var(--radius);
+    border: none;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px; font-weight: 700;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .quiz-btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .quiz-btn-secondary:hover { background: var(--bg); }
+  .quiz-btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .quiz-btn-primary:hover { background: var(--accent2); }
+  .quiz-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  .quiz-dots {
+    display: flex; gap: 6px; justify-content: center;
+    margin-top: 16px;
+  }
+  .quiz-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--border);
+    transition: background .2s;
+  }
+  .quiz-dot.answered { background: var(--accent); }
+  .quiz-dot.active { background: var(--gold); }
+
+  .quiz-result {
+    text-align: center;
+    padding: 12px 0;
+  }
+  .quiz-result .qr-score {
+    font-size: 42px; font-weight: 800;
+    color: var(--accent);
+    margin: 10px 0 4px;
+  }
+  .quiz-result .qr-label {
+    font-size: 13px; color: var(--muted);
+  }
+
+  /* Quiz launcher button (in jadwal/riwayat) */
+  .quiz-launch-btn {
+    background: rgba(37,99,235,.12);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 11px; font-weight: 700;
+    cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    white-space: nowrap;
+  }
+  .quiz-launch-btn:hover { background: rgba(37,99,235,.2); }
+  .quiz-launch-btn:disabled {
+    opacity: .4; cursor: not-allowed;
+    border-color: var(--border); color: var(--muted); background: none;
+  }
+  .quiz-score-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 700;
+    color: var(--success);
+    background: rgba(16,185,129,.12);
+    border-radius: 6px;
+    padding: 4px 10px;
+  }
+
+
   /* Loading state */
   .loading-text {
     text-align: center; padding: 32px;
@@ -701,6 +861,11 @@
 
 <!-- ── TOAST ── -->
 <div id="toast"></div>
+
+<!-- ── QUIZ MODAL ── -->
+<div class="quiz-overlay" id="quizOverlay">
+  <div class="quiz-modal" id="quizModal"></div>
+</div>
 
 <!-- ── MAIN APP ── -->
 <div id="app">
@@ -896,6 +1061,15 @@ let pendingQrSesi = null;   // sesi no from URL ?sesi= param, processed after lo
 let html5QrCode   = null;   // QR scanner instance
 let qrScanning    = false;
 
+// Quiz state
+let quizSoal      = [];     // array of 5 questions
+let quizAnswers   = [];     // user's selected answers (a-e)
+let quizIndex     = 0;      // current question index
+let quizType      = null;   // 'pre' | 'post'
+let quizAbsenRow  = null;   // absensi_ngawan row being updated
+let quizSesiRow   = null;   // ngawan row (sesi) for the quiz
+let quizFinished  = false;
+
 // ─────────────────────────────────────────────
 // BOOT
 // ─────────────────────────────────────────────
@@ -949,7 +1123,11 @@ async function apiGet(table, params = {}) {
 }
 
 async function apiPost(table, action, body) {
-  const r = await fetch(`${API_URL}?table=${table}&action=${action}`, {
+  let url = `${API_URL}?table=${table}&action=${action}`;
+  if (action === 'update' && body && body.id_x) {
+    url += `&id_x=${encodeURIComponent(body.id_x)}`;
+  }
+  const r = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
     body: JSON.stringify(body)
@@ -1291,6 +1469,13 @@ async function doAbsen() {
       showToast('✅ Kehadiran sesi ' + selectedSesi.x_01 + ' tercatat!');
       document.getElementById('alreadyBadge').style.display = 'block';
       await loadMyAbsensi();
+
+      // Cari row absensi yang baru dibuat untuk sesi ini
+      const newRow = myAbsensi.find(r => r.x_03 == selectedSesi.x_01 && r.x_01 == currentUser.id_x)
+                     || { id_x: res.id_x, x_03: selectedSesi.x_01, x_01: currentUser.id_x };
+
+      // Buka Pre-Test jika sesi punya soal
+      openQuiz('pre', selectedSesi, newRow);
     } else {
       showToast('Gagal menyimpan: ' + (res.error || 'Error'), true);
     }
@@ -1302,8 +1487,170 @@ async function doAbsen() {
 }
 
 // ─────────────────────────────────────────────
-// RENDER RIWAYAT
+// QUIZ: PRE-TEST / POST-TEST
 // ─────────────────────────────────────────────
+// Mapping di absensi_ngawan:
+//   x_08 = jawaban pretest (JSON array ["a","c",...])
+//   x_09 = skor pretest (mis. "3/5")
+//   x_10 = jawaban posttest (JSON)
+//   x_11 = skor posttest (mis. "4/5")
+
+function openQuiz(type, sesiRow, absenRow) {
+  let soal = [];
+  try { soal = JSON.parse(sesiRow.x_05 || '[]'); } catch (e) { soal = []; }
+
+  // Lewati jika soal belum diisi (masih template kosong)
+  const validSoal = soal.filter(q => q && q.soal);
+  if (validSoal.length === 0) {
+    if (type === 'post') showToast('Soal untuk sesi ini belum tersedia.', true);
+    return;
+  }
+
+  // Cek apakah sudah pernah mengisi
+  const already = type === 'pre' ? absenRow.x_08 : absenRow.x_10;
+  if (already) {
+    showToast(type === 'pre' ? 'ℹ️ Pre-Test sesi ini sudah pernah diisi.' : 'ℹ️ Post-Test sesi ini sudah pernah diisi.');
+    return;
+  }
+
+  quizType     = type;
+  quizSoal     = validSoal;
+  quizAbsenRow = absenRow;
+  quizSesiRow  = sesiRow;
+  quizAnswers  = new Array(quizSoal.length).fill(null);
+  quizIndex    = 0;
+  quizFinished = false;
+
+  document.getElementById('quizOverlay').classList.add('open');
+  renderQuizModal();
+}
+
+function closeQuiz() {
+  document.getElementById('quizOverlay').classList.remove('open');
+  quizSoal = []; quizAnswers = []; quizIndex = 0; quizType = null;
+  quizAbsenRow = null; quizSesiRow = null; quizFinished = false;
+}
+
+function renderQuizModal() {
+  const modal = document.getElementById('quizModal');
+  const isPre = quizType === 'pre';
+  const title = isPre ? '📝 Pre-Test' : '📝 Post-Test';
+
+  if (quizFinished) {
+    const score = quizAnswers.reduce((acc, ans, i) => acc + (ans === quizSoal[i].jawaban ? 1 : 0), 0);
+    modal.innerHTML = `
+      <div class="quiz-header">
+        <h2>${title} — Selesai</h2>
+        <p>Sesi ${quizSesiRow.x_01} · ${quizSesiRow.x_03 || ''}</p>
+      </div>
+      <div class="quiz-result">
+        <div class="qr-score">${score} / ${quizSoal.length}</div>
+        <div class="qr-label">Jawaban benar</div>
+      </div>
+      <div class="quiz-progress" style="margin-top:18px;">Ringkasan Jawaban</div>
+      ${quizSoal.map((q, i) => {
+        const correct = quizAnswers[i] === q.jawaban;
+        return `
+          <div class="quiz-question" style="margin-bottom:6px;font-size:13px;">
+            ${i+1}. ${escapeHtml(q.soal)}
+            <div style="font-size:12px;margin-top:4px;color:${correct ? 'var(--success)' : 'var(--danger)'}">
+              Jawabanmu: ${(quizAnswers[i]||'-').toUpperCase()} ${correct ? '✓' : '— Benar: ' + q.jawaban.toUpperCase()}
+            </div>
+          </div>
+        `;
+      }).join('')}
+      <div class="quiz-nav">
+        <button class="quiz-btn quiz-btn-primary" style="flex:1" onclick="closeQuiz()">Tutup</button>
+      </div>
+    `;
+    return;
+  }
+
+  const q = quizSoal[quizIndex];
+  const letters = ['a','b','c','d','e'];
+
+  modal.innerHTML = `
+    <div class="quiz-header">
+      <h2>${title}</h2>
+      <p>Sesi ${quizSesiRow.x_01} · ${quizSesiRow.x_03 || ''}</p>
+    </div>
+    <div class="quiz-progress">Soal ${quizIndex+1} dari ${quizSoal.length}</div>
+    <div class="quiz-question">${escapeHtml(q.soal)}</div>
+    <div class="quiz-options">
+      ${letters.filter(l => q[l]).map(l => `
+        <div class="quiz-option ${quizAnswers[quizIndex]===l ? 'selected' : ''}" onclick="selectQuizOption('${l}')">
+          <span class="qo-letter">${l.toUpperCase()}</span>
+          <span>${escapeHtml(q[l])}</span>
+        </div>
+      `).join('')}
+    </div>
+    <div class="quiz-dots">
+      ${quizSoal.map((_, i) => `<div class="quiz-dot ${quizAnswers[i] ? 'answered' : ''} ${i===quizIndex ? 'active' : ''}"></div>`).join('')}
+    </div>
+    <div class="quiz-nav">
+      <button class="quiz-btn quiz-btn-secondary" onclick="quizPrev()" ${quizIndex===0 ? 'disabled' : ''}>← Sebelumnya</button>
+      <button class="quiz-btn quiz-btn-primary" onclick="quizNext()" ${quizAnswers[quizIndex] ? '' : 'disabled'}>
+        ${quizIndex === quizSoal.length - 1 ? 'Selesai' : 'Berikutnya →'}
+      </button>
+    </div>
+  `;
+}
+
+function selectQuizOption(letter) {
+  quizAnswers[quizIndex] = letter;
+  renderQuizModal();
+}
+
+function quizPrev() {
+  if (quizIndex > 0) { quizIndex--; renderQuizModal(); }
+}
+
+function quizNext() {
+  if (!quizAnswers[quizIndex]) return;
+  if (quizIndex < quizSoal.length - 1) {
+    quizIndex++;
+    renderQuizModal();
+  } else {
+    submitQuiz();
+  }
+}
+
+async function submitQuiz() {
+  const score = quizAnswers.reduce((acc, ans, i) => acc + (ans === quizSoal[i].jawaban ? 1 : 0), 0);
+  const scoreStr = `${score}/${quizSoal.length}`;
+  const isPre = quizType === 'pre';
+
+  const payload = { id_x: quizAbsenRow.id_x };
+  if (isPre) {
+    payload.x_08 = JSON.stringify(quizAnswers);
+    payload.x_09 = scoreStr;
+  } else {
+    payload.x_10 = JSON.stringify(quizAnswers);
+    payload.x_11 = scoreStr;
+  }
+
+  try {
+    const res = await apiPost(T_ABSENSI, 'update', payload);
+    if (!res.success) {
+      showToast('Gagal menyimpan hasil ' + (isPre ? 'pre-test' : 'post-test') + ': ' + (res.error || 'Error'), true);
+    } else {
+      await loadMyAbsensi();
+    }
+  } catch (e) {
+    showToast('Gagal terhubung ke server saat menyimpan hasil tes.', true);
+  }
+
+  quizFinished = true;
+  renderQuizModal();
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = String(str ?? '');
+  return div.innerHTML;
+}
+
+
 function renderRiwayat() {
   const el = document.getElementById('riwayatBody');
   document.getElementById('riwayatCount').textContent = myAbsensi.length;
@@ -1323,10 +1670,32 @@ function renderRiwayat() {
           <th>Materi</th>
           <th>Waktu</th>
           <th>Status</th>
+          <th>Pre-Test</th>
+          <th>Post-Test</th>
         </tr>
       </thead>
       <tbody>
-        ${sorted.map(r => `
+        ${sorted.map(r => {
+          const sesiRow = allSesi.find(s => s.x_01 == r.x_03);
+          const hasSoal = (() => {
+            try { return JSON.parse(sesiRow?.x_05 || '[]').filter(q => q && q.soal).length > 0; }
+            catch { return false; }
+          })();
+
+          let preCell = '<span style="color:var(--muted);font-size:11px">—</span>';
+          let postCell = '<span style="color:var(--muted);font-size:11px">—</span>';
+
+          if (hasSoal) {
+            preCell = r.x_09
+              ? `<span class="quiz-score-chip">${r.x_09}</span>`
+              : `<span style="color:var(--muted);font-size:11px">belum diisi</span>`;
+
+            postCell = r.x_11
+              ? `<span class="quiz-score-chip">${r.x_11}</span>`
+              : `<button class="quiz-launch-btn" onclick='openQuizFromRiwayat(${r.id_x})'>Mulai Post-Test</button>`;
+          }
+
+          return `
           <tr>
             <td style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--gold)">
               ${String(r.x_03||'').padStart(2,'0')}
@@ -1334,11 +1703,23 @@ function renderRiwayat() {
             <td>${r.x_04 || '—'}</td>
             <td style="color:var(--muted);font-size:12px">${r.x_05 || '—'}</td>
             <td><span class="badge-hadir">Hadir</span></td>
+            <td>${preCell}</td>
+            <td>${postCell}</td>
           </tr>
-        `).join('')}
+        `;
+        }).join('')}
       </tbody>
     </table>
   `;
+}
+
+// Buka Post-Test dari halaman Riwayat berdasarkan id_x baris absensi
+function openQuizFromRiwayat(absenIdX) {
+  const absenRow = myAbsensi.find(r => r.id_x == absenIdX);
+  if (!absenRow) return;
+  const sesiRow = allSesi.find(s => s.x_01 == absenRow.x_03);
+  if (!sesiRow) { showToast('Data jadwal sesi tidak ditemukan.', true); return; }
+  openQuiz('post', sesiRow, absenRow);
 }
 
 // ─────────────────────────────────────────────
