@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jadwal Ngawan GBKP 2026/2027</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --bg:        #0B1120;
+    --surface:   #111827;
+    --surface2:  #1a2540;
+    --border:    #1e3058;
+    --accent:    #2563EB;
+    --accent2:   #1d4ed8;
+    --gold:      #F59E0B;
+    --text:      #E2E8F0;
+    --muted:     #64748B;
+    --success:   #10B981;
+    --danger:    #EF4444;
+    --radius:    10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── LOGIN OVERLAY ── */
+  #loginOverlay {
+    position: fixed; inset: 0; z-index: 999;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 40px 36px;
+    width: 100%; max-width: 400px;
+    box-shadow: 0 32px 80px rgba(0,0,0,.6);
+  }
+
+  .login-logo {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  .login-logo .cross {
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    width: 56px; height: 56px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--accent), #7C3AED);
+    font-size: 26px;
+    margin-bottom: 12px;
+  }
+
+  .login-logo h2 {
+    font-size: 20px; font-weight: 800;
+    letter-spacing: -.3px;
+  }
+
+  .login-logo p {
+    font-size: 12px; color: var(--muted); margin-top: 3px;
+  }
+
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block;
+    font-size: 12px; font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase; letter-spacing: .5px;
+    margin-bottom: 6px;
+  }
+
+  .field input {
+    width: 100%;
+    background: #0B1120;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 11px 14px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    transition: border-color .2s;
+    outline: none;
+  }
+
+  .field input:focus { border-color: var(--accent); }
+
+  .btn-login {
+    width: 100%;
+    padding: 13px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 15px; font-weight: 700;
+    cursor: pointer;
+    transition: background .2s;
+    margin-top: 4px;
+  }
+
+  .btn-login:hover:not(:disabled) { background: var(--accent2); }
+  .btn-login:disabled { opacity: .5; cursor: not-allowed; }
+
+  .login-err {
+    margin-top: 12px;
+    background: rgba(239,68,68,.1);
+    border: 1px solid rgba(239,68,68,.3);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--danger);
+    display: none;
+    text-align: center;
+  }
+
+  /* ── MAIN APP ── */
+  #app { display: none; }
+
+  /* HEADER */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 60px;
+    position: sticky; top: 0; z-index: 100;
+  }
+
+  .topbar-left {
+    display: flex; align-items: center; gap: 12px;
+  }
+
+  .topbar-logo {
+    width: 34px; height: 34px;
+    background: linear-gradient(135deg, var(--accent), #7C3AED);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+
+  .topbar-title { font-size: 15px; font-weight: 700; }
+  .topbar-sub   { font-size: 11px; color: var(--muted); }
+
+  .topbar-right {
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .user-chip {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 5px 14px 5px 8px;
+    font-size: 13px;
+  }
+
+  .user-avatar {
+    width: 26px; height: 26px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700;
+  }
+
+  .btn-logout {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 12px; font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  .btn-logout:hover { border-color: var(--danger); color: var(--danger); }
+
+  /* CONTENT */
+  .content { padding: 28px 24px; max-width: 1200px; margin: 0 auto; }
+
+  /* STATS BAR */
+  .stats-bar {
+    display: flex; gap: 12px; flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+
+  .stat-pill {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 20px;
+    display: flex; align-items: center; gap: 12px;
+    flex: 1; min-width: 140px;
+  }
+
+  .stat-icon {
+    width: 38px; height: 38px;
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .stat-icon.blue  { background: rgba(37,99,235,.15); }
+  .stat-icon.gold  { background: rgba(245,158,11,.15); }
+  .stat-icon.green { background: rgba(16,185,129,.15); }
+
+  .stat-val  { font-size: 22px; font-weight: 800; line-height: 1; }
+  .stat-lbl  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* TOOLBAR */
+  .toolbar {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 16px; flex-wrap: wrap;
+  }
+
+  .search-wrap {
+    flex: 1; min-width: 200px; position: relative;
+  }
+
+  .search-wrap input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 9px 14px 9px 38px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    outline: none;
+    transition: border-color .2s;
+  }
+
+  .search-wrap input:focus { border-color: var(--accent); }
+
+  .search-icon {
+    position: absolute; left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted); font-size: 14px;
+    pointer-events: none;
+  }
+
+  .btn-print {
+    background: var(--gold);
+    color: #000;
+    border: none;
+    border-radius: var(--radius);
+    padding: 9px 18px;
+    font-size: 13px; font-weight: 700;
+    cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    display: flex; align-items: center; gap: 6px;
+    transition: opacity .2s;
+  }
+
+  .btn-print:hover { opacity: .85; }
+
+  /* TABLE */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  thead th {
+    background: var(--surface2);
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background .15s;
+  }
+
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(37,99,235,.04); }
+
+  tbody td {
+    padding: 12px 16px;
+    vertical-align: middle;
+  }
+
+  .no-badge {
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    width: 32px; height: 32px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; font-weight: 600;
+    color: var(--accent);
+  }
+
+  .pengajar-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(37,99,235,.1);
+    border: 1px solid rgba(37,99,235,.2);
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 12px; font-weight: 600;
+    color: #93C5FD;
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .materi-text {
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.4;
+    max-width: 280px;
+  }
+
+  .hal-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--gold);
+    font-weight: 600;
+  }
+
+  /* QR CELL */
+  .qr-cell {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 6px;
+  }
+
+  .qr-box {
+    background: #fff;
+    border-radius: 6px;
+    padding: 6px;
+    display: inline-block;
+  }
+
+  .qr-box canvas, .qr-box img { display: block; }
+
+  .qr-label {
+    font-size: 10px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    text-align: center;
+  }
+
+  /* EMPTY / LOADING */
+  .state-row td {
+    padding: 40px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 20px; height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* PRINT STYLES */
+  @media print {
+    body { background: #fff; color: #000; }
+    .topbar, .toolbar, .stats-bar, .btn-print, .btn-logout { display: none !important; }
+    #loginOverlay { display: none !important; }
+    #app { display: block !important; }
+    .content { padding: 10px; }
+    .table-wrap { border: 1px solid #ccc; }
+    thead th { background: #f0f0f0; color: #333; border-bottom: 1px solid #ccc; }
+    tbody tr { border-bottom: 1px solid #eee; }
+    .no-badge { background: #eee; color: #000; border: 1px solid #ccc; }
+    .pengajar-chip { background: #e8f0fe; color: #1a56db; border: none; }
+    .hal-badge { color: #b45309; }
+    .qr-box { border: 1px solid #ccc; }
+    .qr-label { color: #666; }
+    .materi-text { color: #000; }
+    table { font-size: 11px; }
+    tbody td { padding: 8px 10px; }
+    @page { margin: 15mm; size: A4 landscape; }
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 640px) {
+    .content { padding: 16px; }
+    .topbar { padding: 0 16px; }
+    .stat-pill { min-width: 100%; }
+    .materi-text { max-width: 160px; font-size: 12px; }
+    .pengajar-chip { max-width: 130px; font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ LOGIN OVERLAY ═══════════════ -->
+<div id="loginOverlay">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="cross">✝</div>
+      <h2>GBKP Ngawan</h2>
+      <p>Jadwal Pengajar 2026/2027</p>
+    </div>
+    <div class="field">
+      <label>Username</label>
+      <input type="text" id="loginUser" placeholder="masukkan username" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-login" id="btnLogin" onclick="doLogin()">Masuk</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ MAIN APP ═══════════════ -->
+<div id="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">✝</div>
+      <div>
+        <div class="topbar-title">Jadwal Ngawan</div>
+        <div class="topbar-sub">GBKP 2026/2027</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="user-chip">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <span id="userLabel">—</span>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">Keluar</button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- STATS -->
+    <div class="stats-bar">
+      <div class="stat-pill">
+        <div class="stat-icon blue">📋</div>
+        <div>
+          <div class="stat-val" id="statTotal">—</div>
+          <div class="stat-lbl">Total Sesi</div>
+        </div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-icon gold">👨‍🏫</div>
+        <div>
+          <div class="stat-val" id="statPengajar">—</div>
+          <div class="stat-lbl">Pengajar</div>
+        </div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-icon green">✅</div>
+        <div>
+          <div class="stat-val" id="statLoaded">—</div>
+          <div class="stat-lbl">Data Termuat</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Cari pengajar atau materi..." oninput="filterTable()">
+      </div>
+      <button class="btn-print" onclick="window.print()">🖨️ Print Semua QR</button>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:52px">No</th>
+            <th>Pengajar</th>
+            <th>Materi</th>
+            <th style="width:70px">Hal.</th>
+            <th style="width:110px; text-align:center">QR Absensi</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr class="state-row">
+            <td colspan="5">
+              <span class="spinner"></span> Memuat data dari server...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /app -->
+
+<script>
+// ─────────────────────────────────────────────
+// CONFIG
+// ─────────────────────────────────────────────
+const API_URL   = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
+const AUTH_KEY  = 'admin';
+const TABLE_DATA  = 'ngawan';
+const TABLE_USERS = 'users';
+const BASE_ABSENSI = 'https://gbkp.my.id/ngawan/absensi.html';
+const SESSION_KEY  = 'ngawan_user';
+
+// ─────────────────────────────────────────────
+// SESSION
+// ─────────────────────────────────────────────
+function getSession() {
+  try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)); } catch { return null; }
+}
+function setSession(u) { sessionStorage.setItem(SESSION_KEY, JSON.stringify(u)); }
+function clearSession() { sessionStorage.removeItem(SESSION_KEY); }
+
+// ─────────────────────────────────────────────
+// BOOT
+// ─────────────────────────────────────────────
+(function boot() {
+  const s = getSession();
+  if (s) showApp(s);
+  // else login overlay already visible
+
+  // Enter key on login
+  ['loginUser','loginPass'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => {
+      if (e.key === 'Enter') doLogin();
+    });
+  });
+})();
+
+// ─────────────────────────────────────────────
+// LOGIN
+// ─────────────────────────────────────────────
+async function doLogin() {
+  const username = document.getElementById('loginUser').value.trim();
+  const password = document.getElementById('loginPass').value.trim();
+  const errEl    = document.getElementById('loginErr');
+  const btnEl    = document.getElementById('btnLogin');
+
+  if (!username || !password) {
+    showErr('Username dan password wajib diisi.');
+    return;
+  }
+
+  btnEl.disabled = true;
+  btnEl.textContent = 'Memeriksa...';
+  errEl.style.display = 'none';
+
+  try {
+    const resp = await fetch(
+      `${API_URL}?table=${TABLE_USERS}&action=login`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Custom-Auth': AUTH_KEY,
+          'X-Role': 'user'
+        },
+        body: JSON.stringify({ username, password })
+      }
+    );
+
+    const json = await resp.json();
+
+    if (json.success) {
+      const userData = { username, display: json.data?.x_01 || username };
+      setSession(userData);
+      showApp(userData);
+    } else {
+      showErr(json.message || 'Username atau password salah.');
+    }
+  } catch (e) {
+    showErr('Gagal terhubung ke server. Periksa koneksi internet.');
+  } finally {
+    btnEl.disabled = false;
+    btnEl.textContent = 'Masuk';
+  }
+}
+
+function showErr(msg) {
+  const el = document.getElementById('loginErr');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function doLogout() {
+  clearSession();
+  location.reload();
+}
+
+// ─────────────────────────────────────────────
+// SHOW APP
+// ─────────────────────────────────────────────
+function showApp(user) {
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('userLabel').textContent = user.display || user.username;
+  document.getElementById('userAvatar').textContent =
+    (user.display || user.username).charAt(0).toUpperCase();
+  loadData();
+}
+
+// ─────────────────────────────────────────────
+// LOAD DATA
+// ─────────────────────────────────────────────
+let ALL_ROWS = [];
+
+async function loadData() {
+  try {
+    const resp = await fetch(
+      `${API_URL}?table=${TABLE_DATA}&limit=100&offset=0`,
+      { headers: { 'X-Custom-Auth': AUTH_KEY } }
+    );
+    const json = await resp.json();
+
+    if (!json.success) throw new Error(json.error || 'Gagal memuat data');
+
+    // Sort by x_01 (nomor urut)
+    ALL_ROWS = (json.data || []).sort((a, b) => {
+      return parseInt(a.x_01 || 0) - parseInt(b.x_01 || 0);
+    });
+
+    updateStats(ALL_ROWS);
+    renderTable(ALL_ROWS);
+  } catch (e) {
+    document.getElementById('tableBody').innerHTML = `
+      <tr class="state-row">
+        <td colspan="5">⚠️ Gagal memuat data: ${e.message}</td>
+      </tr>`;
+  }
+}
+
+// ─────────────────────────────────────────────
+// STATS
+// ─────────────────────────────────────────────
+function updateStats(rows) {
+  const pengajarSet = new Set(rows.map(r => r.x_02).filter(Boolean));
+  document.getElementById('statTotal').textContent    = rows.length;
+  document.getElementById('statPengajar').textContent = pengajarSet.size;
+  document.getElementById('statLoaded').textContent   = rows.length;
+}
+
+// ─────────────────────────────────────────────
+// FILTER
+// ─────────────────────────────────────────────
+function filterTable() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const filtered = q
+    ? ALL_ROWS.filter(r =>
+        (r.x_02 || '').toLowerCase().includes(q) ||
+        (r.x_03 || '').toLowerCase().includes(q)
+      )
+    : ALL_ROWS;
+  renderTable(filtered);
+}
+
+// ─────────────────────────────────────────────
+// RENDER TABLE
+// ─────────────────────────────────────────────
+function renderTable(rows) {
+  const tbody = document.getElementById('tableBody');
+
+  if (rows.length === 0) {
+    tbody.innerHTML = `
+      <tr class="state-row">
+        <td colspan="5">Tidak ada data yang cocok.</td>
+      </tr>`;
+    return;
+  }
+
+  tbody.innerHTML = '';
+
+  rows.forEach(row => {
+    const id_x  = row.id_x;
+    const no    = row.x_01 || '—';
+    const pengajar = row.x_02 || '—';
+    const materi   = row.x_03 || '';
+    const hal      = row.x_04 || '';
+
+    const qrUrl = `${BASE_ABSENSI}?sesi=${no}&id=${id_x}`;
+
+    const tr = document.createElement('tr');
+    tr.dataset.pengajar = pengajar.toLowerCase();
+    tr.dataset.materi   = materi.toLowerCase();
+
+    tr.innerHTML = `
+      <td><span class="no-badge">${no}</span></td>
+      <td><span class="pengajar-chip" title="${pengajar}">👤 ${pengajar}</span></td>
+      <td><div class="materi-text">${materi || '<span style="color:var(--muted)">—</span>'}</div></td>
+      <td><span class="hal-badge">${hal ? 'hlm. ' + hal : '—'}</span></td>
+      <td>
+        <div class="qr-cell">
+          <div class="qr-box" id="qr-${id_x}"></div>
+          <div class="qr-label">Sesi ${no}</div>
+        </div>
+      </td>
+    `;
+
+    tbody.appendChild(tr);
+
+    // Generate QR setelah row masuk DOM
+    requestAnimationFrame(() => {
+      try {
+        new QRCode(document.getElementById(`qr-${id_x}`), {
+          text: qrUrl,
+          width: 80,
+          height: 80,
+          colorDark: '#000000',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      } catch (e) {
+        document.getElementById(`qr-${id_x}`).innerHTML =
+          `<div style="width:80px;height:80px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#ef4444">QR Error</div>`;
+      }
+    });
+  });
+}
+</script>
+</body>
+</html>
