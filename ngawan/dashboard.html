@@ -162,6 +162,28 @@
 
   .topbar-left { display: flex; align-items: center; gap: 12px; }
 
+  /* BURGER */
+  .burger-btn {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    width: 32px; height: 32px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    padding: 0;
+    align-items: center;
+  }
+  .burger-btn span {
+    display: block;
+    width: 16px; height: 2px;
+    background: var(--text);
+    border-radius: 2px;
+    transition: transform .2s, opacity .2s;
+  }
+
   .topbar-logo {
     width: 34px; height: 34px;
     background: linear-gradient(135deg, var(--accent), #7C3AED);
@@ -219,6 +241,14 @@
     border-right: 1px solid var(--border);
     padding: 20px 12px;
     flex-shrink: 0;
+  }
+
+  .sidebar-overlay {
+    display: none;
+  }
+
+  .sidebar-mobile-footer {
+    display: none;
   }
 
   .nav-label {
@@ -283,7 +313,54 @@
 
   @media(max-width: 680px) {
     .steps-grid { grid-template-columns: 1fr; }
-    .sidebar { display: none; }
+
+    .burger-btn { display: flex; }
+
+    .topbar-right .user-chip { display: none; }
+    .topbar-right .btn-logout { display: none; }
+
+    .main { padding: 18px 14px; }
+
+    .sidebar {
+      position: fixed;
+      top: 60px; left: 0; bottom: 0;
+      width: 240px;
+      max-width: 80vw;
+      z-index: 200;
+      transform: translateX(-100%);
+      transition: transform .25s ease;
+      box-shadow: 8px 0 24px rgba(0,0,0,.4);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar.open { transform: translateX(0); }
+
+    .sidebar-overlay {
+      display: block;
+      position: fixed;
+      top: 60px; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,.5);
+      z-index: 150;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s ease;
+    }
+    .sidebar-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .sidebar-mobile-footer {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .sidebar-mobile-footer .user-chip { width: fit-content; }
+    .sidebar-mobile-footer .btn-logout { width: 100%; text-align: center; }
   }
 
   .step-card {
@@ -631,6 +708,9 @@
   <!-- TOPBAR -->
   <div class="topbar">
     <div class="topbar-left">
+      <button class="burger-btn" id="burgerBtn" onclick="toggleSidebar()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
       <div class="topbar-logo">✝</div>
       <div>
         <div class="topbar-title">GBKP Ngawan</div>
@@ -649,7 +729,8 @@
   <div class="layout">
 
     <!-- SIDEBAR -->
-    <div class="sidebar">
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+    <div class="sidebar" id="sidebar">
       <div class="nav-label">Menu</div>
       <button class="nav-item active" onclick="showPage('beranda')">
         <span class="nav-icon">🏠</span> Beranda
@@ -660,6 +741,13 @@
       <button class="nav-item" onclick="showPage('jadwal')">
         <span class="nav-icon">📋</span> Jadwal Sesi
       </button>
+      <div class="sidebar-mobile-footer">
+        <div class="user-chip">
+          <div class="user-avatar" id="userAvatarMobile">?</div>
+          <span id="userLabelMobile">—</span>
+        </div>
+        <button class="btn-logout" onclick="doLogout()">Keluar</button>
+      </div>
     </div>
 
     <!-- CONTENT -->
@@ -997,6 +1085,8 @@ function launchApp() {
 
   document.getElementById('userLabel').textContent  = currentUser.nama;
   document.getElementById('userAvatar').textContent = currentUser.nama.charAt(0).toUpperCase();
+  document.getElementById('userLabelMobile').textContent  = currentUser.nama;
+  document.getElementById('userAvatarMobile').textContent = currentUser.nama.charAt(0).toUpperCase();
 
   // Info di absensi card
   document.getElementById('infoNama').textContent   = currentUser.nama;
@@ -1363,6 +1453,20 @@ function showPage(name) {
   document.querySelectorAll('.nav-item').forEach(b => {
     if (b.textContent.trim().toLowerCase().includes(name)) b.classList.add('active');
   });
+
+  closeSidebar();
+}
+
+// ─────────────────────────────────────────────
+// MOBILE SIDEBAR (BURGER MENU)
+// ─────────────────────────────────────────────
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
 }
 
 // ─────────────────────────────────────────────
