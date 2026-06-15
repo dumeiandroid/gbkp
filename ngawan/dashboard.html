@@ -1323,7 +1323,9 @@ async function doAbsen() {
       x_02: currentUser.nama,
       x_03: selectedSesi.x_01,   // no sesi
       x_04: selectedSesi.x_03,   // materi
-      x_05: tanggal
+      x_05: tanggal,
+      x_06: currentUser.sektor,  // sektor peserta
+      x_07: selectedSesi.x_02    // nama pengajar
     });
 
     if (res.success) {
