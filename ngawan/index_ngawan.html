@@ -114,6 +114,20 @@
   .btn-login:hover:not(:disabled) { background: var(--accent2); }
   .btn-login:disabled { opacity: .5; cursor: not-allowed; }
 
+  .remember-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 16px;
+  }
+  .remember-row input[type="checkbox"] {
+    width: 16px; height: 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .remember-row label {
+    font-size: 13px; color: var(--muted);
+    cursor: pointer; user-select: none;
+  }
+
   .login-err {
     margin-top: 12px;
     background: rgba(239,68,68,.1);
@@ -441,6 +455,10 @@
       <label>Password</label>
       <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
     </div>
+    <div class="remember-row">
+      <input type="checkbox" id="loginRemember">
+      <label for="loginRemember">Ingat saya</label>
+    </div>
     <button class="btn-login" id="btnLogin" onclick="doLogin()">Masuk</button>
     <div class="login-err" id="loginErr"></div>
   </div>
@@ -539,15 +557,33 @@ const TABLE_DATA  = 'ngawan';
 const TABLE_USERS = 'users';
 const BASE_ABSENSI = 'https://gbkp.my.id/ngawan/absensi.html';
 const SESSION_KEY  = 'ngawan_user';
+const REMEMBER_KEY = 'ngawan_remember';
 
 // ─────────────────────────────────────────────
 // SESSION
 // ─────────────────────────────────────────────
 function getSession() {
-  try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)); } catch { return null; }
+  try {
+    return JSON.parse(sessionStorage.getItem(SESSION_KEY)) ||
+           JSON.parse(localStorage.getItem(SESSION_KEY));
+  } catch { return null; }
 }
-function setSession(u) { sessionStorage.setItem(SESSION_KEY, JSON.stringify(u)); }
-function clearSession() { sessionStorage.removeItem(SESSION_KEY); }
+function setSession(u, remember) {
+  if (remember) {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(u));
+    localStorage.setItem(REMEMBER_KEY, '1');
+    sessionStorage.removeItem(SESSION_KEY);
+  } else {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(u));
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(REMEMBER_KEY);
+  }
+}
+function clearSession() {
+  sessionStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(REMEMBER_KEY);
+}
 
 // ─────────────────────────────────────────────
 // BOOT
@@ -556,6 +592,11 @@ function clearSession() { sessionStorage.removeItem(SESSION_KEY); }
   const s = getSession();
   if (s) showApp(s);
   // else login overlay already visible
+
+  // restore remember-me checkbox state
+  if (localStorage.getItem(REMEMBER_KEY) === '1') {
+    document.getElementById('loginRemember').checked = true;
+  }
 
   // Enter key on login
   ['loginUser','loginPass'].forEach(id => {
@@ -601,7 +642,8 @@ async function doLogin() {
 
     if (json.success) {
       const userData = { username, display: json.data?.x_01 || username };
-      setSession(userData);
+      const remember = document.getElementById('loginRemember').checked;
+      setSession(userData, remember);
       showApp(userData);
     } else {
       showErr(json.message || 'Username atau password salah.');

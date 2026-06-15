@@ -135,6 +135,20 @@
   .btn-submit:hover:not(:disabled) { background: var(--accent2); }
   .btn-submit:disabled { opacity: .5; cursor: not-allowed; }
 
+  .remember-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 14px;
+  }
+  .remember-row input[type="checkbox"] {
+    width: 16px; height: 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .remember-row label {
+    font-size: 13px; color: var(--muted);
+    cursor: pointer; user-select: none;
+  }
+
   .auth-msg {
     margin-top: 12px;
     border-radius: 8px;
@@ -822,6 +836,10 @@
         <label>Password</label>
         <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
       </div>
+      <div class="remember-row">
+        <input type="checkbox" id="loginRemember">
+        <label for="loginRemember">Ingat saya</label>
+      </div>
       <button class="btn-submit" id="btnLogin" onclick="doLogin()">Masuk</button>
     </div>
 
@@ -1042,13 +1060,33 @@ const T_USERS      = 'users_ngawan';
 const T_ABSENSI    = 'absensi_ngawan';
 const T_NGAWAN     = 'ngawan';
 const SESSION_KEY  = 'ngawan_peserta';
+const REMEMBER_KEY = 'ngawan_peserta_remember';
 
 // ─────────────────────────────────────────────
 // SESSION
 // ─────────────────────────────────────────────
-function getSession()  { try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)); } catch { return null; } }
-function setSession(u) { sessionStorage.setItem(SESSION_KEY, JSON.stringify(u)); }
-function clearSession(){ sessionStorage.removeItem(SESSION_KEY); }
+function getSession() {
+  try {
+    return JSON.parse(sessionStorage.getItem(SESSION_KEY)) ||
+           JSON.parse(localStorage.getItem(SESSION_KEY));
+  } catch { return null; }
+}
+function setSession(u, remember) {
+  if (remember) {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(u));
+    localStorage.setItem(REMEMBER_KEY, '1');
+    sessionStorage.removeItem(SESSION_KEY);
+  } else {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(u));
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(REMEMBER_KEY);
+  }
+}
+function clearSession() {
+  sessionStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(REMEMBER_KEY);
+}
 
 // ─────────────────────────────────────────────
 // STATE
@@ -1079,6 +1117,11 @@ let quizFinished  = false;
     currentUser = s;
     launchApp();
   }
+  // restore remember-me checkbox state
+  if (localStorage.getItem(REMEMBER_KEY) === '1') {
+    document.getElementById('loginRemember').checked = true;
+  }
+
   // Enter key on login
   ['loginNama','loginPass'].forEach(id => {
     document.getElementById(id).addEventListener('keydown', e => {
@@ -1216,7 +1259,8 @@ async function doLogin() {
     }
 
     currentUser = { id_x: user.id_x, nama: user.x_01, sektor: user.x_03 || '—' };
-    setSession(currentUser);
+    const remember = document.getElementById('loginRemember').checked;
+    setSession(currentUser, remember);
     launchApp();
 
   } catch (e) {
