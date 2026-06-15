@@ -811,13 +811,6 @@
               📷 Scan QR Code
             </button>
 
-            <div class="qr-divider">atau pilih manual</div>
-
-            <div class="sesi-select-wrap">
-              <select id="sesiSelect" onchange="onSesiChange()">
-                <option value="">— Memuat sesi... —</option>
-              </select>
-            </div>
             <div class="sesi-preview" id="sesiPreview">
               <div class="sp-materi" id="spMateri">—</div>
               <div class="sp-pengajar" id="spPengajar">—</div>
@@ -825,9 +818,6 @@
             <div id="alreadyBadge" style="display:none">
               <div class="already-badge">✅ Sudah tercatat hadir di sesi ini</div>
             </div>
-            <button class="btn-absen" id="btnAbsen" onclick="doAbsen()" disabled>
-              ✋ Catat Kehadiran
-            </button>
           </div>
 
           <div class="step-card">
@@ -1109,18 +1099,6 @@ async function loadAllSesi() {
 
     allSesi = (res.data || []).sort((a, b) => parseInt(a.x_01||0) - parseInt(b.x_01||0));
 
-    // Isi select sesi
-    const sel = document.getElementById('sesiSelect');
-    sel.innerHTML = '<option value="">— Pilih sesi —</option>';
-    allSesi.forEach(row => {
-      if (row.x_03) { // hanya sesi yang punya materi
-        const opt = document.createElement('option');
-        opt.value       = row.id_x;
-        opt.textContent = `Sesi ${row.x_01} – ${row.x_03}`;
-        sel.appendChild(opt);
-      }
-    });
-
     // Update stat beranda
     document.getElementById('statTotalSesi').textContent = allSesi.filter(r => r.x_03).length;
 
@@ -1128,7 +1106,7 @@ async function loadAllSesi() {
     renderJadwal();
 
   } catch (e) {
-    document.getElementById('sesiSelect').innerHTML = '<option>Gagal memuat sesi</option>';
+    showToast('Gagal memuat jadwal sesi.', true);
   }
 }
 
@@ -1164,31 +1142,8 @@ async function loadMyAbsensi() {
 }
 
 // ─────────────────────────────────────────────
-// ON SESI SELECT CHANGE
+// SELECT SESI (from QR scan)
 // ─────────────────────────────────────────────
-function onSesiChange() {
-  const val = document.getElementById('sesiSelect').value;
-
-  if (!val) {
-    clearSelectedSesi();
-    return;
-  }
-
-  const row = allSesi.find(r => r.id_x == val);
-  if (!row) return;
-
-  // Pilihan manual membatalkan hasil scan QR sebelumnya
-  document.getElementById('qrResultCard').style.display = 'none';
-  selectSesiByRow(row);
-}
-
-function clearSelectedSesi() {
-  document.getElementById('sesiPreview').style.display = 'none';
-  document.getElementById('alreadyBadge').style.display = 'none';
-  document.getElementById('btnAbsen').disabled = true;
-  selectedSesi = null;
-}
-
 function selectSesiByRow(row) {
   selectedSesi = row;
 
@@ -1196,13 +1151,9 @@ function selectSesiByRow(row) {
   document.getElementById('spPengajar').textContent = selectedSesi.x_02 || '—';
   document.getElementById('sesiPreview').style.display = 'block';
 
-  // Sinkronkan dropdown manual
-  document.getElementById('sesiSelect').value = selectedSesi.id_x;
-
   // Cek apakah sudah absen sesi ini
   const sudahAbsen = myAbsensi.some(r => r.x_03 == selectedSesi.x_01 && r.x_01 == currentUser.id_x);
   document.getElementById('alreadyBadge').style.display = sudahAbsen ? 'block' : 'none';
-  document.getElementById('btnAbsen').disabled = sudahAbsen;
 }
 
 // ─────────────────────────────────────────────
@@ -1287,7 +1238,15 @@ function applySesiNo(sesiNo, fromQr) {
 
   selectSesiByRow(row);
 
-  if (fromQr) showToast('✅ Sesi ' + sesiNo + ' terdeteksi dari QR Code.');
+  if (fromQr) {
+    const sudahAbsen = myAbsensi.some(r => r.x_03 == row.x_01 && r.x_01 == currentUser.id_x);
+    if (sudahAbsen) {
+      showToast('ℹ️ Sesi ' + sesiNo + ' terdeteksi — kamu sudah tercatat hadir.');
+    } else {
+      showToast('📡 Sesi ' + sesiNo + ' terdeteksi, menyimpan kehadiran...');
+      doAbsen();
+    }
+  }
 }
 
 // Proses ?sesi= dari URL setelah login & data jadwal siap
@@ -1308,8 +1267,8 @@ function applyPendingQrSesi() {
 async function doAbsen() {
   if (!selectedSesi) return;
 
-  const btn = document.getElementById('btnAbsen');
-  btn.disabled = true; btn.textContent = 'Menyimpan...';
+  const btn = document.getElementById('btnScan');
+  btn.disabled = true;
 
   try {
     const now = new Date();
@@ -1329,19 +1288,17 @@ async function doAbsen() {
     });
 
     if (res.success) {
-      showToast('✅ Kehadiran tercatat!');
+      showToast('✅ Kehadiran sesi ' + selectedSesi.x_01 + ' tercatat!');
       document.getElementById('alreadyBadge').style.display = 'block';
       await loadMyAbsensi();
     } else {
       showToast('Gagal menyimpan: ' + (res.error || 'Error'), true);
-      btn.disabled = false;
     }
   } catch (e) {
     showToast('Gagal terhubung ke server.', true);
-    btn.disabled = false;
   }
 
-  btn.textContent = '✋ Catat Kehadiran';
+  btn.disabled = false;
 }
 
 // ─────────────────────────────────────────────
@@ -1434,7 +1391,6 @@ function updateSesiBadge() {
   if (!selectedSesi) return;
   const sudahAbsen = myAbsensi.some(r => r.x_03 == selectedSesi.x_01 && r.x_01 == currentUser.id_x);
   document.getElementById('alreadyBadge').style.display = sudahAbsen ? 'block' : 'none';
-  document.getElementById('btnAbsen').disabled = sudahAbsen;
 
   // Update sisa
   const totalSesi = allSesi.filter(r => r.x_03).length;
