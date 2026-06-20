@@ -1609,9 +1609,29 @@ function selectSesiByRow(row) {
   document.getElementById('spPengajar').textContent = selectedSesi.x_02 || '—';
   document.getElementById('sesiPreview').style.display = 'block';
 
-  // Cek apakah sudah absen sesi ini
-  const sudahAbsen = myAbsensi.some(r => r.x_03 == selectedSesi.x_01 && r.x_01 == currentUser.id_x);
-  document.getElementById('alreadyBadge').style.display = sudahAbsen ? 'block' : 'none';
+  // Cek status absen sesi ini (badge tunggal, teks menyesuaikan)
+  refreshAlreadyBadge();
+}
+
+// Update teks & tampilan badge "alreadyBadge" sesuai status absen masuk/pulang
+function refreshAlreadyBadge() {
+  if (!selectedSesi) return;
+  const badgeWrap = document.getElementById('alreadyBadge');
+  const badgeEl   = badgeWrap.querySelector('.already-badge');
+  const existing  = myAbsensi.find(r => r.x_03 == selectedSesi.x_01 && r.x_01 == currentUser.id_x);
+
+  if (!existing) {
+    badgeWrap.style.display = 'none';
+    return;
+  }
+
+  const data = parseAbsenData(existing);
+  if (data.waktu_pulang) {
+    badgeEl.textContent = '✅ Sudah absen masuk & pulang di sesi ini';
+  } else {
+    badgeEl.textContent = '✅ Sudah absen masuk — scan lagi untuk absen pulang';
+  }
+  badgeWrap.style.display = 'block';
 }
 
 // ─────────────────────────────────────────────
@@ -1697,11 +1717,19 @@ function applySesiNo(sesiNo, fromQr) {
   selectSesiByRow(row);
 
   if (fromQr) {
-    const sudahAbsen = myAbsensi.some(r => r.x_03 == row.x_01 && r.x_01 == currentUser.id_x);
-    if (sudahAbsen) {
-      showToast('ℹ️ Sesi ' + sesiNo + ' terdeteksi — kamu sudah tercatat hadir.');
+    const existing = myAbsensi.find(r => r.x_03 == row.x_01 && r.x_01 == currentUser.id_x);
+    if (!existing) {
+      // Belum absen sama sekali di sesi ini → proses absen MASUK
+      openAbsenConfirm(row, 'masuk');
     } else {
-      openAbsenConfirm(row);
+      const data = parseAbsenData(existing);
+      if (!data.waktu_pulang) {
+        // Sudah absen masuk, belum pulang → proses absen PULANG
+        openAbsenConfirm(row, 'pulang', existing);
+      } else {
+        // Sudah absen masuk & pulang
+        showToast('ℹ️ Anda telah absen untuk sesi ' + sesiNo + ' (masuk & pulang).');
+      }
     }
   }
 }
@@ -1709,10 +1737,26 @@ function applySesiNo(sesiNo, fromQr) {
 // ─────────────────────────────────────────────
 // KONFIRMASI ABSENSI (mencegah salah scan)
 // ─────────────────────────────────────────────
-function openAbsenConfirm(row) {
+let _absenMode       = 'masuk'; // 'masuk' | 'pulang'
+let _absenExistingRow = null;   // row absensi yang sudah ada (untuk mode pulang)
+
+function openAbsenConfirm(row, mode, existingRow) {
+  _absenMode        = mode || 'masuk';
+  _absenExistingRow = existingRow || null;
+
+  const isPulang = _absenMode === 'pulang';
+
   document.getElementById('confirmSesi').textContent     = 'SESI ' + (row.x_01 || '—');
   document.getElementById('confirmMateri').textContent   = row.x_03 || '—';
   document.getElementById('confirmPengajar').textContent = row.x_02 || '—';
+
+  const titleEl = document.querySelector('#confirmOverlay .confirm-title');
+  const subEl   = document.querySelector('#confirmOverlay .confirm-sub');
+  if (titleEl) titleEl.textContent = isPulang ? 'Konfirmasi Absen Pulang' : 'Konfirmasi Absen Masuk';
+  if (subEl)   subEl.textContent   = isPulang
+    ? 'Kamu sudah tercatat hadir di sesi ini. Lanjutkan untuk mencatat waktu pulang.'
+    : 'Pastikan ini adalah sesi yang sedang kamu ikuti sebelum mencatat kehadiran.';
+
   document.getElementById('confirmOverlay').classList.add('open');
 }
 
@@ -1722,7 +1766,11 @@ function closeAbsenConfirm() {
 
 function confirmAbsen() {
   closeAbsenConfirm();
-  doAbsen();
+  if (_absenMode === 'pulang') {
+    doAbsenPulang();
+  } else {
+    doAbsen();
+  }
 }
 
 function cancelAbsenConfirm() {
@@ -1770,18 +1818,39 @@ async function doAbsen() {
 
     if (res.success) {
       showToast('✅ Kehadiran sesi ' + selectedSesi.x_01 + ' tercatat!');
-      document.getElementById('alreadyBadge').style.display = 'block';
       await loadMyAbsensi();
+      refreshAlreadyBadge();
 
       // Cari row absensi yang baru dibuat untuk sesi ini
       const newRow = myAbsensi.find(r => r.x_03 == selectedSesi.x_01 && r.x_01 == currentUser.id_x)
                      || { id_x: res.id_x, x_03: selectedSesi.x_01, x_01: currentUser.id_x };
 
-      // Lanjutkan dengan selfie verifikasi kehadiran
-      bukaKameraSelfieAbsen(newRow);
+      // Lanjutkan dengan selfie verifikasi kehadiran (masuk)
+      bukaKameraSelfieAbsen(newRow, 'masuk');
     } else {
       showToast('Gagal menyimpan: ' + (res.error || 'Error'), true);
     }
+  } catch (e) {
+    showToast('Gagal terhubung ke server.', true);
+  }
+
+  btn.disabled = false;
+}
+
+// ─────────────────────────────────────────────
+// ABSEN PULANG (absen ke-2 untuk sesi yang sama)
+// ─────────────────────────────────────────────
+async function doAbsenPulang() {
+  if (!selectedSesi || !_absenExistingRow) return;
+
+  const btn = document.getElementById('btnScan');
+  btn.disabled = true;
+
+  try {
+    // Lanjutkan dengan selfie verifikasi pulang.
+    // waktu_pulang akan dicatat saat selfie pulang dikirim (kirimSelfieAbsen),
+    // bersamaan dengan URL foto selfie_pulang, dalam satu update.
+    bukaKameraSelfieAbsen(_absenExistingRow, 'pulang');
   } catch (e) {
     showToast('Gagal terhubung ke server.', true);
   }
@@ -1796,11 +1865,21 @@ let _selfieStream    = null;
 let _selfieBlob      = null;
 let _selfieAbsenRow  = null;
 let _selfieSesiRow   = null;
+let _selfieMode      = 'masuk'; // 'masuk' | 'pulang'
 
-function bukaKameraSelfieAbsen(absenRow) {
+function bukaKameraSelfieAbsen(absenRow, mode) {
   _selfieBlob     = null;
   _selfieAbsenRow = absenRow;
   _selfieSesiRow  = selectedSesi;
+  _selfieMode     = mode || 'masuk';
+
+  const isPulang = _selfieMode === 'pulang';
+  const titleEl = document.querySelector('#selfieOverlay .selfie-title');
+  const subEl   = document.querySelector('#selfieOverlay .selfie-sub');
+  if (titleEl) titleEl.textContent = isPulang ? '📸 Selfie Verifikasi Pulang' : '📸 Selfie Verifikasi Hadir';
+  if (subEl)   subEl.innerHTML     = isPulang
+    ? 'Ambil foto selfie untuk memverifikasi kepulanganmu dari sesi ini.<br>Pastikan wajah terlihat jelas.'
+    : 'Ambil foto selfie untuk memverifikasi kehadiranmu di sesi ini.<br>Pastikan wajah terlihat jelas.';
 
   document.getElementById('selfieVideoWrap').style.display   = 'block';
   document.getElementById('selfiePreviewWrap').style.display = 'none';
@@ -1873,6 +1952,7 @@ async function kirimSelfieAbsen() {
   const loadEl = document.getElementById('selfieLoading');
   loadEl.style.display = 'flex';
   const stTxt = document.getElementById('selfieLoadingText');
+  const isPulang = _selfieMode === 'pulang';
 
   try {
     // 1. Upload selfie ke R2 (storage sama persis dengan cpmi.html)
@@ -1886,19 +1966,32 @@ async function kirimSelfieAbsen() {
     if (!r2.success) throw new Error('Gagal upload foto: ' + (r2.error || ''));
     const fotoUrl = r2.url || (CDN + fn);
 
-    // 2. Simpan URL foto ke JSON data absensi (selfie_masuk)
+    // 2. Simpan URL foto ke JSON data absensi (selfie_masuk / selfie_pulang)
     stTxt.textContent = 'Menyimpan data...';
-    const res = await updateAbsenData(_selfieAbsenRow.id_x, {
-      selfie_masuk: fotoUrl
+    const now = new Date();
+    const tanggal = now.toLocaleString('id-ID', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
     });
+
+    const patch = isPulang
+      ? { selfie_pulang: fotoUrl, waktu_pulang: tanggal }
+      : { selfie_masuk: fotoUrl };
+
+    const res = await updateAbsenData(_selfieAbsenRow.id_x, patch);
     if (!res.success) throw new Error(res.error || 'Gagal menyimpan foto.');
 
     await loadMyAbsensi();
     closeSelfieAbsen();
-    showToast('✅ Selfie verifikasi tersimpan!');
+    showToast(isPulang ? '✅ Absen pulang tercatat!' : '✅ Selfie verifikasi tersimpan!');
 
-    // Lanjutkan ke Pre-Test jika sesi punya soal
-    openQuiz('pre', _selfieSesiRow, _selfieAbsenRow);
+    if (isPulang) {
+      // Refresh badge "sudah absen masuk & pulang" di halaman absensi
+      updateSesiBadge();
+    } else {
+      // Lanjutkan ke Pre-Test jika sesi punya soal
+      openQuiz('pre', _selfieSesiRow, _selfieAbsenRow);
+    }
   } catch (e) {
     loadEl.style.display = 'none';
     document.getElementById('selfieActions').style.display = 'flex';
@@ -2088,7 +2181,8 @@ function renderRiwayat() {
         <tr>
           <th>Sesi</th>
           <th>Materi</th>
-          <th>Waktu</th>
+          <th>Masuk</th>
+          <th>Pulang</th>
           <th>Status</th>
           <th>Pre-Test</th>
           <th>Post-Test</th>
@@ -2105,8 +2199,9 @@ function renderRiwayat() {
           let preCell = '<span style="color:var(--muted);font-size:11px">—</span>';
           let postCell = '<span style="color:var(--muted);font-size:11px">—</span>';
 
+          const data = parseAbsenData(r);
+
           if (hasSoal) {
-            const data = parseAbsenData(r);
             preCell = data.pretest?.skor
               ? `<span class="quiz-score-chip">${data.pretest.skor}</span>`
               : `<span style="color:var(--muted);font-size:11px">belum diisi</span>`;
@@ -2116,6 +2211,10 @@ function renderRiwayat() {
               : `<button class="quiz-launch-btn" onclick='openQuizFromRiwayat(${r.id_x})'>Mulai Post-Test</button>`;
           }
 
+          const pulangCell = data.waktu_pulang
+            ? data.waktu_pulang
+            : '<span style="color:var(--muted);font-size:11px">belum pulang</span>';
+
           return `
           <tr>
             <td style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--gold)">
@@ -2123,6 +2222,7 @@ function renderRiwayat() {
             </td>
             <td>${r.x_04 || '—'}</td>
             <td style="color:var(--muted);font-size:12px">${r.x_05 || '—'}</td>
+            <td style="color:var(--muted);font-size:12px">${pulangCell}</td>
             <td><span class="badge-hadir">Hadir</span></td>
             <td>${preCell}</td>
             <td>${postCell}</td>
@@ -2191,8 +2291,7 @@ function renderJadwal() {
 // ─────────────────────────────────────────────
 function updateSesiBadge() {
   if (!selectedSesi) return;
-  const sudahAbsen = myAbsensi.some(r => r.x_03 == selectedSesi.x_01 && r.x_01 == currentUser.id_x);
-  document.getElementById('alreadyBadge').style.display = sudahAbsen ? 'block' : 'none';
+  refreshAlreadyBadge();
 
   // Update sisa
   const totalSesi = allSesi.filter(r => r.x_03).length;
