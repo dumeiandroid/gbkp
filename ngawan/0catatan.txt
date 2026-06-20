@@ -1,0 +1,10 @@
+Dashboard ini menggunakan 3 tabel:
+KonstantaNama TabelKegunaanT_USERS	
+users_ngawan	
+
+Akun login/registrasi peserta (nama, password, sektor)T_ABSENSI	
+absensi_ngawan	
+
+Data absensi/kehadiranT_NGAWAN	
+ngawan
+Data sesi/jadwal pengajar (sama seperti yang dipakai di index_ngawan.html)
