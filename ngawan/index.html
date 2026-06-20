@@ -632,6 +632,94 @@
   #toast.show { transform: translateX(-50%) translateY(0); }
   #toast.err  { background: var(--danger); }
 
+  /* Selfie Verifikasi Modal */
+  .selfie-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,.7);
+    z-index: 650;
+    display: none;
+    align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .selfie-overlay.open { display: flex; }
+
+  .selfie-modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    width: 100%; max-width: 380px;
+    padding: 24px 22px;
+    text-align: center;
+    box-shadow: 0 32px 80px rgba(0,0,0,.6);
+  }
+
+  .selfie-title {
+    font-size: 16px; font-weight: 800;
+    margin-bottom: 6px;
+  }
+  .selfie-sub {
+    font-size: 12px; color: var(--muted);
+    margin-bottom: 18px; line-height: 1.6;
+  }
+
+  #selfieVideoWrap {
+    position: relative;
+    width: 100%; max-width: 280px;
+    margin: 0 auto 16px;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #000;
+    aspect-ratio: 4/3;
+  }
+  #selfieVideo {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+    display: block;
+  }
+  #selfieCanvas { display: none; }
+
+  #selfiePreviewWrap {
+    display: none;
+    width: 100%; max-width: 280px;
+    margin: 0 auto 16px;
+  }
+  #selfiePreviewWrap img {
+    width: 100%; border-radius: 14px;
+    border: 3px solid var(--success);
+    display: block;
+  }
+
+  .selfie-actions {
+    display: flex; flex-direction: column; gap: 10px;
+    max-width: 280px; margin: 0 auto;
+  }
+  .selfie-actions button {
+    padding: 12px; border: none; border-radius: 10px;
+    font-weight: 800; font-size: 13px; cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    transition: opacity .2s;
+  }
+  #btnAmbilSelfie { background: var(--accent); color: #fff; }
+  #btnAmbilSelfie:hover { background: var(--accent2); }
+  #btnUlangSelfie { background: var(--surface2); color: var(--text); border: 1px solid var(--border); display: none; }
+  #btnKirimSelfie { background: var(--success); color: #fff; display: none; }
+  .selfie-actions button:hover { opacity: .88; }
+
+  .selfie-loading {
+    display: none; flex-direction: column; align-items: center; gap: 12px;
+    padding: 20px 0;
+  }
+  .selfie-loading p { color: var(--muted); font-size: 12px; }
+  .selfie-spinner {
+    width: 30px; height: 30px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
   /* Confirm Absen Modal */
   .confirm-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -970,6 +1058,34 @@
   </div>
 </div>
 
+<!-- ═══════════════ SELFIE VERIFIKASI ABSENSI ═══════════════ -->
+<div class="selfie-overlay" id="selfieOverlay">
+  <div class="selfie-modal">
+    <div class="selfie-title">📸 Selfie Verifikasi Hadir</div>
+    <p class="selfie-sub">Ambil foto selfie untuk memverifikasi kehadiranmu di sesi ini.<br>Pastikan wajah terlihat jelas.</p>
+
+    <div id="selfieVideoWrap">
+      <video id="selfieVideo" autoplay playsinline muted></video>
+    </div>
+    <canvas id="selfieCanvas"></canvas>
+
+    <div id="selfiePreviewWrap">
+      <img id="selfiePreviewImg" src="" alt="Preview Selfie">
+    </div>
+
+    <div class="selfie-loading" id="selfieLoading">
+      <div class="selfie-spinner"></div>
+      <p id="selfieLoadingText">Mengunggah foto...</p>
+    </div>
+
+    <div class="selfie-actions" id="selfieActions">
+      <button id="btnAmbilSelfie" onclick="ambilSelfieAbsen()">📷 Ambil Foto</button>
+      <button id="btnUlangSelfie" onclick="ulangSelfieAbsen()">🔄 Foto Ulang</button>
+      <button id="btnKirimSelfie" onclick="kirimSelfieAbsen()">✅ Gunakan Foto Ini</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── MAIN APP ── -->
 <div id="app">
 
@@ -1146,6 +1262,8 @@ const T_ABSENSI    = 'absensi_ngawan';
 const T_NGAWAN     = 'ngawan';
 const SESSION_KEY  = 'ngawan_peserta';
 const REMEMBER_KEY = 'ngawan_peserta_remember';
+const R2  = 'https://indahabadi.my.id/api/upload_r2_lidan';
+const CDN = 'https://assets.indahabadi.my.id/';
 
 // ─────────────────────────────────────────────
 // SESSION
@@ -1626,8 +1744,8 @@ async function doAbsen() {
       const newRow = myAbsensi.find(r => r.x_03 == selectedSesi.x_01 && r.x_01 == currentUser.id_x)
                      || { id_x: res.id_x, x_03: selectedSesi.x_01, x_01: currentUser.id_x };
 
-      // Buka Pre-Test jika sesi punya soal
-      openQuiz('pre', selectedSesi, newRow);
+      // Lanjutkan dengan selfie verifikasi kehadiran
+      bukaKameraSelfieAbsen(newRow);
     } else {
       showToast('Gagal menyimpan: ' + (res.error || 'Error'), true);
     }
@@ -1639,6 +1757,124 @@ async function doAbsen() {
 }
 
 // ─────────────────────────────────────────────
+// SELFIE VERIFIKASI ABSEN
+// ─────────────────────────────────────────────
+let _selfieStream    = null;
+let _selfieBlob      = null;
+let _selfieAbsenRow  = null;
+let _selfieSesiRow   = null;
+
+function bukaKameraSelfieAbsen(absenRow) {
+  _selfieBlob     = null;
+  _selfieAbsenRow = absenRow;
+  _selfieSesiRow  = selectedSesi;
+
+  document.getElementById('selfieVideoWrap').style.display   = 'block';
+  document.getElementById('selfiePreviewWrap').style.display = 'none';
+  document.getElementById('selfieLoading').style.display     = 'none';
+  document.getElementById('selfieActions').style.display     = 'flex';
+  document.getElementById('btnAmbilSelfie').style.display    = 'block';
+  document.getElementById('btnUlangSelfie').style.display    = 'none';
+  document.getElementById('btnKirimSelfie').style.display    = 'none';
+
+  document.getElementById('selfieOverlay').classList.add('open');
+
+  navigator.mediaDevices.getUserMedia({
+    video: { facingMode: { ideal: 'user' }, width: { ideal: 1280 }, height: { ideal: 960 } }
+  }).then(stream => {
+    _selfieStream = stream;
+    document.getElementById('selfieVideo').srcObject = stream;
+  }).catch(() => {
+    showToast('Gagal mengakses kamera. Pastikan izin kamera diberikan.', true);
+    closeSelfieAbsen();
+  });
+}
+
+function tutupKameraSelfieAbsen() {
+  if (_selfieStream) {
+    _selfieStream.getTracks().forEach(t => t.stop());
+    _selfieStream = null;
+  }
+}
+
+function closeSelfieAbsen() {
+  tutupKameraSelfieAbsen();
+  document.getElementById('selfieOverlay').classList.remove('open');
+}
+
+function ambilSelfieAbsen() {
+  const vid = document.getElementById('selfieVideo');
+  const cvs = document.getElementById('selfieCanvas');
+  const vw = vid.videoWidth || 640, vh = vid.videoHeight || 480;
+  cvs.width = vw; cvs.height = vh;
+  const ctx = cvs.getContext('2d');
+  ctx.translate(vw, 0); ctx.scale(-1, 1); // mirror, kamera depan
+  ctx.drawImage(vid, 0, 0, vw, vh);
+
+  cvs.toBlob(blob => {
+    _selfieBlob = blob;
+    const url = URL.createObjectURL(blob);
+    document.getElementById('selfiePreviewImg').src = url;
+    document.getElementById('selfieVideoWrap').style.display   = 'none';
+    document.getElementById('selfiePreviewWrap').style.display = 'block';
+    document.getElementById('btnAmbilSelfie').style.display = 'none';
+    document.getElementById('btnUlangSelfie').style.display = 'block';
+    document.getElementById('btnKirimSelfie').style.display = 'block';
+  }, 'image/jpeg', 0.88);
+}
+
+function ulangSelfieAbsen() {
+  _selfieBlob = null;
+  document.getElementById('selfiePreviewImg').src = '';
+  document.getElementById('selfiePreviewWrap').style.display = 'none';
+  document.getElementById('selfieVideoWrap').style.display   = 'block';
+  document.getElementById('btnAmbilSelfie').style.display = 'block';
+  document.getElementById('btnUlangSelfie').style.display = 'none';
+  document.getElementById('btnKirimSelfie').style.display = 'none';
+}
+
+async function kirimSelfieAbsen() {
+  if (!_selfieBlob) { showToast('Silakan ambil foto terlebih dahulu.', true); return; }
+
+  document.getElementById('selfieActions').style.display = 'none';
+  const loadEl = document.getElementById('selfieLoading');
+  loadEl.style.display = 'flex';
+  const stTxt = document.getElementById('selfieLoadingText');
+
+  try {
+    // 1. Upload selfie ke R2 (storage sama persis dengan cpmi.html)
+    stTxt.textContent = 'Mengunggah foto selfie...';
+    const fn = `ngawan/selfie_${Date.now()}.jpg`;
+    const fd = new FormData();
+    fd.append('file', _selfieBlob);
+    fd.append('customName', fn);
+
+    const r2 = await fetch(R2, { method: 'POST', headers: { 'X-Custom-Auth': AUTH_KEY }, body: fd }).then(r => r.json());
+    if (!r2.success) throw new Error('Gagal upload foto: ' + (r2.error || ''));
+    const fotoUrl = r2.url || (CDN + fn);
+
+    // 2. Simpan URL foto ke row absensi (x_12 = foto_selfie)
+    stTxt.textContent = 'Menyimpan data...';
+    const res = await apiPost(T_ABSENSI, 'update', {
+      id_x: _selfieAbsenRow.id_x,
+      x_12: fotoUrl
+    });
+    if (!res.success) throw new Error(res.error || 'Gagal menyimpan foto.');
+
+    await loadMyAbsensi();
+    closeSelfieAbsen();
+    showToast('✅ Selfie verifikasi tersimpan!');
+
+    // Lanjutkan ke Pre-Test jika sesi punya soal
+    openQuiz('pre', _selfieSesiRow, _selfieAbsenRow);
+  } catch (e) {
+    loadEl.style.display = 'none';
+    document.getElementById('selfieActions').style.display = 'flex';
+    showToast('⚠ ' + e.message, true);
+  }
+}
+
+// ─────────────────────────────────────────────
 // QUIZ: PRE-TEST / POST-TEST
 // ─────────────────────────────────────────────
 // Mapping di absensi_ngawan:
@@ -1646,6 +1882,7 @@ async function doAbsen() {
 //   x_09 = skor pretest (mis. "3/5")
 //   x_10 = jawaban posttest (JSON)
 //   x_11 = skor posttest (mis. "4/5")
+//   x_12 = URL foto selfie verifikasi kehadiran
 
 function openQuiz(type, sesiRow, absenRow) {
   let soal = [];
@@ -1937,6 +2174,9 @@ function updateSesiBadge() {
 // PAGE NAVIGATION
 // ─────────────────────────────────────────────
 function showPage(name) {
+  // Hentikan kamera selfie jika berpindah halaman saat overlay masih terbuka
+  if (_selfieStream) closeSelfieAbsen();
+
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
 
