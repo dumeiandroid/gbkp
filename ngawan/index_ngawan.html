@@ -445,6 +445,12 @@
     border-radius: 6px;
     padding: 6px;
     display: inline-block;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+  }
+  .qr-box:hover {
+    transform: scale(1.06);
+    box-shadow: 0 0 0 2px var(--gold);
   }
 
   .qr-box canvas, .qr-box img { display: block; }
@@ -455,6 +461,57 @@
     font-family: 'JetBrains Mono', monospace;
     text-align: center;
   }
+
+  /* ── QR MODAL ── */
+  .qr-modal-card { max-width: 360px; text-align: center; }
+  .qr-modal-body {
+    padding: 24px 24px 26px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+  .qr-modal-box {
+    background: #fff;
+    border-radius: 10px;
+    padding: 14px;
+    display: inline-block;
+  }
+  .qr-modal-box canvas, .qr-modal-box img { display: block; }
+  .qr-modal-info { width: 100%; }
+  .qr-modal-sesi {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--gold);
+    font-weight: 700;
+    letter-spacing: .5px;
+    margin-bottom: 4px;
+  }
+  .qr-modal-pengajar {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .qr-modal-materi {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .btn-download-qr {
+    width: 100%;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 11px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .btn-download-qr:hover { background: var(--accent2); }
 
   /* EMPTY / LOADING */
   .state-row td {
@@ -626,6 +683,25 @@
       <button class="modal-close" onclick="closePengajarModal()">✕</button>
     </div>
     <div class="modal-body" id="pengajarModalBody"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL QR CODE ═══════════════ -->
+<div class="modal-overlay" id="qrModal" onclick="if(event.target===this) closeQrModal()">
+  <div class="modal-card qr-modal-card">
+    <div class="modal-head">
+      <h3>📷 QR Absensi</h3>
+      <button class="modal-close" onclick="closeQrModal()">✕</button>
+    </div>
+    <div class="qr-modal-body">
+      <div class="qr-modal-box" id="qrModalBox"></div>
+      <div class="qr-modal-info">
+        <div class="qr-modal-sesi" id="qrModalSesi">SESI —</div>
+        <div class="qr-modal-pengajar" id="qrModalPengajar">—</div>
+        <div class="qr-modal-materi" id="qrModalMateri">—</div>
+      </div>
+      <button class="btn-download-qr" id="btnDownloadQr">⬇️ Download QR Code</button>
+    </div>
   </div>
 </div>
 
@@ -844,8 +920,71 @@ function closePengajarModal() {
   document.getElementById('pengajarModal').classList.remove('show');
 }
 
+// ─────────────────────────────────────────────
+// MODAL QR CODE
+// ─────────────────────────────────────────────
+function openQrModal(id_x) {
+  const row = ALL_ROWS.find(r => String(r.id_x) === String(id_x));
+  if (!row) return;
+
+  const no       = row.x_01 || '—';
+  const pengajar = row.x_02 || '—';
+  const materi   = row.x_03 || '—';
+  const qrUrl    = `${BASE_ABSENSI}?sesi=${no}&id=${id_x}`;
+
+  document.getElementById('qrModalSesi').textContent     = `SESI ${no}`;
+  document.getElementById('qrModalPengajar').textContent = pengajar;
+  document.getElementById('qrModalMateri').textContent   = materi;
+
+  const box = document.getElementById('qrModalBox');
+  box.innerHTML = '';
+
+  new QRCode(box, {
+    text: qrUrl,
+    width: 240,
+    height: 240,
+    colorDark: '#000000',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+
+  document.getElementById('qrModal').classList.add('show');
+
+  // Setup tombol download (tunggu QR selesai dirender)
+  requestAnimationFrame(() => {
+    const btn = document.getElementById('btnDownloadQr');
+    btn.onclick = () => downloadQr(box, no, pengajar);
+  });
+}
+
+function closeQrModal() {
+  document.getElementById('qrModal').classList.remove('show');
+}
+
+function downloadQr(box, no, pengajar) {
+  const canvas = box.querySelector('canvas');
+  const img    = box.querySelector('img');
+  const safeName = (pengajar || 'pengajar').replace(/[^a-zA-Z0-9]+/g, '_');
+  const filename = `QR_Sesi${no}_${safeName}.png`;
+
+  const triggerDownload = (dataUrl) => {
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+
+  if (canvas) {
+    triggerDownload(canvas.toDataURL('image/png'));
+  } else if (img) {
+    triggerDownload(img.src);
+  }
+}
+
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closePengajarModal();
+  if (e.key === 'Escape') { closePengajarModal(); closeQrModal(); }
 });
 
 // ─────────────────────────────────────────────
@@ -898,7 +1037,7 @@ function renderTable(rows) {
       <td><span class="hal-badge">${hal ? 'hlm. ' + hal : '—'}</span></td>
       <td>
         <div class="qr-cell">
-          <div class="qr-box" id="qr-${id_x}"></div>
+          <div class="qr-box" id="qr-${id_x}" onclick="openQrModal('${id_x}')"></div>
           <div class="qr-label">Sesi ${no}</div>
         </div>
       </td>

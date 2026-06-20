@@ -632,6 +632,71 @@
   #toast.show { transform: translateX(-50%) translateY(0); }
   #toast.err  { background: var(--danger); }
 
+  /* Confirm Absen Modal */
+  .confirm-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,.65);
+    z-index: 600;
+    display: none;
+    align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .confirm-overlay.open { display: flex; }
+
+  .confirm-modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    width: 100%; max-width: 380px;
+    padding: 26px 24px;
+    text-align: center;
+    box-shadow: 0 32px 80px rgba(0,0,0,.6);
+  }
+
+  .confirm-icon {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: rgba(245,158,11,.15);
+    color: var(--gold);
+    font-size: 24px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 14px;
+  }
+
+  .confirm-title {
+    font-size: 16px; font-weight: 800;
+    margin-bottom: 6px;
+  }
+  .confirm-sub {
+    font-size: 12px; color: var(--muted);
+    margin-bottom: 18px;
+  }
+
+  .confirm-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    text-align: left;
+    margin-bottom: 20px;
+  }
+  .confirm-card .cc-sesi {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--gold); font-weight: 700;
+    letter-spacing: .5px; margin-bottom: 6px;
+  }
+  .confirm-card .cc-materi {
+    font-size: 15px; font-weight: 700; color: var(--text);
+    line-height: 1.4; margin-bottom: 4px;
+  }
+  .confirm-card .cc-pengajar {
+    font-size: 13px; color: var(--accent); font-weight: 600;
+  }
+
+  .confirm-nav {
+    display: flex; gap: 10px;
+  }
+
   /* Quiz Modal */
   .quiz-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -883,6 +948,26 @@
 <!-- ── QUIZ MODAL ── -->
 <div class="quiz-overlay" id="quizOverlay">
   <div class="quiz-modal" id="quizModal"></div>
+</div>
+
+<!-- ═══════════════ KONFIRMASI ABSENSI ═══════════════ -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-modal">
+    <div class="confirm-icon">📡</div>
+    <div class="confirm-title">Konfirmasi Sesi</div>
+    <div class="confirm-sub">Pastikan ini adalah sesi yang sedang kamu ikuti sebelum mencatat kehadiran.</div>
+
+    <div class="confirm-card">
+      <div class="cc-sesi" id="confirmSesi">SESI —</div>
+      <div class="cc-materi" id="confirmMateri">—</div>
+      <div class="cc-pengajar" id="confirmPengajar">—</div>
+    </div>
+
+    <div class="confirm-nav">
+      <button class="quiz-btn quiz-btn-secondary" onclick="cancelAbsenConfirm()">✖️ Salah Scan</button>
+      <button class="quiz-btn quiz-btn-primary" onclick="confirmAbsen()">✅ Ya, Benar</button>
+    </div>
+  </div>
 </div>
 
 <!-- ── MAIN APP ── -->
@@ -1465,10 +1550,33 @@ function applySesiNo(sesiNo, fromQr) {
     if (sudahAbsen) {
       showToast('ℹ️ Sesi ' + sesiNo + ' terdeteksi — kamu sudah tercatat hadir.');
     } else {
-      showToast('📡 Sesi ' + sesiNo + ' terdeteksi, menyimpan kehadiran...');
-      doAbsen();
+      openAbsenConfirm(row);
     }
   }
+}
+
+// ─────────────────────────────────────────────
+// KONFIRMASI ABSENSI (mencegah salah scan)
+// ─────────────────────────────────────────────
+function openAbsenConfirm(row) {
+  document.getElementById('confirmSesi').textContent     = 'SESI ' + (row.x_01 || '—');
+  document.getElementById('confirmMateri').textContent   = row.x_03 || '—';
+  document.getElementById('confirmPengajar').textContent = row.x_02 || '—';
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+
+function closeAbsenConfirm() {
+  document.getElementById('confirmOverlay').classList.remove('open');
+}
+
+function confirmAbsen() {
+  closeAbsenConfirm();
+  doAbsen();
+}
+
+function cancelAbsenConfirm() {
+  closeAbsenConfirm();
+  showToast('Absensi dibatalkan. Silakan scan ulang QR yang benar.', true);
 }
 
 // Proses ?sesi= dari URL setelah login & data jadwal siap
