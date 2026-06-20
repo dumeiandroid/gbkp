@@ -1381,6 +1381,39 @@ async function apiPost(table, action, body) {
   return r.json();
 }
 
+// PUT langsung ke baris (id_x) — dipakai untuk update agar selalu menimpa
+// baris yang sama, bukan membuat baris baru (sama seperti pola di cpmi.html).
+async function apiPut(table, id_x, body) {
+  const r = await fetch(`${API_URL}?table=${table}&id_x=${encodeURIComponent(id_x)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
+    body: JSON.stringify(body)
+  });
+  return r.json();
+}
+
+// ─────────────────────────────────────────────
+// DATA TAMBAHAN ABSENSI (JSON di kolom x_08)
+// Semua data lanjutan (selfie masuk/pulang, waktu pulang,
+// pretest, posttest) disimpan dalam SATU kolom JSON supaya
+// satu sesi/materi = satu baris saja, walau nanti ada
+// absensi masuk & pulang.
+// ─────────────────────────────────────────────
+function parseAbsenData(row) {
+  try { return JSON.parse(row?.x_08 || '{}'); } catch (e) { return {}; }
+}
+
+async function updateAbsenData(id_x, patch) {
+  const existing = myAbsensi.find(r => r.id_x == id_x) || {};
+  const data = parseAbsenData(existing);
+  Object.assign(data, patch);
+  const res = await apiPut(T_ABSENSI, id_x, { x_08: JSON.stringify(data) });
+  if (res.success) {
+    existing.x_08 = JSON.stringify(data); // update cache lokal juga
+  }
+  return res;
+}
+
 // ─────────────────────────────────────────────
 // REGISTER
 // ─────────────────────────────────────────────
@@ -1853,11 +1886,10 @@ async function kirimSelfieAbsen() {
     if (!r2.success) throw new Error('Gagal upload foto: ' + (r2.error || ''));
     const fotoUrl = r2.url || (CDN + fn);
 
-    // 2. Simpan URL foto ke row absensi (x_12 = foto_selfie)
+    // 2. Simpan URL foto ke JSON data absensi (selfie_masuk)
     stTxt.textContent = 'Menyimpan data...';
-    const res = await apiPost(T_ABSENSI, 'update', {
-      id_x: _selfieAbsenRow.id_x,
-      x_12: fotoUrl
+    const res = await updateAbsenData(_selfieAbsenRow.id_x, {
+      selfie_masuk: fotoUrl
     });
     if (!res.success) throw new Error(res.error || 'Gagal menyimpan foto.');
 
@@ -1878,11 +1910,14 @@ async function kirimSelfieAbsen() {
 // QUIZ: PRE-TEST / POST-TEST
 // ─────────────────────────────────────────────
 // Mapping di absensi_ngawan:
-//   x_08 = jawaban pretest (JSON array ["a","c",...])
-//   x_09 = skor pretest (mis. "3/5")
-//   x_10 = jawaban posttest (JSON)
-//   x_11 = skor posttest (mis. "4/5")
-//   x_12 = URL foto selfie verifikasi kehadiran
+//   x_08 = JSON gabungan data lanjutan, contoh:
+//   {
+//     "selfie_masuk":  "https://assets...jpg",
+//     "waktu_pulang":  "20/06/2026, 18.05",
+//     "selfie_pulang": "https://assets...jpg",
+//     "pretest":  { "jawaban": ["a","c",...], "skor": "3/5" },
+//     "posttest": { "jawaban": ["a","c",...], "skor": "4/5" }
+//   }
 
 function openQuiz(type, sesiRow, absenRow) {
   let soal = [];
@@ -1896,7 +1931,8 @@ function openQuiz(type, sesiRow, absenRow) {
   }
 
   // Cek apakah sudah pernah mengisi
-  const already = type === 'pre' ? absenRow.x_08 : absenRow.x_10;
+  const data    = parseAbsenData(absenRow);
+  const already = type === 'pre' ? data.pretest : data.posttest;
   if (already) {
     showToast(type === 'pre' ? 'ℹ️ Pre-Test sesi ini sudah pernah diisi.' : 'ℹ️ Post-Test sesi ini sudah pernah diisi.');
     return;
@@ -2009,17 +2045,12 @@ async function submitQuiz() {
   const scoreStr = `${score}/${quizSoal.length}`;
   const isPre = quizType === 'pre';
 
-  const payload = { id_x: quizAbsenRow.id_x };
-  if (isPre) {
-    payload.x_08 = JSON.stringify(quizAnswers);
-    payload.x_09 = scoreStr;
-  } else {
-    payload.x_10 = JSON.stringify(quizAnswers);
-    payload.x_11 = scoreStr;
-  }
+  const patch = isPre
+    ? { pretest:  { jawaban: quizAnswers, skor: scoreStr } }
+    : { posttest: { jawaban: quizAnswers, skor: scoreStr } };
 
   try {
-    const res = await apiPost(T_ABSENSI, 'update', payload);
+    const res = await updateAbsenData(quizAbsenRow.id_x, patch);
     if (!res.success) {
       showToast('Gagal menyimpan hasil ' + (isPre ? 'pre-test' : 'post-test') + ': ' + (res.error || 'Error'), true);
     } else {
@@ -2075,12 +2106,13 @@ function renderRiwayat() {
           let postCell = '<span style="color:var(--muted);font-size:11px">—</span>';
 
           if (hasSoal) {
-            preCell = r.x_09
-              ? `<span class="quiz-score-chip">${r.x_09}</span>`
+            const data = parseAbsenData(r);
+            preCell = data.pretest?.skor
+              ? `<span class="quiz-score-chip">${data.pretest.skor}</span>`
               : `<span style="color:var(--muted);font-size:11px">belum diisi</span>`;
 
-            postCell = r.x_11
-              ? `<span class="quiz-score-chip">${r.x_11}</span>`
+            postCell = data.posttest?.skor
+              ? `<span class="quiz-score-chip">${data.posttest.skor}</span>`
               : `<button class="quiz-launch-btn" onclick='openQuizFromRiwayat(${r.id_x})'>Mulai Post-Test</button>`;
           }
 
