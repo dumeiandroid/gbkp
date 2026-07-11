@@ -57,10 +57,6 @@ let quizAbsenRow  = null;   // absensi_ngawan row being updated
 let quizSesiRow   = null;   // ngawan row (sesi) for the quiz
 let quizFinished  = false;
 
-// Menyimpan konteks absen pulang yang tertunda menunggu Post-Test selesai
-// (diisi saat scan QR ke-2 mendeteksi Post-Test belum diisi)
-let _pulangAfterQuiz = null; // { row, existing } | null
-
 // ─────────────────────────────────────────────
 // BOOT
 // ─────────────────────────────────────────────
@@ -368,34 +364,20 @@ function refreshAlreadyBadge() {
   if (!selectedSesi) return;
   const badgeWrap = document.getElementById('alreadyBadge');
   const badgeEl   = badgeWrap.querySelector('.already-badge');
-  const btnPost   = document.getElementById('btnPostTestManual');
   const existing  = myAbsensi.find(r => r.x_03 == selectedSesi.x_01 && r.x_01 == currentUser.id_x);
 
   if (!existing) {
     badgeWrap.style.display = 'none';
-    if (btnPost) btnPost.style.display = 'none';
     return;
   }
 
   const data = parseAbsenData(existing);
   if (data.waktu_pulang) {
     badgeEl.textContent = '✅ Sudah absen masuk & pulang di sesi ini';
-    if (btnPost) btnPost.style.display = 'none';
   } else {
-    badgeEl.textContent = '✅ Sudah absen masuk — selesaikan Post-Test sebelum absen pulang';
-    if (btnPost) btnPost.style.display = (sesiPunyaSoal(selectedSesi) && !data.posttest) ? 'flex' : 'none';
+    badgeEl.textContent = '✅ Sudah absen masuk — scan lagi untuk absen pulang';
   }
   badgeWrap.style.display = 'block';
-}
-
-// Trigger Post-Test manual dari halaman Absensi (tombol di bawah badge)
-function mulaiPostTestManual() {
-  if (!selectedSesi) return;
-  const existing = myAbsensi.find(r => r.x_03 == selectedSesi.x_01 && r.x_01 == currentUser.id_x);
-  if (!existing) { showToast('Anda belum absen masuk di sesi ini.', true); return; }
-  const data = parseAbsenData(existing);
-  if (data.posttest) { showToast('ℹ️ Post-Test sesi ini sudah pernah diisi.'); return; }
-  openQuiz('post', selectedSesi, existing);
 }
 
 // ─────────────────────────────────────────────
@@ -466,58 +448,6 @@ function onQrScanSuccess(decodedText) {
   applySesiNo(sesiNo, true);
 }
 
-// ─────────────────────────────────────────────
-// CEK KETERLAMBATAN ABSEN MASUK (toleransi 5 menit)
-// Jadwal sesi diambil dari tabel ngawan: x_06 = tanggal
-// (format "Sabtu, 25 Juli 2026"), x_07 = jam (format "HH:MM").
-// ─────────────────────────────────────────────
-const NAMA_BULAN_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-const BATAS_TOLERANSI_MENIT = 5;
-
-function parseJadwalSesi(sesiRow) {
-  const tgl = sesiRow?.x_06, jam = sesiRow?.x_07;
-  if (!tgl || !jam) return null; // jadwal belum diisi admin -> tidak bisa dicek, jangan blokir
-
-  const m = String(tgl).match(/(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/);
-  if (!m) return null;
-  const [, day, monName, year] = m;
-  const bulanIdx = NAMA_BULAN_ID.findIndex(b => b.toLowerCase() === monName.toLowerCase());
-  if (bulanIdx === -1) return null;
-
-  const jamMatch = String(jam).match(/(\d{1,2}):(\d{2})/);
-  if (!jamMatch) return null;
-  const [, h, mnt] = jamMatch;
-
-  const dt = new Date(parseInt(year,10), bulanIdx, parseInt(day,10), parseInt(h,10), parseInt(mnt,10), 0);
-  return isNaN(dt.getTime()) ? null : dt;
-}
-
-// Mengembalikan { terlambat: bool, menit: number } untuk absen MASUK.
-// Kalau jadwal (tanggal/jam) belum diisi admin, dianggap tidak terlambat
-// (tidak ada acuan waktu untuk dibandingkan).
-function cekKeterlambatanMasuk(sesiRow) {
-  const jadwal = parseJadwalSesi(sesiRow);
-  if (!jadwal) return { terlambat: false };
-
-  const now = new Date();
-  const selisihMenit = Math.floor((now - jadwal) / 60000);
-
-  if (selisihMenit > BATAS_TOLERANSI_MENIT) {
-    return { terlambat: true, menit: selisihMenit };
-  }
-  return { terlambat: false, menit: selisihMenit };
-}
-
-// Cek apakah sesi ini punya soal test (dipakai untuk pre-test/post-test)
-function sesiPunyaSoal(sesiRow) {
-  try {
-    const soal = JSON.parse(sesiRow?.x_05 || '[]');
-    return soal.filter(q => q && q.soal).length > 0;
-  } catch (e) {
-    return false;
-  }
-}
-
 // Terapkan nomor sesi (dari QR atau ?sesi= di URL)
 function applySesiNo(sesiNo, fromQr) {
   const row = allSesi.find(r => String(r.x_01) == String(sesiNo));
@@ -535,32 +465,17 @@ function applySesiNo(sesiNo, fromQr) {
   if (fromQr) {
     const existing = myAbsensi.find(r => r.x_03 == row.x_01 && r.x_01 == currentUser.id_x);
     if (!existing) {
-      // Belum absen sama sekali di sesi ini → cek keterlambatan dulu
-      const cek = cekKeterlambatanMasuk(row);
-      if (cek.terlambat) {
-        showToast('⛔ Absen masuk ditolak — sudah lewat ' + cek.menit + ' menit dari jadwal (batas toleransi ' + BATAS_TOLERANSI_MENIT + ' menit).', true);
-        return;
-      }
-      // Proses absen MASUK
+      // Belum absen sama sekali di sesi ini → proses absen MASUK
       openAbsenConfirm(row, 'masuk');
     } else {
       const data = parseAbsenData(existing);
-      if (data.waktu_pulang) {
+      if (!data.waktu_pulang) {
+        // Sudah absen masuk, belum pulang → proses absen PULANG
+        openAbsenConfirm(row, 'pulang', existing);
+      } else {
         // Sudah absen masuk & pulang
         showToast('ℹ️ Anda telah absen untuk sesi ' + sesiNo + ' (masuk & pulang).');
-        return;
       }
-
-      // Sudah absen masuk, belum pulang → wajib Post-Test dulu (jika sesi punya soal)
-      if (sesiPunyaSoal(row) && !data.posttest) {
-        showToast('📝 Silakan selesaikan Post-Test terlebih dahulu sebelum absen pulang.');
-        _pulangAfterQuiz = { row, existing };
-        openQuiz('post', row, existing);
-        return;
-      }
-
-      // Post-Test sudah selesai (atau sesi tidak punya soal) → proses absen PULANG
-      openAbsenConfirm(row, 'pulang', existing);
     }
   }
 }
@@ -876,22 +791,8 @@ function openQuiz(type, sesiRow, absenRow) {
 
 function closeQuiz() {
   document.getElementById('quizOverlay').classList.remove('open');
-  const wasPost = quizType === 'post';
   quizSoal = []; quizAnswers = []; quizIndex = 0; quizType = null;
   quizAbsenRow = null; quizSesiRow = null; quizFinished = false;
-
-  // Jika Post-Test ini dipicu oleh alur scan absen pulang, lanjutkan
-  // otomatis ke konfirmasi + selfie absen pulang setelah Post-Test tersimpan.
-  if (wasPost && _pulangAfterQuiz) {
-    const pending = _pulangAfterQuiz;
-    _pulangAfterQuiz = null;
-
-    const freshRow = myAbsensi.find(r => r.id_x == pending.existing.id_x) || pending.existing;
-    const data = parseAbsenData(freshRow);
-    if (data.posttest) {
-      openAbsenConfirm(pending.row, 'pulang', freshRow);
-    }
-  }
 }
 
 function renderQuizModal() {
@@ -1036,7 +937,10 @@ function renderRiwayat() {
       <tbody>
         ${sorted.map(r => {
           const sesiRow = allSesi.find(s => s.x_01 == r.x_03);
-          const hasSoal = sesiPunyaSoal(sesiRow);
+          const hasSoal = (() => {
+            try { return JSON.parse(sesiRow?.x_05 || '[]').filter(q => q && q.soal).length > 0; }
+            catch { return false; }
+          })();
 
           let preCell = '<span style="color:var(--muted);font-size:11px">—</span>';
           let postCell = '<span style="color:var(--muted);font-size:11px">—</span>';

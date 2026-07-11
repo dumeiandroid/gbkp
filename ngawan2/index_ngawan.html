@@ -236,79 +236,6 @@
   .stat-val  { font-size: 22px; font-weight: 800; line-height: 1; }
   .stat-lbl  { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
-  /* ADMIN TABS */
-  .admin-tabs {
-    display: flex; gap: 8px;
-    margin-bottom: 16px;
-    border-bottom: 1px solid var(--border);
-  }
-  .admin-tab-btn {
-    background: transparent; border: none;
-    color: var(--muted); font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 13px; font-weight: 700;
-    padding: 10px 4px; cursor: pointer;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-    transition: color .15s, border-color .15s;
-  }
-  .admin-tab-btn + .admin-tab-btn { margin-left: 18px; }
-  .admin-tab-btn:hover { color: var(--text); }
-  .admin-tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
-  .admin-tab-panel { display: none; }
-  .admin-tab-panel.active { display: block; }
-
-  /* MATRIKS KEHADIRAN */
-  .matrix-wrap { overflow-x: auto; }
-  table.matrix { border-collapse: collapse; font-size: 12px; min-width: 600px; width: 100%; }
-  table.matrix th, table.matrix td {
-    padding: 7px 8px; text-align: center; border: 1px solid var(--border);
-    white-space: nowrap;
-  }
-  table.matrix th { background: var(--surface2); color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: .3px; }
-  table.matrix td.mk-nama, table.matrix th.mk-nama { text-align: left; font-weight: 600; }
-  table.matrix td.mk-total { font-weight: 800; color: var(--gold); }
-  table.matrix th.today-col, table.matrix td.today-col { background: rgba(16,185,129,.06); }
-  .ico-hadir { color: var(--success); }
-  .ico-absen { color: var(--danger); opacity: .6; }
-  .ico-terlambat { color: var(--gold); }
-  .ico-berlangsung { color: var(--accent); }
-  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px; font-size: 11.5px; color: var(--muted); }
-  .legend span { display: inline-flex; align-items: center; gap: 5px; }
-
-  /* REKAP PANEL (Hadir/Tidak Hadir Hari Ini & Jumlah Kehadiran) */
-  .rekap-panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px 18px;
-    margin-bottom: 16px;
-  }
-  .rekap-panel-title {
-    font-size: 13px; font-weight: 700; color: var(--text);
-    margin-bottom: 12px;
-    display: flex; align-items: center; gap: 6px;
-  }
-  .rekap-pills-row {
-    display: flex; gap: 10px; flex-wrap: wrap;
-  }
-  .rekap-pill {
-    display: flex; align-items: center; gap: 10px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 9px;
-    padding: 10px 16px;
-    cursor: pointer;
-    transition: border-color .2s, transform .15s;
-    min-width: 110px;
-  }
-  .rekap-pill:hover { border-color: var(--accent); transform: translateY(-1px); }
-  .rekap-pill-count { font-size: 20px; font-weight: 800; line-height: 1; }
-  .rekap-pill-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .rekap-pill.hadir .rekap-pill-count     { color: var(--success); }
-  .rekap-pill.tidak-hadir .rekap-pill-count { color: var(--danger); }
-  .rekap-pill.jumlah .rekap-pill-count    { color: var(--gold); }
-  .rekap-empty { color: var(--muted); font-size: 13px; }
-
   /* TOOLBAR */
   .toolbar {
     display: flex; align-items: center; gap: 10px;
@@ -661,11 +588,9 @@
   /* PRINT STYLES */
   @media print {
     body { background: #fff; color: #000; }
-    .topbar, .toolbar, .stats-bar, .btn-print, .btn-logout, .admin-tabs, .rekap-panel { display: none !important; }
+    .topbar, .toolbar, .stats-bar, .btn-print, .btn-logout { display: none !important; }
     #loginOverlay { display: none !important; }
     #app { display: block !important; }
-    .admin-tab-panel { display: none !important; }
-    #tabPanelSesi { display: block !important; }
     .content { padding: 10px; }
     .table-wrap { border: 1px solid #ccc; }
     thead th { background: #f0f0f0; color: #333; border-bottom: 1px solid #ccc; }
@@ -769,87 +694,39 @@
       </div>
     </div>
 
-    <!-- TAB BAR -->
-    <div class="admin-tabs">
-      <button class="admin-tab-btn active" id="tabBtnSesi" onclick="switchAdminTab('sesi')">📋 Kelola Sesi &amp; QR</button>
-      <button class="admin-tab-btn" id="tabBtnRekap" onclick="switchAdminTab('rekap')">📊 Rekap Absensi</button>
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Cari pengajar atau materi..." oninput="filterTable()">
+      </div>
+      <button class="btn-print" onclick="window.print()">🖨️ Print Semua QR</button>
     </div>
 
-    <!-- ═══════════ TAB: KELOLA SESI ═══════════ -->
-    <div class="admin-tab-panel active" id="tabPanelSesi">
-
-      <!-- TOOLBAR -->
-      <div class="toolbar">
-        <div class="search-wrap">
-          <span class="search-icon">🔍</span>
-          <input type="text" id="searchInput" placeholder="Cari pengajar atau materi..." oninput="filterTable()">
-        </div>
-        <button class="btn-print" onclick="window.print()">🖨️ Print Semua QR</button>
-      </div>
-
-      <!-- TABLE -->
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th style="width:52px">No</th>
-              <th>Pengajar</th>
-              <th>Materi</th>
-              <th style="width:70px">Hal.</th>
-              <th style="width:130px">Tanggal</th>
-              <th style="width:70px">Jam</th>
-              <th class="no-print" style="width:56px; text-align:center">Aksi</th>
-              <th style="width:110px; text-align:center">QR Absensi</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody">
-            <tr class="state-row">
-              <td colspan="8">
-                <span class="spinner"></span> Memuat data dari server...
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:52px">No</th>
+            <th>Pengajar</th>
+            <th>Materi</th>
+            <th style="width:70px">Hal.</th>
+            <th style="width:130px">Tanggal</th>
+            <th style="width:70px">Jam</th>
+            <th class="no-print" style="width:56px; text-align:center">Aksi</th>
+            <th style="width:110px; text-align:center">QR Absensi</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr class="state-row">
+            <td colspan="8">
+              <span class="spinner"></span> Memuat data dari server...
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-
-    <!-- ═══════════ TAB: REKAP ABSENSI ═══════════ -->
-    <div class="admin-tab-panel" id="tabPanelRekap">
-
-      <!-- REKAP HARI INI -->
-      <div class="rekap-panel">
-        <div class="rekap-panel-title">📅 Rekap Kehadiran Hari Ini</div>
-        <div class="rekap-pills-row" id="rekapHariIniBody">
-          <div class="rekap-empty">Memuat rekap...</div>
-        </div>
-      </div>
-
-      <!-- REKAP JUMLAH KEHADIRAN -->
-      <div class="rekap-panel">
-        <div class="rekap-panel-title">📊 Rekap Jumlah Kehadiran Peserta</div>
-        <div class="rekap-pills-row" id="rekapJumlahBody">
-          <div class="rekap-empty">Memuat rekap...</div>
-        </div>
-      </div>
-
-      <!-- MATRIKS KEHADIRAN -->
-      <div class="rekap-panel">
-        <div class="rekap-panel-title">🗓️ Matriks Kehadiran (per Peserta × per Sesi)</div>
-        <div class="matrix-wrap" id="matrixKehadiranWrap">
-          <div class="rekap-empty">Memuat matriks kehadiran...</div>
-        </div>
-        <div class="legend">
-          <span><span class="ico-hadir">✅</span> Hadir (masuk &amp; pulang)</span>
-          <span><span class="ico-terlambat">🕒</span> Terlambat &gt;5 menit — tidak dihitung hadir</span>
-          <span><span class="ico-berlangsung">🕓</span> Sudah absen masuk, belum pulang / belum Post-Test</span>
-          <span><span class="ico-absen">✖️</span> Tidak hadir</span>
-          <span>Kolom hijau = sesi hari ini</span>
-        </div>
-      </div>
-
-    </div>
-
 
   </div><!-- /content -->
 </div><!-- /app -->
@@ -862,17 +739,6 @@
       <button class="modal-close" onclick="closePengajarModal()">✕</button>
     </div>
     <div class="modal-body" id="pengajarModalBody"></div>
-  </div>
-</div>
-
-<!-- ═══════════════ MODAL REKAP (Hadir/Tidak Hadir/Jumlah Kehadiran) ═══════════════ -->
-<div class="modal-overlay" id="rekapModal" onclick="if(event.target===this) closeRekapModal()">
-  <div class="modal-card">
-    <div class="modal-head">
-      <h3 id="rekapModalTitle">Rekap</h3>
-      <button class="modal-close" onclick="closeRekapModal()">✕</button>
-    </div>
-    <div class="modal-body" id="rekapModalBody"></div>
   </div>
 </div>
 
@@ -939,8 +805,6 @@ const API_URL   = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
 const AUTH_KEY  = 'admin';
 const TABLE_DATA  = 'ngawan';
 const TABLE_USERS = 'users';
-const T_ABSENSI   = 'absensi_ngawan';
-const T_PESERTA   = 'users_ngawan';
 const BASE_ABSENSI = 'https://gbkp.my.id/ngawan/absensi.html';
 const SESSION_KEY  = 'ngawan_user';
 const REMEMBER_KEY = 'ngawan_remember';
@@ -1081,14 +945,13 @@ function doLogout() {
 // ─────────────────────────────────────────────
 // SHOW APP
 // ─────────────────────────────────────────────
-async function showApp(user) {
+function showApp(user) {
   document.getElementById('loginOverlay').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   document.getElementById('userLabel').textContent = user.display || user.username;
   document.getElementById('userAvatar').textContent =
     (user.display || user.username).charAt(0).toUpperCase();
-  await loadData();  // tunggu ALL_ROWS terisi dulu, baru loadRekap (butuh ALL_ROWS juga)
-  loadRekap();
+  loadData();
 }
 
 // ─────────────────────────────────────────────
@@ -1136,290 +999,6 @@ function updateStats(rows) {
   document.getElementById('statTotal').textContent    = rows.length;
   document.getElementById('statPengajar').textContent = pengajarSet.size;
   document.getElementById('statLoaded').textContent   = rows.length;
-}
-
-// ─────────────────────────────────────────────
-// REKAP KEHADIRAN (Hari Ini + Jumlah Kehadiran per Peserta)
-// Sumber data: absensi_ngawan (satu baris = satu sesi dihadiri)
-// dan users_ngawan (daftar peserta terdaftar).
-// ─────────────────────────────────────────────
-let ALL_ABSENSI = [];
-let ALL_PESERTA = [];
-let _rekapJumlahGroups = {}; // { "3": ["Nama A","Nama B"], ... }
-let _rekapHadirNames     = [];
-let _rekapTidakHadirNames = [];
-
-// Ambil semua baris sebuah tabel dengan paginasi (API dibatasi per-request)
-async function apiGetAll(table) {
-  let all = [];
-  let offset = 0;
-  const limit = 200;
-  while (true) {
-    try {
-      const resp = await fetch(`${API_URL}?table=${table}&limit=${limit}&offset=${offset}`, {
-        headers: { 'X-Custom-Auth': AUTH_KEY }
-      });
-      const json = await resp.json();
-      if (!json.success) break;
-      const rows = json.data || [];
-      all = all.concat(rows);
-      if (rows.length < limit) break;
-      offset += limit;
-      if (offset > 20000) break; // safety net
-    } catch (e) {
-      break;
-    }
-  }
-  return all;
-}
-
-async function loadRekap() {
-  try {
-    const [absensi, peserta] = await Promise.all([apiGetAll(T_ABSENSI), apiGetAll(T_PESERTA)]);
-    ALL_ABSENSI = absensi;
-    ALL_PESERTA = peserta;
-    renderRekapHariIni();
-    renderRekapJumlah();
-    renderMatrixKehadiran();
-  } catch (e) {
-    document.getElementById('rekapHariIniBody').innerHTML = '<div class="rekap-empty">Gagal memuat rekap.</div>';
-    document.getElementById('rekapJumlahBody').innerHTML  = '<div class="rekap-empty">Gagal memuat rekap.</div>';
-    document.getElementById('matrixKehadiranWrap').innerHTML = '<div class="rekap-empty">Gagal memuat matriks kehadiran.</div>';
-  }
-}
-
-// Ambil tanggal HARI INI berdasarkan waktu LOKAL perangkat (bukan UTC).
-// PENTING: new Date().toISOString() selalu berbasis UTC, jadi untuk pengguna
-// WIB (UTC+7) bisa salah tanggal (mundur 1 hari) terutama dini hari.
-// Normalisasi ID untuk pencocokan antar tabel — beberapa kolom di D1 tersimpan
-// sebagai desimal (mis. "21.0") sementara tabel lain menyimpannya sebagai
-// angka murni (21) atau string biasa ("21"). Number() menyamakan semuanya.
-function normId(v) {
-  const n = Number(v);
-  return isNaN(n) ? String(v ?? '') : String(n);
-}
-
-function getTodayIsoLocal() {
-  const now = new Date();
-  const pad = n => String(n).padStart(2, '0');
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-}
-
-function renderRekapHariIni() {
-  const el = document.getElementById('rekapHariIniBody');
-
-  // Cari sesi yang tanggalnya (x_06) = hari ini
-  const todayIso = getTodayIsoLocal();
-  const todayStr = formatTanggalIndo(todayIso);
-  const sesiHariIni = ALL_ROWS.filter(r => (r.x_06 || '') === todayStr);
-
-  if (sesiHariIni.length === 0) {
-    el.innerHTML = '<div class="rekap-empty">Tidak ada sesi terjadwal hari ini.</div>';
-    _rekapHadirNames = []; _rekapTidakHadirNames = [];
-    return;
-  }
-
-  const sesiIdsHariIni = new Set(sesiHariIni.map(r => normId(r.x_01)));
-  const hadirIds = new Set(
-    ALL_ABSENSI.filter(r => sesiIdsHariIni.has(normId(r.x_03))).map(r => normId(r.x_01))
-  );
-
-  const hadirList     = ALL_PESERTA.filter(p => hadirIds.has(normId(p.id_x)));
-  const tidakHadirList = ALL_PESERTA.filter(p => !hadirIds.has(normId(p.id_x)));
-
-  _rekapHadirNames      = hadirList.map(p => p.x_01 || 'Tanpa Nama').sort((a,b) => a.localeCompare(b,'id'));
-  _rekapTidakHadirNames = tidakHadirList.map(p => p.x_01 || 'Tanpa Nama').sort((a,b) => a.localeCompare(b,'id'));
-
-  el.innerHTML = `
-    <div class="rekap-pill hadir" onclick="openRekapModalNames('✅ Hadir Hari Ini', _rekapHadirNames)">
-      <div>
-        <div class="rekap-pill-count">${hadirList.length}</div>
-        <div class="rekap-pill-label">Hadir</div>
-      </div>
-    </div>
-    <div class="rekap-pill tidak-hadir" onclick="openRekapModalNames('❌ Tidak Hadir Hari Ini', _rekapTidakHadirNames)">
-      <div>
-        <div class="rekap-pill-count">${tidakHadirList.length}</div>
-        <div class="rekap-pill-label">Tidak Hadir</div>
-      </div>
-    </div>
-  `;
-}
-
-function renderRekapJumlah() {
-  const el = document.getElementById('rekapJumlahBody');
-
-  // Hitung jumlah kehadiran (baris absensi) per id peserta
-  const counts = {};
-  ALL_ABSENSI.forEach(r => {
-    const uid = normId(r.x_01);
-    counts[uid] = (counts[uid] || 0) + 1;
-  });
-
-  // Kelompokkan peserta berdasarkan jumlah kehadiran
-  const groups = {};
-  ALL_PESERTA.forEach(p => {
-    const c = counts[normId(p.id_x)] || 0;
-    if (c === 0) return; // peserta yang belum pernah absen tidak ditampilkan di sini
-    if (!groups[c]) groups[c] = [];
-    groups[c].push(p.x_01 || 'Tanpa Nama');
-  });
-
-  Object.keys(groups).forEach(k => groups[k].sort((a,b) => a.localeCompare(b,'id')));
-  _rekapJumlahGroups = groups;
-
-  const keys = Object.keys(groups).map(Number).sort((a,b) => b - a);
-
-  if (keys.length === 0) {
-    el.innerHTML = '<div class="rekap-empty">Belum ada data kehadiran.</div>';
-    return;
-  }
-
-  el.innerHTML = keys.map(k => `
-    <div class="rekap-pill jumlah" onclick="openRekapModalCount(${k})">
-      <div>
-        <div class="rekap-pill-count">${groups[k].length}</div>
-        <div class="rekap-pill-label">${k}x hadir</div>
-      </div>
-    </div>
-  `).join('');
-}
-
-function openRekapModalNames(title, names) {
-  document.getElementById('rekapModalTitle').textContent = title;
-  const body = document.getElementById('rekapModalBody');
-  if (!names || names.length === 0) {
-    body.innerHTML = '<div class="pengajar-item">Tidak ada data.</div>';
-  } else {
-    body.innerHTML = names.map((nama, i) => `
-      <div class="pengajar-item">
-        <div class="pengajar-info">
-          <div class="pengajar-num">${i + 1}</div>
-          <div class="pengajar-name" title="${nama}">${nama}</div>
-        </div>
-      </div>
-    `).join('');
-  }
-  document.getElementById('rekapModal').classList.add('show');
-}
-
-function openRekapModalCount(count) {
-  const names = _rekapJumlahGroups[count] || [];
-  openRekapModalNames(`📊 Peserta dengan ${count}x Kehadiran`, names);
-}
-
-function closeRekapModal() {
-  document.getElementById('rekapModal').classList.remove('show');
-}
-
-// ─────────────────────────────────────────────
-// TAB SWITCHER (Kelola Sesi <-> Rekap Absensi)
-// ─────────────────────────────────────────────
-function switchAdminTab(tab) {
-  const isSesi = tab === 'sesi';
-  document.getElementById('tabBtnSesi').classList.toggle('active', isSesi);
-  document.getElementById('tabBtnRekap').classList.toggle('active', !isSesi);
-  document.getElementById('tabPanelSesi').classList.toggle('active', isSesi);
-  document.getElementById('tabPanelRekap').classList.toggle('active', !isSesi);
-}
-
-// ─────────────────────────────────────────────
-// MATRIKS KEHADIRAN (peserta × sesi)
-// Status per sel dihitung langsung dari data, bukan flag tersimpan:
-// - Tidak ada baris absensi              -> Tidak Hadir
-// - Ada baris, belum ada x_08.waktu_pulang -> sedang berlangsung / belum Post-Test
-// - Ada baris, waktu masuk (x_05) > 5 menit dari jadwal (x_06+x_07) -> Terlambat
-// - Selain itu -> Hadir
-// ─────────────────────────────────────────────
-function parseWaktuAbsenMasuk(str) {
-  if (!str) return null;
-  const m = String(str).match(/(\d{1,2})\/(\d{1,2})\/(\d{4}),\s*(\d{1,2})\.(\d{2})/);
-  if (!m) return null;
-  const [, d, mo, y, h, mi] = m;
-  const dt = new Date(parseInt(y,10), parseInt(mo,10)-1, parseInt(d,10), parseInt(h,10), parseInt(mi,10));
-  return isNaN(dt.getTime()) ? null : dt;
-}
-
-function parseJadwalSesiForMatrix(sesiRow) {
-  const tgl = sesiRow?.x_06, jam = sesiRow?.x_07;
-  if (!tgl || !jam) return null;
-  const m = String(tgl).match(/(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/);
-  if (!m) return null;
-  const [, day, monName, year] = m;
-  const idx = NAMA_BULAN_ID_MATRIX.findIndex(b => b.toLowerCase() === monName.toLowerCase());
-  if (idx === -1) return null;
-  const jm = String(jam).match(/(\d{1,2}):(\d{2})/);
-  if (!jm) return null;
-  const [, h, mnt] = jm;
-  const dt = new Date(parseInt(year,10), idx, parseInt(day,10), parseInt(h,10), parseInt(mnt,10));
-  return isNaN(dt.getTime()) ? null : dt;
-}
-
-const NAMA_BULAN_ID_MATRIX = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-
-function isAbsenTerlambat(sesiRow, absenRow) {
-  const jadwal = parseJadwalSesiForMatrix(sesiRow);
-  const masuk  = parseWaktuAbsenMasuk(absenRow.x_05);
-  if (!jadwal || !masuk) return false;
-  return Math.floor((masuk - jadwal) / 60000) > 5;
-}
-
-function parseAbsenDataMatrix(row) {
-  try { return JSON.parse(row?.x_08 || '{}'); } catch (e) { return {}; }
-}
-
-function renderMatrixKehadiran() {
-  const wrap = document.getElementById('matrixKehadiranWrap');
-  if (!wrap) return;
-
-  if (!ALL_ROWS.length || !ALL_PESERTA.length) {
-    wrap.innerHTML = '<div class="rekap-empty">Belum ada data sesi atau peserta untuk ditampilkan.</div>';
-    return;
-  }
-
-  const sesiSorted    = [...ALL_ROWS].sort((a, b) => Number(a.x_01) - Number(b.x_01));
-  const pesertaSorted = [...ALL_PESERTA].sort((a, b) => (a.x_01 || '').localeCompare(b.x_01 || '', 'id'));
-
-  const todayIso = getTodayIsoLocal();
-  const todayStr = formatTanggalIndo(todayIso);
-
-  let thead = '<tr><th class="mk-nama">Peserta</th><th>Total</th>';
-  sesiSorted.forEach((s, i) => {
-    const isToday = (s.x_06 || '') === todayStr;
-    const tip = `${s.x_03 || 'Materi belum diisi'}\n${s.x_06 || 'Tanggal belum diisi'} ${s.x_07 || ''}`.trim();
-    thead += `<th class="${isToday ? 'today-col' : ''}" title="${tip.replace(/"/g,'&quot;')}">S${i + 1}</th>`;
-  });
-  thead += '</tr>';
-
-  let rows = '';
-  pesertaSorted.forEach(p => {
-    let total = 0;
-    let cells = '';
-    sesiSorted.forEach(s => {
-      const isToday = (s.x_06 || '') === todayStr;
-      const absen = ALL_ABSENSI.find(r => normId(r.x_01) === normId(p.id_x) && normId(r.x_03) === normId(s.x_01));
-
-      let icon;
-      if (!absen) {
-        icon = '<span class="ico-absen" title="Tidak hadir">✖️</span>';
-      } else {
-        const data = parseAbsenDataMatrix(absen);
-        if (!data.waktu_pulang) {
-          icon = '<span class="ico-berlangsung" title="Sudah absen masuk, belum absen pulang / belum Post-Test">🕓</span>';
-        } else if (isAbsenTerlambat(s, absen)) {
-          // Terlambat > 5 menit: TIDAK dihitung ke Total (dianggap tidak mengikuti sesi ini)
-          icon = '<span class="ico-terlambat" title="Ditolak — terlambat lebih dari 5 menit, tidak dihitung hadir">🕒</span>';
-        } else {
-          total++; // dihitung total hanya kalau sudah absen masuk & pulang, DAN tidak terlambat
-          icon = '<span class="ico-hadir" title="Hadir (masuk & pulang tepat waktu)">✅</span>';
-        }
-      }
-      cells += `<td class="${isToday ? 'today-col' : ''}">${icon}</td>`;
-    });
-    rows += `<tr><td class="mk-nama">${p.x_01 || 'Tanpa Nama'}</td><td class="mk-total">${total}x</td>${cells}</tr>`;
-  });
-
-  wrap.innerHTML = `<table class="matrix">${thead}${rows}</table>`;
 }
 
 // ─────────────────────────────────────────────
@@ -1522,7 +1101,7 @@ function downloadQr(box, no, pengajar) {
 }
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closePengajarModal(); closeQrModal(); closeEditModal(); closeRekapModal(); }
+  if (e.key === 'Escape') { closePengajarModal(); closeQrModal(); closeEditModal(); }
 });
 
 // ─────────────────────────────────────────────
@@ -1598,8 +1177,6 @@ async function saveEdit() {
       });
       updateStats(ALL_ROWS);
       filterTable(); // re-render dengan filter pencarian yang sedang aktif
-      renderRekapHariIni(); // tanggal/jam sesi bisa berubah -> rekap hari ini ikut diperbarui
-      renderMatrixKehadiran(); // begitu juga matriks kehadiran & status terlambat
       closeEditModal();
     } else {
       errEl.textContent = res.error || 'Gagal menyimpan perubahan.';
