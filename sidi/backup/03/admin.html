@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Erlajar Ngawan - Panel Admin</title>
+    <!--
+      admin.html — Panel Admin (kewenangan tertinggi)
+      Tidak ada form registrasi di sini: akun admin dibuat MANUAL langsung di
+      tabel `admin_ngawan` (kolom x_01 = username, x_02 = password) lewat
+      database/NocoDB, bukan lewat aplikasi.
+      Tugas utama admin: menyetujui (approve) registrasi baru dari
+      peserta_ngawan (index.html) dan pengajar_ngawan (pengajar_ngawan.html)
+      sebelum akun-akun tersebut bisa login.
+    -->
+    <style>
+        :root {
+            --primary: #7c3aed; --primary-dark: #6d28d9;
+            --bg: #f1f5f9; --dark: #1e293b; --sidebar-w: 240px;
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--dark); }
+
+        /* LOGIN */
+        #loginPage { position: fixed; inset: 0; background: linear-gradient(135deg, #1e293b 0%, #7c3aed 100%); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        .login-card { background: white; padding: 40px; border-radius: 16px; width: 100%; max-width: 360px; box-shadow: 0 25px 50px rgba(0,0,0,0.3); }
+        .lc-logo { text-align: center; margin-bottom: 28px; }
+        .lc-logo h2 { font-size: 26px; font-weight: 900; color: var(--dark); }
+        .lc-logo h2 span { color: var(--primary); }
+        .lc-logo p { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin-top: 4px; }
+        .lc-badge { display:inline-block; margin-top:10px; font-size:10px; font-weight:800; letter-spacing:.5px; color:#7c3aed; background:#f3e8ff; padding:4px 10px; border-radius:20px; text-transform:uppercase; }
+        .lc-label { display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px; text-transform: uppercase; }
+        .lc-input { width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; outline: none; margin-bottom: 16px; transition: 0.2s; }
+        .lc-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(124,58,237,0.12); }
+        .btn-login { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; }
+        #loginError { color: #ef4444; font-size: 13px; text-align: center; margin-top: 12px; display: none; }
+        .lc-rem { display: flex; align-items: center; font-size: 12px; color: #64748b; margin-bottom: 14px; cursor: pointer; }
+
+        /* LAYOUT */
+        #appLayout { display: none; min-height: 100vh; }
+
+        /* SIDEBAR */
+        .sidebar { position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh; background: var(--dark); color: white; display: flex; flex-direction: column; z-index: 100; overflow-y: auto; }
+        .sb-logo { padding: 22px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .sb-logo h1 { font-size: 19px; font-weight: 900; }
+        .sb-logo h1 span { color: var(--primary); }
+        .sb-logo p { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+        .sb-nav { flex: 1; padding: 12px 0; }
+        .sb-sec { font-size: 10px; color: #475569; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 14px 20px 5px; }
+        .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; color: #94a3b8; font-size: 13px; font-weight: 500; cursor: pointer; transition: 0.2s; border-left: 3px solid transparent; }
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+        .nav-item.active { background: rgba(124,58,237,0.18); color: white; border-left-color: var(--primary); }
+        .nav-item .icon { font-size: 15px; width: 20px; text-align: center; }
+        .nav-item .cnt { margin-left:auto; background:var(--warning); color:#1e293b; font-size:10px; font-weight:800; padding:1px 7px; border-radius:20px; }
+        .sb-foot { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.08); }
+        .admin-badge { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .admin-av { width: 34px; height: 34px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
+        .admin-info p { font-size: 13px; font-weight: 600; color: white; }
+        .admin-info small { font-size: 10px; color: #64748b; }
+        .btn-logout-sb { width: 100%; padding: 8px; background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2); border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+        /* MAIN */
+        .main { margin-left: var(--sidebar-w); padding: 28px; min-height: 100vh; }
+        .pg-header { margin-bottom: 22px; }
+        .pg-header h2 { font-size: 21px; font-weight: 800; }
+        .pg-header p { font-size: 13px; color: #64748b; margin-top: 3px; }
+
+        /* STATS */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+        .scard { background: white; padding: 18px; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; }
+        .scard .si { font-size: 22px; float: right; }
+        .scard .sl { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .scard .sv { font-size: 26px; font-weight: 900; }
+        .scard .ss { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+
+        /* TABS (jenis akun) */
+        .ptabs { display: flex; background: #e2e8f0; border-radius: 10px; padding: 4px; gap: 3px; margin-bottom: 18px; width: fit-content; }
+        .ptab { padding: 8px 18px; border: none; border-radius: 7px; font-size: 13px; font-weight: 700; cursor: pointer; background: transparent; color: #64748b; transition: all 0.2s; font-family: inherit; }
+        .ptab:hover { color: var(--dark); }
+        .ptab.active { background: white; color: var(--primary); box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
+
+        /* FILTER STATUS */
+        .fbar { background: white; padding: 12px 16px; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+        .fchip { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; border: 1px solid #e2e8f0; color: #64748b; background: #f8fafc; transition:.2s; }
+        .fchip.active { background: var(--dark); color: white; border-color: var(--dark); }
+
+        /* TABLE */
+        .tcard { background: white; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; overflow: hidden; }
+        .tcard table { width: 100%; border-collapse: collapse; }
+        .tcard thead th { background: #f8fafc; padding: 11px 14px; text-align: left; font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+        .tcard tbody td { padding: 11px 14px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        .tcard tbody tr:last-child td { border-bottom: none; }
+        .tcard tbody tr:hover { background: #f8fafc; }
+        .lr td { text-align: center; padding: 36px; color: #94a3b8; font-size: 13px; }
+        .er td { text-align: center; padding: 40px; color: #94a3b8; }
+
+        /* BADGES STATUS */
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .b-pending  { background: #fef3c7; color: #b45309; }
+        .b-approved { background: #d1fae5; color: #065f46; }
+
+        .uchip { display: inline-flex; align-items: center; gap: 5px; background: #f1f5f9; padding: 3px 9px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .udot { width: 7px; height: 7px; border-radius: 50%; background: var(--primary); flex-shrink: 0; }
+
+        /* ACTION BUTTONS */
+        .actbtn { border: none; border-radius: 6px; padding: 6px 11px; font-size: 11px; font-weight: 700; cursor: pointer; margin-right: 5px; }
+        .act-approve { background: #d1fae5; color: #065f46; }
+        .act-approve:hover { background: #a7f3d0; }
+        .act-revoke { background: #fef3c7; color: #b45309; }
+        .act-revoke:hover { background: #fde68a; }
+        .act-delete { background: #fee2e2; color: #b91c1c; }
+        .act-delete:hover { background: #fecaca; }
+
+        /* SPINNER */
+        .sp { display: inline-block; width: 16px; height: 16px; border: 2px solid #e2e8f0; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 5px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* PAGES */
+        .page { display: none; }
+        .page.active { display: block; }
+
+        @media (max-width: 900px) { .stats-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 640px) { .main { margin-left: 0; padding: 14px; } .stats-grid { grid-template-columns: 1fr 1fr; } }
+
+        /* ===== MOBILE HAMBURGER & RESPONSIVE SIDEBAR ===== */
+        .topbar-mobile {
+            display: none;
+            position: fixed; top: 0; left: 0; right: 0; height: 52px;
+            background: var(--dark); color: white; z-index: 10000;
+            align-items: center; justify-content: space-between;
+            padding: 0 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        body.app-ready .topbar-mobile { display: none; }
+        .topbar-mobile h1 { font-size: 15px; font-weight: 900; }
+        .topbar-mobile h1 span { color: var(--primary); }
+        .btn-burger { background: none; border: none; cursor: pointer; display: flex; flex-direction: column; gap: 5px; padding: 6px; }
+        .btn-burger span { display: block; width: 22px; height: 2px; background: white; border-radius: 2px; transition: all 0.3s ease; }
+        .btn-burger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .btn-burger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+        .btn-burger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+        .sb-overlay-adm { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 140; }
+        .sb-overlay-adm.open { display: block; }
+
+        @media (max-width: 768px) {
+            body.app-ready .topbar-mobile { display: flex; }
+            .sidebar { transform: translateX(-100%); transition: transform 0.3s ease; z-index: 150; top: 52px; height: calc(100vh - 52px); }
+            .sidebar.sb-open { transform: translateX(0); }
+            .main { margin-left: 0 !important; padding: 14px; padding-top: 64px !important; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .tcard table { font-size: 12px; }
+            .tcard thead th, .tcard tbody td { padding: 8px 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- LOGIN (khusus admin, tanpa registrasi — akun dibuat manual di tabel admin_ngawan) -->
+<div id="loginPage">
+    <div class="login-card">
+        <div class="lc-logo">
+            <h2>ERLAJAR<span>NGAWAN</span></h2>
+            <p>GBKP Runggun Bambu Raya</p>
+            <span class="lc-badge">🛡️ Admin Access</span>
+        </div>
+        <label class="lc-label">Username Admin</label>
+        <input class="lc-input" type="text" id="l_user" placeholder="Username...">
+        <label class="lc-label">Password</label>
+        <input class="lc-input" type="password" id="l_pass" placeholder="Password..." onkeydown="if(event.key==='Enter') handleLogin()">
+        <label class="lc-rem">
+            <input type="checkbox" id="l_rem" style="width:14px;height:14px;accent-color:var(--primary);vertical-align:middle;margin-right:5px;">
+            <span>Ingat Saya (30 hari)</span>
+        </label>
+        <button class="btn-login" onclick="handleLogin()">MASUK SEBAGAI ADMIN</button>
+        <p id="loginError">Username atau password salah!</p>
+    </div>
+</div>
+
+<!-- MOBILE TOPBAR -->
+<div class="topbar-mobile" id="mobileTopbar">
+    <button class="btn-burger" id="btnBurger" onclick="toggleSidebarMobile()">
+        <span></span><span></span><span></span>
+    </button>
+    <h1>ERLAJAR<span>NGAWAN</span></h1>
+    <div style="width:34px;"></div>
+</div>
+<div class="sb-overlay-adm" id="sbOverlayAdm" onclick="toggleSidebarMobile()"></div>
+
+<!-- APP -->
+<div id="appLayout">
+    <aside class="sidebar">
+        <div class="sb-logo"><h1>ERLAJAR<span>NGAWAN</span></h1><p>Panel Admin</p></div>
+        <nav class="sb-nav">
+            <div class="sb-sec">Approval Akun</div>
+            <div class="nav-item active" onclick="showPage('approval')" id="nav-approval">
+                <span class="icon">✅</span> Approval Registrasi
+                <span class="cnt" id="pendingCount" style="display:none;">0</span>
+            </div>
+        </nav>
+        <div class="sb-foot">
+            <div class="admin-badge">
+                <div class="admin-av" id="adminInitial">A</div>
+                <div class="admin-info"><p id="adminName">Admin</p><small>Administrator</small></div>
+            </div>
+            <button class="btn-logout-sb" onclick="handleLogout()">🚪 Logout</button>
+        </div>
+    </aside>
+
+    <main class="main">
+        <!-- APPROVAL -->
+        <div class="page active" id="page-approval">
+            <div class="pg-header"><h2>Approval Registrasi</h2><p>Setujui akun baru sebelum bisa digunakan untuk login</p></div>
+
+            <!-- STAT CARD -->
+            <div class="stats-grid">
+                <div class="scard"><span class="si">🧑‍🎓</span><div class="sl">Total Peserta</div><div class="sv" id="stTotalPeserta" style="color:#7c3aed">-</div><div class="ss">Erlajar Ngawan</div></div>
+                <div class="scard"><span class="si">⏳</span><div class="sl">Peserta Menunggu</div><div class="sv" id="stPendingPeserta" style="color:#f59e0b">-</div><div class="ss">Perlu disetujui</div></div>
+                <div class="scard"><span class="si">🧑‍🏫</span><div class="sl">Total Pengajar</div><div class="sv" id="stTotalPengajar" style="color:#7c3aed">-</div><div class="ss">Erlajar Ngawan</div></div>
+                <div class="scard"><span class="si">⏳</span><div class="sl">Pengajar Menunggu</div><div class="sv" id="stPendingPengajar" style="color:#f59e0b">-</div><div class="ss">Perlu disetujui</div></div>
+            </div>
+
+            <!-- TOGGLE JENIS AKUN -->
+            <div class="ptabs">
+                <button class="ptab active" id="ptab-peserta_ngawan" onclick="setJenis('peserta_ngawan')">🧑‍🎓 Peserta</button>
+                <button class="ptab" id="ptab-pengajar_ngawan" onclick="setJenis('pengajar_ngawan')">🧑‍🏫 Pengajar</button>
+            </div>
+
+            <!-- FILTER STATUS -->
+            <div class="fbar">
+                <span style="font-size:12px;font-weight:700;color:#64748b;">Status:</span>
+                <div class="fchip active" id="fstat-semua"    onclick="setFilterStatus('semua')">Semua</div>
+                <div class="fchip"        id="fstat-pending"  onclick="setFilterStatus('pending')">⏳ Menunggu</div>
+                <div class="fchip"        id="fstat-approved" onclick="setFilterStatus('approved')">✅ Disetujui</div>
+            </div>
+
+            <div class="tcard"><table>
+                <thead><tr><th>ID</th><th>Username</th><th>Status</th><th>Aksi</th></tr></thead>
+                <tbody id="approvalTable"><tr class="lr"><td colspan="4"><span class="sp"></span>Memuat...</td></tr></tbody>
+            </table></div>
+        </div>
+    </main>
+</div>
+
+<script>
+const API  = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+const AUTH = 'admin';
+const TBL_ADMIN = 'admin_ngawan'; // tabel admin, diisi MANUAL langsung di database
+
+let adminUser     = '';
+let currentJenis   = 'peserta_ngawan';   // 'peserta_ngawan' | 'pengajar_ngawan'
+let currentFilter  = 'semua';            // 'semua' | 'pending' | 'approved'
+let dataCache      = { peserta_ngawan: [], pengajar_ngawan: [] };
+
+// ===== HELPERS =====
+const api = q => fetch(API + q, { headers: { 'X-Custom-Auth': AUTH } }).then(r => r.json());
+const jenisLabel = j => j === 'peserta_ngawan' ? 'Peserta' : 'Pengajar';
+
+// ===== AUTH =====
+// Login admin memakai tabel admin_ngawan. Akun admin TIDAK didaftarkan lewat
+// aplikasi ini — tambahkan baris baru langsung di database (x_01=username,
+// x_02=password) bila perlu admin baru.
+async function handleLogin() {
+    const u   = document.getElementById('l_user').value.trim();
+    const p   = document.getElementById('l_pass').value.trim();
+    const rem = document.getElementById('l_rem').checked;
+    if (!u || !p) return;
+    document.getElementById('loginError').style.display = 'none';
+    const res = await api(`?table=${TBL_ADMIN}&x_01_eq=${u}&x_02_eq=${p}`);
+    if (res.success && res.data?.length > 0) {
+        adminUser = res.data[0].x_01;
+        if (rem) {
+            const expire = Date.now() + 30 * 24 * 60 * 60 * 1000;
+            localStorage.setItem('ngawan_admin', JSON.stringify({ user: adminUser, expire }));
+        } else {
+            sessionStorage.setItem('ngawan_admin', adminUser);
+        }
+        showApp();
+    } else {
+        document.getElementById('loginError').style.display = 'block';
+    }
+}
+
+function checkAuth() {
+    const ss = sessionStorage.getItem('ngawan_admin');
+    if (ss) { adminUser = ss; showApp(); return; }
+    const ls = localStorage.getItem('ngawan_admin');
+    if (ls) {
+        try {
+            const data = JSON.parse(ls);
+            if (data.expire && Date.now() < data.expire) {
+                adminUser = data.user;
+                showApp();
+                return;
+            } else {
+                localStorage.removeItem('ngawan_admin');
+            }
+        } catch { localStorage.removeItem('ngawan_admin'); }
+    }
+}
+
+function handleLogout() {
+    sessionStorage.removeItem('ngawan_admin');
+    localStorage.removeItem('ngawan_admin');
+    document.body.classList.remove('app-ready');
+    location.reload();
+}
+
+async function showApp() {
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('appLayout').style.display = 'flex';
+    document.body.classList.add('app-ready');
+    document.getElementById('adminName').textContent    = adminUser;
+    document.getElementById('adminInitial').textContent = adminUser.charAt(0).toUpperCase();
+    await loadAllData();
+}
+
+// ===== NAV =====
+function showPage(pg) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-'+pg).classList.add('active');
+    document.getElementById('nav-'+pg).classList.add('active');
+    const sb = document.querySelector('.sidebar');
+    const ov = document.getElementById('sbOverlayAdm');
+    const btn = document.getElementById('btnBurger');
+    if (sb) sb.classList.remove('sb-open');
+    if (ov) ov.classList.remove('open');
+    if (btn) btn.classList.remove('open');
+}
+
+function toggleSidebarMobile() {
+    const sb = document.querySelector('.sidebar');
+    const ov = document.getElementById('sbOverlayAdm');
+    const btn = document.getElementById('btnBurger');
+    if (sb) sb.classList.toggle('sb-open');
+    if (ov) ov.classList.toggle('open');
+    if (btn) btn.classList.toggle('open');
+}
+
+// ===== LOAD DATA =====
+async function loadAllData() {
+    document.getElementById('approvalTable').innerHTML = '<tr class="lr"><td colspan="4"><span class="sp"></span>Memuat...</td></tr>';
+    const [resP, resG] = await Promise.all([
+        api(`?table=peserta_ngawan&limit=500`),
+        api(`?table=pengajar_ngawan&limit=500`)
+    ]);
+    dataCache.peserta_ngawan  = resP.success ? (resP.data || []) : [];
+    dataCache.pengajar_ngawan = resG.success ? (resG.data || []) : [];
+    updateStats();
+    renderTable();
+}
+
+function updateStats() {
+    const peserta  = dataCache.peserta_ngawan;
+    const pengajar = dataCache.pengajar_ngawan;
+    const pendingP = peserta.filter(d => d.x_03 !== 'approved').length;
+    const pendingG = pengajar.filter(d => d.x_03 !== 'approved').length;
+
+    document.getElementById('stTotalPeserta').textContent    = peserta.length;
+    document.getElementById('stPendingPeserta').textContent  = pendingP;
+    document.getElementById('stTotalPengajar').textContent   = pengajar.length;
+    document.getElementById('stPendingPengajar').textContent = pendingG;
+
+    const totalPending = pendingP + pendingG;
+    const cnt = document.getElementById('pendingCount');
+    if (totalPending > 0) { cnt.textContent = totalPending; cnt.style.display = 'inline-block'; }
+    else cnt.style.display = 'none';
+}
+
+// ===== TOGGLE JENIS & FILTER =====
+function setJenis(jenis) {
+    currentJenis = jenis;
+    document.getElementById('ptab-peserta_ngawan').classList.toggle('active', jenis === 'peserta_ngawan');
+    document.getElementById('ptab-pengajar_ngawan').classList.toggle('active', jenis === 'pengajar_ngawan');
+    renderTable();
+}
+
+function setFilterStatus(filter) {
+    currentFilter = filter;
+    ['semua','pending','approved'].forEach(f => {
+        document.getElementById('fstat-'+f).classList.toggle('active', f === filter);
+    });
+    renderTable();
+}
+
+function renderTable() {
+    let rows = dataCache[currentJenis] || [];
+    if (currentFilter === 'pending')  rows = rows.filter(d => d.x_03 !== 'approved');
+    if (currentFilter === 'approved') rows = rows.filter(d => d.x_03 === 'approved');
+    rows = [...rows].sort((a,b) => (b.id_x||0) - (a.id_x||0));
+
+    document.getElementById('approvalTable').innerHTML = rows.length
+        ? rows.map(d => {
+            const approved = d.x_03 === 'approved';
+            const badge = approved
+                ? `<span class="badge b-approved">✅ Disetujui</span>`
+                : `<span class="badge b-pending">⏳ Menunggu</span>`;
+            const actions = approved
+                ? `<button class="actbtn act-revoke" onclick="revokeAkun('${currentJenis}',${d.id_x})">⛔ Nonaktifkan</button>
+                   <button class="actbtn act-delete" onclick="hapusAkun('${currentJenis}',${d.id_x},'${d.x_01}')">🗑️ Hapus</button>`
+                : `<button class="actbtn act-approve" onclick="approveAkun('${currentJenis}',${d.id_x})">✅ Setujui</button>
+                   <button class="actbtn act-delete" onclick="hapusAkun('${currentJenis}',${d.id_x},'${d.x_01}')">🗑️ Tolak</button>`;
+            return `<tr>
+                <td>${d.id_x}</td>
+                <td><span class="uchip"><span class="udot"></span>${d.x_01||'-'}</span></td>
+                <td>${badge}</td>
+                <td>${actions}</td>
+            </tr>`;
+        }).join('')
+        : `<tr class="er"><td colspan="4">Tidak ada data ${jenisLabel(currentJenis).toLowerCase()} untuk filter ini</td></tr>`;
+}
+
+// ===== AKSI APPROVAL =====
+async function approveAkun(tabel, id) {
+    await fetch(`${API}?table=${tabel}&id_x=${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type':'application/json', 'X-Custom-Auth': AUTH },
+        body: JSON.stringify({ x_03: 'approved' })
+    }).then(r=>r.json());
+    await loadAllData();
+}
+
+async function revokeAkun(tabel, id) {
+    if (!confirm('Nonaktifkan akun ini? User tidak akan bisa login sampai disetujui ulang.')) return;
+    await fetch(`${API}?table=${tabel}&id_x=${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type':'application/json', 'X-Custom-Auth': AUTH },
+        body: JSON.stringify({ x_03: 'pending' })
+    }).then(r=>r.json());
+    await loadAllData();
+}
+
+async function hapusAkun(tabel, id, username) {
+    if (!confirm(`Hapus akun "${username}" secara permanen? Tindakan ini tidak bisa dibatalkan.`)) return;
+    await fetch(`${API}?table=${tabel}&id_x=${id}`, {
+        method: 'DELETE',
+        headers: { 'X-Custom-Auth': AUTH }
+    }).then(r=>r.json());
+    await loadAllData();
+}
+
+// ===== INIT =====
+window.onload = function() { checkAuth(); };
+</script>
+</body>
+</html>

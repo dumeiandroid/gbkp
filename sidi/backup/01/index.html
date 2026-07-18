@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lidan - Portal Magang</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary:  #5b5ef4;
+            --p2:       #7c3aed;
+            --blue:     #0ea5e9;
+            --green:    #10b981;
+            --orange:   #f59e0b;
+            --red:      #ef4444;
+            --dark:     #0f172a;
+            --muted:    #64748b;
+            --border:   #e2e8f0;
+            --bg:       #f8fafc;
+            --white:    #ffffff;
+            --sidebar-w: 230px;
+            --hdr-h:    58px;
+        }
+        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--dark); overflow-x: hidden; }
+
+        /* ========== LOGIN ========== */
+        #loginPage {
+            position: fixed; inset: 0;
+            background: linear-gradient(135deg, #0f172a 0%, #312e81 60%, #5b5ef4 100%);
+            z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+        .lbox { background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.12); padding: 40px 32px; border-radius: 24px; width: 100%; max-width: 360px; box-shadow: 0 30px 60px rgba(0,0,0,0.4); }
+        .lbox-logo { text-align: center; margin-bottom: 32px; }
+        .lbox-logo .logo-icon { width: 52px; height: 52px; background: linear-gradient(135deg, #5b5ef4, #7c3aed); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 12px; box-shadow: 0 8px 20px rgba(91,94,244,0.4); }
+        .lbox-logo h1 { font-size: 22px; font-weight: 900; color: #fff; letter-spacing: -0.5px; }
+        .lbox-logo h1 span { color: #a5b4fc; }
+        .lbox-logo p { font-size: 11px; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 2px; margin-top: 4px; }
+        .lbox label { display: block; font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.6); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .lbox input[type=text], .lbox input[type=password] { width: 100%; padding: 12px 14px; border: 1.5px solid rgba(255,255,255,0.15); border-radius: 10px; font-size: 14px; outline: none; margin-bottom: 14px; transition: 0.2s; background: rgba(255,255,255,0.08); color: #fff; font-family: inherit; }
+        .lbox input::placeholder { color: rgba(255,255,255,0.3); }
+        .lbox input:focus { border-color: #5b5ef4; background: rgba(255,255,255,0.12); }
+        .lbox-rem { display: flex; align-items: center; gap: 7px; font-size: 13px; color: rgba(255,255,255,0.5); margin-bottom: 16px; cursor: pointer; }
+        .btn-login { width: 100%; padding: 14px; background: linear-gradient(135deg, #5b5ef4, #7c3aed); color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit; transition: 0.2s; box-shadow: 0 6px 16px rgba(91,94,244,0.35); }
+        .btn-login:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(91,94,244,0.45); }
+        #loginErr { color: #fca5a5; font-size: 12px; text-align: center; margin-top: 10px; display: none; }
+
+        /* ========== APP SHELL ========== */
+        #appShell { display: none; min-height: 100vh; }
+
+        /* ========== SIDEBAR ========== */
+        .sidebar {
+            position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh;
+            background: var(--dark); color: #fff;
+            display: flex; flex-direction: column;
+            z-index: 300; transition: transform 0.3s ease;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+        }
+        .sb-logo { padding: 20px 18px 16px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+        .sb-logo .logo-row { display: flex; align-items: center; gap: 10px; }
+        .sb-logo .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, #5b5ef4, #7c3aed); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+        .sb-logo h1 { font-size: 15px; font-weight: 900; letter-spacing: -0.3px; }
+        .sb-logo h1 span { color: #a5b4fc; }
+        .sb-logo p { font-size: 9px; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 1.5px; margin-top: 1px; }
+        .sb-user { margin: 14px 18px; background: rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
+        .sb-av { width: 32px; height: 32px; background: linear-gradient(135deg, #5b5ef4, #7c3aed); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; flex-shrink: 0; }
+        .sb-uname { font-size: 13px; font-weight: 700; }
+        .sb-urole { font-size: 10px; color: rgba(255,255,255,0.4); }
+        .sb-nav { flex: 1; padding: 8px 0; overflow-y: auto; }
+        .sb-sec { font-size: 9px; color: rgba(255,255,255,0.25); font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; padding: 14px 18px 5px; }
+        .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 18px; color: rgba(255,255,255,0.55); font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.15s; border-left: 3px solid transparent; margin: 1px 0; }
+        .nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+        .nav-item.active { background: rgba(91,94,244,0.18); color: #a5b4fc; border-left-color: #5b5ef4; }
+        .nav-icon { font-size: 16px; width: 22px; text-align: center; flex-shrink: 0; }
+        .sb-footer { padding: 14px 18px; border-top: 1px solid rgba(255,255,255,0.07); display: flex; flex-direction: column; gap: 6px; }
+        .btn-sb-cpw { width: 100%; padding: 8px; background: rgba(14,165,233,0.12); color: #7dd3fc; border: 1px solid rgba(14,165,233,0.2); border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; transition: 0.15s; }
+        .btn-sb-cpw:hover { background: rgba(14,165,233,0.2); }
+        .btn-sb-logout { width: 100%; padding: 8px; background: rgba(239,68,68,0.1); color: #fca5a5; border: 1px solid rgba(239,68,68,0.2); border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; transition: 0.15s; }
+        .btn-sb-logout:hover { background: rgba(239,68,68,0.18); }
+
+        /* SIDEBAR MOBILE TOGGLE */
+        .sb-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 299; display: none; }
+        .sb-overlay.open { display: block; }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0 !important; }
+            .topbar { left: 0 !important; }
+        }
+
+        /* ========== TOPBAR ========== */
+        .topbar {
+            position: fixed; top: 0; left: var(--sidebar-w); right: 0; height: var(--hdr-h);
+            background: var(--white); border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; z-index: 200; box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+        }
+        .topbar-left { display: flex; align-items: center; gap: 12px; }
+        .btn-menu-toggle { display: none; background: none; border: none; font-size: 20px; cursor: pointer; padding: 4px; }
+        @media (max-width: 768px) { .btn-menu-toggle { display: block; } }
+        .topbar-title { font-size: 16px; font-weight: 800; color: var(--dark); letter-spacing: -0.3px; }
+        .topbar-right { display: flex; align-items: center; gap: 10px; }
+        .topbar-date { font-size: 12px; color: var(--muted); font-weight: 600; background: var(--bg); padding: 5px 10px; border-radius: 7px; border: 1px solid var(--border); }
+
+        /* ========== MAIN CONTENT ========== */
+        .main-content { margin-left: var(--sidebar-w); padding-top: var(--hdr-h); min-height: 100vh; }
+        .page { display: none; padding: 22px; }
+        .page.active { display: block; }
+
+        /* ========== SPINNER ========== */
+        .spin { display: inline-block; width: 18px; height: 18px; border: 3px solid #e2e8f0; border-top-color: var(--primary); border-radius: 50%; animation: rot 0.7s linear infinite; vertical-align: middle; }
+        @keyframes rot { to { transform: rotate(360deg); } }
+        #gLoader { position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 8000; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 10px; backdrop-filter: blur(4px); }
+        #gLoader.on { display: flex; }
+        #gLoaderTxt { font-size: 13px; font-weight: 700; color: var(--muted); }
+
+        /* ========== DASHBOARD ========== */
+        .dash-header { margin-bottom: 20px; }
+        .dash-header h2 { font-size: 22px; font-weight: 900; color: var(--dark); letter-spacing: -0.5px; }
+        .dash-header p  { font-size: 13px; color: var(--muted); margin-top: 3px; }
+
+        /* absensi card */
+        .abs-today-card {
+            background: linear-gradient(135deg, var(--dark) 0%, #1e293b 100%);
+            border-radius: 16px; padding: 18px 20px; color: #fff;
+            box-shadow: 0 4px 16px rgba(15,23,42,0.2);
+            display: flex; flex-direction: column; gap: 14px;
+            max-width: 460px;
+        }
+        .atc-head { display: flex; justify-content: space-between; align-items: flex-start; }
+        .atc-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
+        .atc-date  { font-size: 14px; font-weight: 800; color: #fff; }
+        .btn-absen-dash { padding: 9px 16px; background: linear-gradient(135deg, #5b5ef4, #7c3aed); color: #fff; border: none; border-radius: 9px; font-weight: 800; font-size: 13px; cursor: pointer; font-family: inherit; white-space: nowrap; box-shadow: 0 4px 12px rgba(91,94,244,0.4); }
+        .atc-times { display: flex; gap: 16px; }
+        .atc-t { background: rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 16px; flex: 1; text-align: center; }
+        .atc-t .v { font-size: 18px; font-weight: 900; font-family: 'DM Mono', monospace; }
+        .atc-t .l { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(255,255,255,0.45); margin-top: 2px; }
+        .atc-t.masuk .v  { color: #6ee7b7; }
+        .atc-t.pulang .v { color: #fcd34d; }
+        .atc-status { display: flex; align-items: center; gap: 8px; }
+        .atc-dot { width: 8px; height: 8px; border-radius: 50%; background: #6ee7b7; animation: pulse2 2s infinite; flex-shrink: 0; }
+        @keyframes pulse2 { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.3)} }
+        .atc-stat-txt { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.6); }
+
+        /* ========== ABSENSI PAGE ========== */
+        .abs-hero { background: linear-gradient(135deg, var(--dark), #1e293b); padding: 20px; border-radius: 16px; color: #fff; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+        .abs-hero h2 { font-size: 18px; font-weight: 900; }
+        .abs-hero p  { font-size: 12px; opacity: .6; margin-top: 2px; }
+        .abs-times-hero { display: flex; gap: 14px; }
+        .abs-t-h { background: rgba(255,255,255,0.1); border-radius: 10px; padding: 10px 16px; text-align: center; }
+        .abs-t-h .v { font-size: 17px; font-weight: 900; font-family: 'DM Mono', monospace; }
+        .abs-t-h .l { font-size: 9px; color: rgba(255,255,255,0.5); font-weight: 700; text-transform: uppercase; margin-top: 1px; }
+        .abs-t-h.masuk  .v { color: #6ee7b7; }
+        .abs-t-h.pulang .v { color: #fcd34d; }
+        .btn-absen-full { padding: 12px 20px; background: linear-gradient(135deg, #5b5ef4, #7c3aed); color: #fff; border: none; border-radius: 10px; font-weight: 800; font-size: 14px; cursor: pointer; font-family: inherit; box-shadow: 0 4px 14px rgba(91,94,244,0.4); }
+        .tcard { background: var(--white); border-radius: 14px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .tcard-head { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 800; color: var(--dark); }
+        table.abs-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+        table.abs-tbl th { background: var(--bg); padding: 9px 12px; text-align: left; font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; border-bottom: 1px solid var(--border); white-space: nowrap; }
+        table.abs-tbl td { padding: 9px 12px; border-bottom: 1px solid #f8fafc; vertical-align: middle; }
+        table.abs-tbl tr:last-child td { border: none; }
+        .abs-foto { width: 38px; height: 48px; object-fit: cover; object-position: center top; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; }
+
+        /* ========== MODAL (shared) ========== */
+        .m-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.6); z-index: 500; display: none; align-items: center; justify-content: center; padding: 16px; backdrop-filter: blur(4px); }
+        .m-overlay.open { display: flex; }
+        .mbox { background: #fff; border-radius: 20px; width: 100%; max-width: 400px; max-height: 92vh; overflow-y: auto; box-shadow: 0 30px 60px rgba(0,0,0,0.25); }
+        .mhead { padding: 18px 20px 14px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: #fff; border-radius: 20px 20px 0 0; z-index: 10; }
+        .mhead h3 { font-size: 15px; font-weight: 900; letter-spacing: -0.3px; }
+        .mhead .x { background: var(--bg); border: none; font-size: 16px; cursor: pointer; color: var(--muted); width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+        .mhead .x:hover { background: #fee2e2; color: var(--red); }
+        .mbody { padding: 18px 20px; }
+        .fg { margin-bottom: 14px; }
+        .fg label { display: block; font-size: 10px; font-weight: 800; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .fg input, .fg select, .fg textarea { width: 100%; padding: 10px 13px; border: 1.5px solid var(--border); border-radius: 9px; font-size: 14px; outline: none; transition: 0.2s; background: var(--bg); font-family: inherit; color: var(--dark); }
+        .fg input:focus, .fg select:focus, .fg textarea:focus { border-color: var(--primary); background: #fff; }
+        .mfoot { padding: 12px 20px; border-top: 1px solid #f1f5f9; display: flex; gap: 8px; }
+        .btn-cancel  { flex: 1; padding: 11px; background: var(--bg); color: var(--muted); border: none; border-radius: 9px; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+        /* MODAL GANTI PASSWORD */
+        .cpw-msg { font-size: 12px; text-align: center; margin-top: 8px; padding: 8px; border-radius: 8px; display: none; }
+        .cpw-msg.ok  { background: #d1fae5; color: #065f46; display: block; }
+        .cpw-msg.err { background: #fee2e2; color: var(--red); display: block; }
+        .btn-save-cpw { width: 100%; padding: 13px; background: var(--blue); color: #fff; border: none; border-radius: 9px; font-weight: 800; font-size: 14px; cursor: pointer; margin-top: 4px; font-family: inherit; }
+
+        /* MODAL KAMERA */
+        .m-bottom { position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 500; display: none; align-items: flex-end; justify-content: center; backdrop-filter: blur(4px); }
+        .m-bottom.open { display: flex; }
+        .msheet { background: #fff; width: 100%; max-width: 420px; border-radius: 22px 22px 0 0; }
+        #video { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 14px; background: #2d3436; transform: scaleX(-1); display: block; }
+        .cam-btns { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+        .btn-masuk  { padding: 14px; background: var(--green);  color: #fff; border: none; border-radius: 10px; font-weight: 800; font-size: 15px; cursor: pointer; display: none; font-family: inherit; }
+        .btn-pulang { padding: 14px; background: var(--orange); color: #fff; border: none; border-radius: 10px; font-weight: 800; font-size: 15px; cursor: pointer; display: none; font-family: inherit; }
+        .msg-done   { padding: 14px; background: var(--bg); color: var(--muted); border-radius: 10px; font-weight: 700; font-size: 14px; text-align: center; display: none; }
+        .cam-loading { display: none; padding: 36px 0; text-align: center; }
+        #cam-spin { width: 38px; height: 38px; border: 4px solid #e2e8f0; border-top-color: var(--primary); border-radius: 50%; animation: rot 0.7s linear infinite; display: inline-block; }
+        #cam-status { font-size: 13px; color: var(--muted); font-weight: 700; margin-top: 10px; }
+
+        /* FOTO MODAL */
+        .foto-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 9998; display: none; align-items: center; justify-content: center; }
+        .foto-modal-overlay.open { display: flex; }
+        .foto-modal-overlay img { max-width: 92vw; max-height: 88vh; border-radius: 10px; object-fit: contain; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .foto-modal-close { position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.15); border: none; color: #fff; font-size: 22px; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 600px) {
+            .page { padding: 14px; }
+            .atc-times { gap: 8px; }
+            .abs-today-card { max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- GLOBAL LOADER -->
+<div id="gLoader"><div class="spin" style="width:36px;height:36px;border-width:4px;"></div><p id="gLoaderTxt">Memproses...</p></div>
+
+<!-- ===== LOGIN ===== -->
+<div id="loginPage">
+    <div class="lbox">
+        <div class="lbox-logo">
+            <div class="logo-icon">🧠</div>
+            <h1>LIDAN<span>PSIKOLOGI</span></h1>
+            <p>Portal Magang</p>
+        </div>
+        <label>Username</label>
+        <input type="text" id="l_user" placeholder="Masukkan username...">
+        <label>Password</label>
+        <input type="password" id="l_pass" placeholder="Masukkan password..." onkeydown="if(event.key==='Enter')doLogin()">
+        <label class="lbox-rem"><input type="checkbox" id="l_rem"> Ingat Saya</label>
+        <button class="btn-login" onclick="doLogin()">MASUK →</button>
+        <p id="loginErr">Username atau password salah!</p>
+    </div>
+</div>
+
+<!-- ===== APP SHELL ===== -->
+<div id="appShell">
+
+    <!-- SIDEBAR -->
+    <div class="sb-overlay" id="sbOverlay" onclick="toggleSidebar()"></div>
+    <aside class="sidebar" id="sidebar">
+        <div class="sb-logo">
+            <div class="logo-row">
+                <div class="logo-icon">🧠</div>
+                <div>
+                    <h1>LIDAN<span>PSIKOLOGI</span></h1>
+                    <p>Portal Magang</p>
+                </div>
+            </div>
+        </div>
+        <div class="sb-user">
+            <div class="sb-av" id="sbAv">U</div>
+            <div>
+                <div class="sb-uname" id="sbName">User</div>
+                <div class="sb-urole">Magang</div>
+            </div>
+        </div>
+        <nav class="sb-nav">
+            <div class="sb-sec">Utama</div>
+            <div class="nav-item active" id="nav-dashboard" onclick="showPg('dashboard')"><span class="nav-icon">🏠</span> Dashboard</div>
+            <div class="sb-sec">Kehadiran</div>
+            <div class="nav-item" id="nav-absensi" onclick="showPg('absensi')"><span class="nav-icon">🕐</span> Absensi</div>
+        </nav>
+        <div class="sb-footer">
+            <button class="btn-sb-cpw" onclick="bukaGantiPassword()">🔑 Ganti Password</button>
+            <button class="btn-sb-logout" onclick="doLogout()">🚪 Logout</button>
+        </div>
+    </aside>
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+        <div class="topbar-left">
+            <button class="btn-menu-toggle" onclick="toggleSidebar()">☰</button>
+            <div class="topbar-title" id="topbarTitle">Dashboard</div>
+        </div>
+        <div class="topbar-right">
+            <div class="topbar-date" id="topbarDate">-</div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+
+        <!-- ===== PAGE: DASHBOARD ===== -->
+        <div class="page active" id="pg-dashboard">
+            <div class="dash-header">
+                <h2>Selamat Datang, <span id="dashName">-</span> 👋</h2>
+                <p id="dashSub">Berikut status absensi hari ini</p>
+            </div>
+
+            <div class="abs-today-card">
+                <div class="atc-head">
+                    <div>
+                        <div class="atc-title">Absensi Hari Ini</div>
+                        <div class="atc-date" id="dashDate">-</div>
+                    </div>
+                    <button class="btn-absen-dash" onclick="bukaKamera()">📷 Absen</button>
+                </div>
+                <div class="atc-times">
+                    <div class="atc-t masuk">
+                        <div class="v" id="dashMasuk">-</div>
+                        <div class="l">Masuk</div>
+                    </div>
+                    <div class="atc-t pulang">
+                        <div class="v" id="dashPulang">-</div>
+                        <div class="l">Pulang</div>
+                    </div>
+                </div>
+                <div class="atc-status">
+                    <div class="atc-dot" id="dashAbsDot"></div>
+                    <div class="atc-stat-txt" id="dashAbsStatus">Belum absen hari ini</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== PAGE: ABSENSI ===== -->
+        <div class="page" id="pg-absensi">
+            <div class="abs-hero">
+                <div>
+                    <h2>Absensi Harian</h2>
+                    <p id="abs-tanggal">-</p>
+                </div>
+                <div>
+                    <div class="abs-times-hero">
+                        <div class="abs-t-h masuk">
+                            <div class="v" id="abs-masuk">-</div>
+                            <div class="l">Masuk</div>
+                        </div>
+                        <div class="abs-t-h pulang">
+                            <div class="v" id="abs-pulang">-</div>
+                            <div class="l">Pulang</div>
+                        </div>
+                    </div>
+                    <button class="btn-absen-full" style="width:100%;margin-top:10px;" onclick="bukaKamera()">📷 ABSEN SEKARANG</button>
+                </div>
+            </div>
+            <div class="tcard">
+                <div class="tcard-head">📋 Riwayat Absensi</div>
+                <div style="overflow-x:auto;">
+                    <table class="abs-tbl">
+                        <thead><tr><th>Tanggal</th><th>Masuk</th><th>Foto</th><th>Pulang</th><th>Foto</th></tr></thead>
+                        <tbody id="abs-tbody"><tr><td colspan="5" style="text-align:center;padding:24px;color:#94a3b8;"><span class="spin"></span></td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /main-content -->
+</div><!-- /appShell -->
+
+<canvas id="canvas" style="display:none;"></canvas>
+
+<!-- MODAL FOTO FULLSCREEN -->
+<div class="foto-modal-overlay" id="fotoModal" onclick="tutupFotoModal()">
+    <button class="foto-modal-close" onclick="tutupFotoModal()">✕</button>
+    <img id="fotoModalImg" src="" alt="Foto Absensi">
+</div>
+
+<!-- MODAL GANTI PASSWORD -->
+<div class="m-overlay" id="modalChPw">
+    <div class="mbox">
+        <div class="mhead"><h3>🔑 Ganti Password</h3><button class="x" onclick="tutupGantiPassword()">✕</button></div>
+        <div class="mbody">
+            <div class="fg"><label>Password Lama</label><input type="password" id="cpw_lama" placeholder="Masukkan password lama..."></div>
+            <div class="fg"><label>Password Baru</label><input type="password" id="cpw_baru" placeholder="Masukkan password baru..."></div>
+            <div class="fg"><label>Konfirmasi Password Baru</label><input type="password" id="cpw_konfirm" placeholder="Ulangi password baru..."></div>
+            <button class="btn-save-cpw" id="btnSaveChPw" onclick="simpanGantiPassword()">💾 SIMPAN PASSWORD BARU</button>
+            <div class="cpw-msg" id="cpwMsg"></div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL KAMERA -->
+<div class="m-bottom" id="modalKam">
+    <div class="msheet">
+        <div class="mhead"><h3>📷 Foto Absensi</h3><button class="x" onclick="tutupKamera()">✕</button></div>
+        <div class="mbody">
+            <div id="cam-area">
+                <video id="video" autoplay playsinline></video>
+                <div class="cam-btns">
+                    <button class="btn-masuk"  id="btnMasuk"  onclick="prosesAbsensi('MASUK')">✅ ABSEN MASUK</button>
+                    <button class="btn-pulang" id="btnPulang" onclick="prosesAbsensi('PULANG')">🏠 ABSEN PULANG</button>
+                    <div   class="msg-done"    id="msgDone">🎉 Absensi hari ini sudah lengkap!</div>
+                </div>
+            </div>
+            <div class="cam-loading" id="camLoading">
+                <div id="cam-spin"></div>
+                <p id="cam-status">Memproses...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ==============================
+   KONSTANTA & STATE
+   ============================== */
+const API  = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+const R2   = 'https://lidan.co.id/api/upload_r2_lidan';
+const CDN  = 'https://assets.lidan.co.id/';
+const KEY  = 'admin';
+const TBLA = 'absensi';
+const TBLU = 'users';
+
+let me      = '';
+let stream  = null;
+let hariIni = { masuk:false, pulang:false };
+
+/* ==============================
+   HELPERS
+   ============================== */
+const req = (q, opt={}) => fetch(API+q, { headers:{'X-Custom-Auth':KEY}, ...opt }).then(r=>r.json());
+const pj  = s => { try{ return s ? JSON.parse(s) : null; } catch{ return null; } };
+const gl  = t  => { document.getElementById('gLoaderTxt').textContent = t||'Memproses...'; document.getElementById('gLoader').classList.add('on'); };
+const gh  = () => document.getElementById('gLoader').classList.remove('on');
+const getMe = () => {
+    const r = localStorage.getItem('lidan_user') || sessionStorage.getItem('lidan_user') || '';
+    try { const p=JSON.parse(r); return (typeof p==='object'&&p) ? (p.x_01||'') : r; } catch { return r; }
+};
+
+/* ==============================
+   AUTH
+   ============================== */
+async function cekAuth() {
+    me = getMe();
+    if (!me) return;
+    gl('Memeriksa sesi...');
+    try {
+        const res = await req(`?table=${TBLU}&x_01_eq=${me}&limit=1`);
+        gh();
+        if (res.success && res.data?.length > 0) startApp();
+        else { localStorage.removeItem('lidan_user'); sessionStorage.removeItem('lidan_user'); }
+    } catch(e) { gh(); }
+}
+
+async function doLogin() {
+    const u = document.getElementById('l_user').value.trim();
+    const p = document.getElementById('l_pass').value.trim();
+    const rem = document.getElementById('l_rem').checked;
+    document.getElementById('loginErr').style.display='none';
+    if (!u||!p) return;
+    gl('Memeriksa...');
+    const res = await req(`?table=${TBLU}&x_01_eq=${u}&x_02_eq=${p}&limit=1`);
+    gh();
+    if (res.success && res.data?.length > 0) {
+        const store = rem ? localStorage : sessionStorage;
+        store.setItem('lidan_user', u);
+        me = u; startApp();
+    } else {
+        document.getElementById('loginErr').style.display='block';
+    }
+}
+
+function doLogout() {
+    localStorage.removeItem('lidan_user'); sessionStorage.removeItem('lidan_user');
+    location.reload();
+}
+
+/* ==============================
+   GANTI PASSWORD
+   ============================== */
+function bukaGantiPassword() {
+    ['cpw_lama','cpw_baru','cpw_konfirm'].forEach(id=>document.getElementById(id).value='');
+    const msg=document.getElementById('cpwMsg'); msg.className='cpw-msg'; msg.textContent='';
+    document.getElementById('btnSaveChPw').disabled=false;
+    document.getElementById('modalChPw').classList.add('open');
+}
+function tutupGantiPassword() { document.getElementById('modalChPw').classList.remove('open'); }
+
+async function simpanGantiPassword() {
+    const lama=document.getElementById('cpw_lama').value.trim();
+    const baru=document.getElementById('cpw_baru').value.trim();
+    const konfirm=document.getElementById('cpw_konfirm').value.trim();
+    const msg=document.getElementById('cpwMsg');
+    if(!lama||!baru||!konfirm){ msg.className='cpw-msg err'; msg.textContent='Semua kolom harus diisi!'; return; }
+    if(baru!==konfirm){ msg.className='cpw-msg err'; msg.textContent='Password baru tidak cocok!'; return; }
+    gl('Memverifikasi...');
+    try {
+        const cek=await req(`?table=${TBLU}&x_01_eq=${me}&x_02_eq=${lama}&limit=1`);
+        if(!cek.success||!cek.data?.length){ gh(); msg.className='cpw-msg err'; msg.textContent='Password lama salah!'; return; }
+        const id=cek.data[0].id_x;
+        const res=await fetch(`${API}?table=${TBLU}&id_x=${id}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Custom-Auth':KEY},body:JSON.stringify({x_02:baru})}).then(r=>r.json());
+        gh();
+        if(res.success){
+            msg.className='cpw-msg ok'; msg.textContent='Password berhasil diubah! Silakan login ulang.';
+            document.getElementById('btnSaveChPw').disabled=true;
+            setTimeout(()=>{ doLogout(); },2000);
+        } else { msg.className='cpw-msg err'; msg.textContent='Gagal menyimpan password. Coba lagi.'; }
+    } catch(e){ gh(); msg.className='cpw-msg err'; msg.textContent='Error: '+e.message; }
+}
+
+/* ==============================
+   NAVIGASI
+   ============================== */
+const PAGE_TITLES = { dashboard:'Dashboard', absensi:'Absensi' };
+
+function showPg(pg) {
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+    document.getElementById('pg-'+pg).classList.add('active');
+    const navEl = document.getElementById('nav-'+pg);
+    if(navEl) navEl.classList.add('active');
+    document.getElementById('topbarTitle').textContent = PAGE_TITLES[pg]||pg;
+    // Close sidebar on mobile
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sbOverlay').classList.remove('open');
+    if (pg==='absensi')     initAbsensi();
+    if (pg==='dashboard')   initDashboard();
+}
+
+function toggleSidebar() {
+    const sb = document.getElementById('sidebar');
+    const ov = document.getElementById('sbOverlay');
+    sb.classList.toggle('open');
+    ov.classList.toggle('open');
+}
+
+/* ==============================
+   START APP
+   ============================== */
+function startApp() {
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('appShell').style.display  = 'block';
+    document.getElementById('sbAv').textContent   = me.charAt(0).toUpperCase();
+    document.getElementById('sbName').textContent = me;
+    document.getElementById('dashName').textContent = me;
+    // Set date
+    const now = new Date();
+    const BLN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    const HR  = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+    const dateStr = `${HR[now.getDay()]}, ${now.getDate()} ${BLN[now.getMonth()]} ${now.getFullYear()}`;
+    document.getElementById('topbarDate').textContent  = dateStr;
+    document.getElementById('dashDate').textContent    = dateStr;
+    document.getElementById('dashSub').textContent     = `${dateStr} — status absensi hari ini`;
+    initDashboard();
+}
+
+/* ==============================
+   DASHBOARD
+   ============================== */
+async function initDashboard() {
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+
+    try {
+        const resAbs = await req(`?table=${TBLA}&x_01_eq=${me}&limit=60`);
+
+        // Absensi hari ini
+        const absData = resAbs.data || [];
+        hariIni = { masuk:false, pulang:false };
+        let masukJam = '-', pulangJam = '-';
+        absData.forEach(d => {
+            if (d.x_02===today) {
+                if (d.x_05==='MASUK')  { masukJam=d.x_03;  hariIni.masuk=true; }
+                if (d.x_05==='PULANG') { pulangJam=d.x_03; hariIni.pulang=true; }
+            }
+        });
+        document.getElementById('dashMasuk').textContent  = masukJam;
+        document.getElementById('dashPulang').textContent = pulangJam;
+        const dot = document.getElementById('dashAbsDot');
+        const stxt = document.getElementById('dashAbsStatus');
+        if (!hariIni.masuk) { dot.style.background='#fca5a5'; stxt.textContent='Belum absen masuk hari ini'; }
+        else if (!hariIni.pulang) { dot.style.background='#fcd34d'; stxt.textContent='Sudah masuk, belum pulang'; }
+        else { stxt.textContent='Absensi hari ini lengkap ✓'; }
+
+        // Also sync abs page
+        document.getElementById('abs-masuk').textContent  = masukJam;
+        document.getElementById('abs-pulang').textContent = pulangJam;
+    } catch(e) { console.error(e); }
+}
+
+/* ==============================
+   ABSENSI
+   ============================== */
+function initAbsensi() {
+    const now = new Date();
+    const BLN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    const HR  = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+    document.getElementById('abs-tanggal').textContent =
+        `${HR[now.getDay()]}, ${now.getDate()} ${BLN[now.getMonth()]} ${now.getFullYear()}`;
+    muatRiwayat();
+}
+
+async function muatRiwayat() {
+    const tbody = document.getElementById('abs-tbody');
+    try {
+        const res  = await req(`?table=${TBLA}&x_01_eq=${me}&limit=60`);
+        const data = res.data || [];
+        const grp  = {};
+        const _t = new Date(); const today= `${_t.getFullYear()}-${String(_t.getMonth()+1).padStart(2,'0')}-${String(_t.getDate()).padStart(2,'0')}`;
+        hariIni    = { masuk:false, pulang:false };
+
+        data.forEach(d => {
+            if (!grp[d.x_02]) grp[d.x_02] = { m:'-', fm:'', p:'-', fp:'' };
+            if (d.x_05==='MASUK')  { grp[d.x_02].m=d.x_03; grp[d.x_02].fm=d.x_04; if(d.x_02===today) hariIni.masuk=true; }
+            if (d.x_05==='PULANG') { grp[d.x_02].p=d.x_03; grp[d.x_02].fp=d.x_04; if(d.x_02===today) hariIni.pulang=true; }
+        });
+
+        document.getElementById('abs-masuk').textContent  = grp[today]?.m  || '-';
+        document.getElementById('abs-pulang').textContent = grp[today]?.p  || '-';
+
+        const sorted = Object.keys(grp).sort((a,b)=>new Date(b)-new Date(a));
+        tbody.innerHTML = sorted.map(d => {
+            const r = grp[d];
+            return `<tr>
+                <td style="font-weight:700;">${d}</td>
+                <td style="color:var(--green);font-weight:700;">${r.m}</td>
+                <td>${r.fm ? `<img src="${CDN}${r.fm}" class="abs-foto" onclick="bukaFotoModal('${CDN}${r.fm}')" title="Klik untuk perbesar">` : '-'}</td>
+                <td style="color:var(--orange);font-weight:700;">${r.p}</td>
+                <td>${r.fp ? `<img src="${CDN}${r.fp}" class="abs-foto" onclick="bukaFotoModal('${CDN}${r.fp}')" title="Klik untuk perbesar">` : '-'}</td>
+            </tr>`;
+        }).join('') || '<tr><td colspan="5" style="text-align:center;padding:24px;color:#94a3b8;">Belum ada riwayat</td></tr>';
+    } catch(e) { console.error(e); }
+}
+
+/* ==============================
+   KAMERA & PROSES ABSENSI
+   (tanpa syarat apapun — langsung buka kamera)
+   ============================== */
+async function bukaKamera() {
+    // Refresh status absensi hari ini (masuk/pulang) secara real-time
+    gl('Memeriksa status absensi...');
+    try {
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+        const resAbs = await req(`?table=${TBLA}&x_01_eq=${me}&limit=60`);
+        hariIni = { masuk: false, pulang: false };
+        (resAbs.data || []).forEach(d => {
+            if (d.x_02 === today) {
+                if (d.x_05 === 'MASUK')  hariIni.masuk  = true;
+                if (d.x_05 === 'PULANG') hariIni.pulang = true;
+            }
+        });
+    } catch(e) { console.error('[bukaKamera] gagal refresh hariIni:', e); }
+    gh();
+
+    document.getElementById('cam-area').style.display   = 'block';
+    document.getElementById('camLoading').style.display = 'none';
+    document.getElementById('modalKam').classList.add('open');
+    updateBtnKamera();
+    navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ ideal:'user' } } })
+        .then(s => { stream=s; document.getElementById('video').srcObject=s; })
+        .catch(() => { alert('Gagal akses kamera'); tutupKamera(); });
+}
+
+function tutupKamera() {
+    document.getElementById('modalKam').classList.remove('open');
+    if (stream) { stream.getTracks().forEach(t=>t.stop()); stream=null; }
+}
+
+function updateBtnKamera() {
+    ['btnMasuk','btnPulang','msgDone'].forEach(id => document.getElementById(id).style.display='none');
+    if (!hariIni.masuk)       document.getElementById('btnMasuk').style.display  = 'block';
+    else if (!hariIni.pulang) document.getElementById('btnPulang').style.display = 'block';
+    else                      document.getElementById('msgDone').style.display   = 'block';
+}
+
+async function prosesAbsensi(tipe) {
+    document.getElementById('cam-area').style.display   = 'none';
+    document.getElementById('camLoading').style.display = 'block';
+    const st = document.getElementById('cam-status');
+    try {
+        const vid=document.getElementById('video'), cvs=document.getElementById('canvas');
+        const vw = vid.videoWidth  || 640;
+        const vh = vid.videoHeight || 480;
+        cvs.width=vw; cvs.height=vh;
+        const ctx=cvs.getContext('2d');
+        ctx.translate(vw,0); ctx.scale(-1,1);
+        ctx.drawImage(vid,0,0,vw,vh);
+        const blob = await new Promise(r=>cvs.toBlob(r,'image/jpeg',0.85));
+        const fn   = `absensi/${me}_${Date.now()}.jpg`;
+        st.textContent = 'Mengunggah foto...';
+        const fd = new FormData(); fd.append('file',blob); fd.append('customName',fn);
+        const r2 = await fetch(R2,{method:'POST',headers:{'X-Custom-Auth':KEY},body:fd}).then(r=>r.json());
+        if (!r2.success) throw new Error('Gagal upload foto');
+        st.textContent = 'Mencatat ke database...';
+        const now = new Date();
+        await req(`?table=${TBLA}`, {
+            method:'POST', headers:{'Content-Type':'application/json','X-Custom-Auth':KEY},
+            body: JSON.stringify({ x_01:me, x_02:`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`, x_03:now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}), x_04:fn, x_05:tipe })
+        });
+        tutupKamera();
+        muatRiwayat();
+        initDashboard();
+    } catch(e) {
+        alert('Error: '+e.message);
+        document.getElementById('cam-area').style.display   = 'block';
+        document.getElementById('camLoading').style.display = 'none';
+    }
+}
+
+/* ==============================
+   FOTO MODAL
+   ============================== */
+function bukaFotoModal(url) {
+    document.getElementById('fotoModalImg').src = url;
+    document.getElementById('fotoModal').classList.add('open');
+}
+function tutupFotoModal() {
+    document.getElementById('fotoModal').classList.remove('open');
+    document.getElementById('fotoModalImg').src = '';
+}
+
+/* ==============================
+   INIT
+   ============================== */
+window.onload = cekAuth;
+</script>
+</body>
+</html>

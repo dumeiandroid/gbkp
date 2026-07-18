@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Erlajar Ngawan - Dashboard Pengajar</title>
+    <!-- pengajar_ngawan.html: login pengajar + registrasi (perlu approval admin) -->
+
+    <style>
+        :root {
+            --primary: #2563eb; --primary-dark: #1d4ed8;
+            --bg: #f1f5f9; --dark: #1e293b; --sidebar-w: 240px;
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --info: #6c5ce7;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--dark); }
+
+        /* LOGIN */
+        #loginPage { position: fixed; inset: 0; background: linear-gradient(135deg, #1e293b 0%, #2563eb 100%); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        .login-card { background: white; padding: 40px; border-radius: 16px; width: 100%; max-width: 360px; box-shadow: 0 25px 50px rgba(0,0,0,0.3); }
+        .lc-logo { text-align: center; margin-bottom: 28px; }
+        .lc-logo h2 { font-size: 26px; font-weight: 900; color: var(--dark); }
+        .lc-logo h2 span { color: var(--primary); }
+        .lc-logo p { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin-top: 4px; }
+        .lc-label { display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px; text-transform: uppercase; }
+        .lc-input { width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; outline: none; margin-bottom: 16px; transition: 0.2s; }
+        .lc-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .btn-login { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; }
+        #loginError { color: #ef4444; font-size: 13px; text-align: center; margin-top: 12px; display: none; }
+        .lc-rem { display: flex; align-items: center; font-size: 12px; color: #64748b; margin-bottom: 14px; cursor: pointer; }
+        .auth-tabs { display:flex; gap:6px; background:#f1f5f9; padding:4px; border-radius:10px; margin-bottom:22px; }
+        .auth-tab { flex:1; text-align:center; padding:9px 0; border-radius:7px; font-size:12px; font-weight:800; letter-spacing:.3px; cursor:pointer; color:#94a3b8; transition:.2s; }
+        .auth-tab.active { background:#fff; color:var(--primary); box-shadow:0 3px 10px rgba(0,0,0,0.08); }
+        #regErrA, #regOkA { font-size: 13px; text-align: center; margin-top: 12px; display: none; }
+        #regErrA { color: #ef4444; }
+        #regOkA  { color: #16a34a; }
+
+        /* LAYOUT */
+        #appLayout { display: none; min-height: 100vh; }
+
+        /* SIDEBAR */
+        .sidebar { position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh; background: var(--dark); color: white; display: flex; flex-direction: column; z-index: 100; overflow-y: auto; }
+        .sb-logo { padding: 22px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .sb-logo h1 { font-size: 19px; font-weight: 900; }
+        .sb-logo h1 span { color: var(--primary); }
+        .sb-logo p { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+        .sb-nav { flex: 1; padding: 12px 0; }
+        .sb-sec { font-size: 10px; color: #475569; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 14px 20px 5px; }
+        .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; color: #94a3b8; font-size: 13px; font-weight: 500; cursor: pointer; transition: 0.2s; border-left: 3px solid transparent; }
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+        .nav-item.active { background: rgba(37,99,235,0.15); color: white; border-left-color: var(--primary); }
+        .nav-item .icon { font-size: 15px; width: 20px; text-align: center; }
+        .sb-foot { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.08); }
+        .admin-badge { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .admin-av { width: 34px; height: 34px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
+        .admin-info p { font-size: 13px; font-weight: 600; color: white; }
+        .admin-info small { font-size: 10px; color: #64748b; }
+        .btn-logout-sb { width: 100%; padding: 8px; background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2); border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+        /* MAIN */
+        .main { margin-left: var(--sidebar-w); padding: 28px; min-height: 100vh; }
+        .pg-header { margin-bottom: 22px; }
+        .pg-header h2 { font-size: 21px; font-weight: 800; }
+        .pg-header p { font-size: 13px; color: #64748b; margin-top: 3px; }
+
+        /* STATS */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+        .scard { background: white; padding: 18px; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; }
+        .scard .si { font-size: 22px; float: right; }
+        .scard .sl { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .scard .sv { font-size: 26px; font-weight: 900; }
+        .scard .ss { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+
+        /* FILTER */
+        .fbar { background: white; padding: 14px 18px; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+        .fbar select, .fbar input[type=number], .fbar input[type=date] { padding: 7px 11px; border: 1px solid #e2e8f0; border-radius: 7px; font-size: 13px; outline: none; background: #f8fafc; color: var(--dark); transition: 0.2s; }
+        .fbar select:focus, .fbar input:focus { border-color: var(--primary); }
+        .fbar label { font-size: 12px; font-weight: 600; color: #64748b; }
+        .fbar input[type=month] { padding: 7px 11px; border: 1px solid #e2e8f0; border-radius: 7px; font-size: 13px; outline: none; background: #f8fafc; color: var(--dark); }
+        .fbar input[type=month]:focus { border-color: var(--primary); }
+
+        /* ===== REKAP MATRIX ===== */
+        .rekap-wrap { background: white; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; overflow-x: auto; }
+        table.rekap-mtx { border-collapse: collapse; font-size: 11px; white-space: nowrap; }
+        table.rekap-mtx th, table.rekap-mtx td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; text-align: center; padding: 6px 5px; }
+        table.rekap-mtx thead th { background: #f8fafc; color: #94a3b8; font-weight: 700; font-size: 10px; text-transform: uppercase; position: sticky; top: 0; z-index: 2; }
+        table.rekap-mtx thead tr:first-child th { top: 0; }
+        table.rekap-mtx thead tr:last-child th { top: 27px; font-size: 9px; }
+        table.rekap-mtx th.mtx-date { border-right: 2px solid #e2e8f0; }
+        table.rekap-mtx th.mtx-sub { font-size: 9px; color: #b0b8c4; padding: 4px 3px; }
+        table.rekap-mtx th.mtx-name, table.rekap-mtx td.mtx-name { position: sticky; left: 0; background: #f8fafc; z-index: 3; text-align: left; font-weight: 700; color: var(--dark); min-width: 150px; box-shadow: 1px 0 0 #e2e8f0; }
+        table.rekap-mtx thead th.mtx-name { z-index: 4; }
+        table.rekap-mtx td.mtx-cell { min-width: 42px; font-weight: 700; font-size: 11px; }
+        table.rekap-mtx td.mtx-cell.mtx-last { border-right: 2px solid #e2e8f0; }
+        table.rekap-mtx td.mtx-time { color: #16a34a; background: #f0fdf4; }
+        table.rekap-mtx td.mtx-absen { color: #ef4444; background: #fef2f2; font-weight: 800; }
+        table.rekap-mtx tbody tr:hover td { background: #eef2ff; }
+        table.rekap-mtx tbody tr:hover td.mtx-name { background: #e0e7ff; }
+        .rekap-legend { display: flex; gap: 16px; align-items: center; margin: 10px 2px 14px; font-size: 12px; color: #64748b; font-weight: 600; }
+        .rekap-legend span.lg-ok { color: #16a34a; font-weight: 800; }
+        .rekap-legend span.lg-no { color: #ef4444; font-weight: 800; }
+        .btn-f { padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+        /* TABLE */
+        .tcard { background: white; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; overflow: hidden; }
+        .tcard table { width: 100%; border-collapse: collapse; }
+        .tcard thead th { background: #f8fafc; padding: 11px 14px; text-align: left; font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+        .tcard tbody td { padding: 11px 14px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        .tcard tbody tr:last-child td { border-bottom: none; }
+        .tcard tbody tr:hover { background: #f8fafc; }
+        .lr td { text-align: center; padding: 36px; color: #94a3b8; font-size: 13px; }
+        .er td { text-align: center; padding: 40px; color: #94a3b8; }
+
+        /* BADGES */
+        .badge { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .b-masuk { background: #d1fae5; color: #065f46; }
+        .b-pulang { background: #fef3c7; color: #b45309; }
+
+        .uchip { display: inline-flex; align-items: center; gap: 5px; background: #f1f5f9; padding: 3px 9px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .udot { width: 7px; height: 7px; border-radius: 50%; background: var(--primary); flex-shrink: 0; }
+
+        /* FOTO */
+        .foto-thumb { width: 38px; height: 38px; object-fit: cover; border-radius: 6px; border: 1px solid #e2e8f0; cursor: pointer; }
+
+        /* MODAL */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 500; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(2px); }
+        .mbox { background: white; border-radius: 14px; width: 100%; max-width: 460px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.2); }
+        .mhead { padding: 18px 22px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: white; z-index: 10; }
+        .mhead h3 { font-size: 15px; font-weight: 800; }
+        .mhead button { background: none; border: none; font-size: 20px; cursor: pointer; color: #94a3b8; }
+        .mbody { padding: 22px; }
+
+        /* PERIOD TABS */
+        .period-bar {
+            display: flex; align-items: center; justify-content: space-between;
+            background: white; padding: 10px 16px; border-radius: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06); border: 1px solid #e2e8f0;
+            margin-bottom: 20px; flex-wrap: wrap; gap: 8px;
+        }
+        .period-bar-left { display: flex; align-items: center; gap: 8px; }
+        .period-label { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+        .ptabs { display: flex; background: #f1f5f9; border-radius: 8px; padding: 3px; gap: 2px; }
+        .ptab {
+            padding: 6px 14px; border: none; border-radius: 6px;
+            font-size: 12px; font-weight: 700; cursor: pointer;
+            background: transparent; color: #64748b;
+            transition: all 0.2s; font-family: inherit;
+        }
+        .ptab:hover { color: var(--dark); background: rgba(255,255,255,0.6); }
+        .ptab.active {
+            background: white; color: var(--primary);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+        .ptab.pt-harian.active  { color: #7c3aed; }
+        .ptab.pt-mingguan.active{ color: #0369a1; }
+        .ptab.pt-bulanan.active { color: #065f46; }
+        .period-info {
+            font-size: 11px; font-weight: 600; color: #64748b;
+            background: #f8fafc; border: 1px solid #e2e8f0;
+            padding: 4px 10px; border-radius: 20px;
+        }
+
+        /* SPINNER */
+        .sp { display: inline-block; width: 16px; height: 16px; border: 2px solid #e2e8f0; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 5px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* PAGES */
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* ===== ABSENSI SAYA (self check-in pengajar) ===== */
+        .abs-today-card {
+            background: linear-gradient(135deg, var(--dark) 0%, #1e293b 100%);
+            border-radius: 16px; padding: 18px 20px; color: #fff;
+            box-shadow: 0 4px 16px rgba(15,23,42,0.2);
+            display: flex; flex-direction: column; gap: 14px;
+            max-width: 460px; margin-bottom: 22px;
+        }
+        .atc-head { display: flex; justify-content: space-between; align-items: flex-start; }
+        .atc-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
+        .atc-date  { font-size: 14px; font-weight: 800; color: #fff; }
+        .btn-absen-dash { padding: 9px 16px; background: var(--primary); color: #fff; border: none; border-radius: 9px; font-weight: 800; font-size: 13px; cursor: pointer; font-family: inherit; white-space: nowrap; }
+        .atc-times { display: flex; gap: 16px; }
+        .atc-t { background: rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 16px; flex: 1; text-align: center; }
+        .atc-t .v { font-size: 18px; font-weight: 900; }
+        .atc-t .l { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(255,255,255,0.45); margin-top: 2px; }
+        .atc-t.masuk .v  { color: #6ee7b7; }
+        .atc-t.pulang .v { color: #fcd34d; }
+        .atc-status { display: flex; align-items: center; gap: 8px; }
+        .atc-dot { width: 8px; height: 8px; border-radius: 50%; background: #6ee7b7; }
+        .atc-stat-txt { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.6); }
+
+        /* MODAL KAMERA */
+        .m-bottom { position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 9000; display: none; align-items: flex-end; justify-content: center; backdrop-filter: blur(4px); }
+        .m-bottom.open { display: flex; }
+        .msheet { background: #fff; width: 100%; max-width: 420px; border-radius: 22px 22px 0 0; }
+        .msheet .mhead { border-radius: 0; }
+        .msheet .mbody { padding: 18px 20px; }
+        #video { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 14px; background: #2d3436; transform: scaleX(-1); display: block; }
+        .cam-btns { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+        .btn-masuk  { padding: 14px; background: var(--success); color: #fff; border: none; border-radius: 10px; font-weight: 800; font-size: 15px; cursor: pointer; display: none; font-family: inherit; }
+        .btn-pulang { padding: 14px; background: var(--warning); color: #fff; border: none; border-radius: 10px; font-weight: 800; font-size: 15px; cursor: pointer; display: none; font-family: inherit; }
+        .msg-done   { padding: 14px; background: var(--bg); color: #64748b; border-radius: 10px; font-weight: 700; font-size: 14px; text-align: center; display: none; }
+        .cam-loading { display: none; padding: 36px 0; text-align: center; }
+        #cam-spin { width: 38px; height: 38px; border: 4px solid #e2e8f0; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
+        #cam-status { font-size: 13px; color: #64748b; font-weight: 700; margin-top: 10px; }
+
+        @media (max-width: 900px) { .stats-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 640px) { .main { margin-left: 0; padding: 14px; } .stats-grid { grid-template-columns: 1fr 1fr; } }
+
+        /* ===== MOBILE HAMBURGER & RESPONSIVE SIDEBAR ===== */
+        .topbar-mobile {
+            display: none;
+            position: fixed; top: 0; left: 0; right: 0; height: 52px;
+            background: var(--dark); color: white; z-index: 10000;
+            align-items: center; justify-content: space-between;
+            padding: 0 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        /* Hanya tampil setelah login & di mobile */
+        body.app-ready .topbar-mobile { display: none; }
+        .topbar-mobile h1 { font-size: 15px; font-weight: 900; }
+        .topbar-mobile h1 span { color: var(--primary); }
+        .btn-burger {
+            background: none; border: none; cursor: pointer;
+            display: flex; flex-direction: column; gap: 5px; padding: 6px;
+        }
+        .btn-burger span {
+            display: block; width: 22px; height: 2px;
+            background: white; border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        .btn-burger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .btn-burger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+        .btn-burger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+        .sb-overlay-adm {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5); z-index: 140;
+        }
+        .sb-overlay-adm.open { display: block; }
+
+        @media (max-width: 768px) {
+            body.app-ready .topbar-mobile { display: flex; }
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                z-index: 150;
+                top: 52px;
+                height: calc(100vh - 52px);
+            }
+            .sidebar.sb-open { transform: translateX(0); }
+            .main { margin-left: 0 !important; padding: 14px; padding-top: 64px !important; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .fbar { flex-wrap: wrap; }
+            .fbar select, .fbar input[type=number], .fbar input[type=date] { flex: 1; min-width: 80px; }
+            .tcard table { font-size: 12px; }
+            .tcard thead th, .tcard tbody td { padding: 8px 10px; }
+            .mbox { max-width: 100% !important; margin: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginPage">
+    <div class="login-card">
+        <div class="lc-logo"><h2>ERLAJAR<span>NGAWAN</span></h2><p>GBKP Runggun Bambu Raya · Pengajar</p></div>
+
+        <div class="auth-tabs">
+            <div class="auth-tab active" id="tabA-login" onclick="switchAuthTabA('login')">LOGIN</div>
+            <div class="auth-tab" id="tabA-reg" onclick="switchAuthTabA('reg')">REGISTRASI</div>
+        </div>
+
+        <!-- FORM LOGIN -->
+        <div id="formLoginA">
+            <label class="lc-label">Username Pengajar</label>
+            <input class="lc-input" type="text" id="l_user" placeholder="Username...">
+            <label class="lc-label">Password</label>
+            <input class="lc-input" type="password" id="l_pass" placeholder="Password..." onkeydown="if(event.key==='Enter') handleLogin()">
+            <label class="lc-rem">
+                <input type="checkbox" id="l_rem" style="width:14px;height:14px;accent-color:var(--primary);vertical-align:middle;margin-right:5px;">
+                <span>Ingat Saya (30 hari)</span>
+            </label>
+            <button class="btn-login" onclick="handleLogin()">MASUK SEBAGAI PENGAJAR</button>
+            <p id="loginError">Username atau password salah!</p>
+        </div>
+
+        <!-- FORM REGISTRASI -->
+        <div id="formRegA" style="display:none;">
+            <label class="lc-label">Username Pengajar</label>
+            <input class="lc-input" type="text" id="r_user" placeholder="Buat username...">
+            <label class="lc-label">Password</label>
+            <input class="lc-input" type="password" id="r_pass" placeholder="Buat password...">
+            <label class="lc-label">Konfirmasi Password</label>
+            <input class="lc-input" type="password" id="r_pass2" placeholder="Ulangi password..." onkeydown="if(event.key==='Enter') doRegisterA()">
+            <button class="btn-login" onclick="doRegisterA()">DAFTAR SEBAGAI PENGAJAR</button>
+            <p id="regErrA"></p>
+            <p id="regOkA"></p>
+        </div>
+    </div>
+</div>
+
+<!-- MOBILE TOPBAR (hamburger) — di luar loginPage agar z-index benar -->
+<div class="topbar-mobile" id="mobileTopbar">
+    <button class="btn-burger" id="btnBurger" onclick="toggleSidebarMobile()">
+        <span></span><span></span><span></span>
+    </button>
+    <h1>ERLAJAR<span>NGAWAN</span></h1>
+    <div style="width:34px;"></div>
+</div>
+<div class="sb-overlay-adm" id="sbOverlayAdm" onclick="toggleSidebarMobile()"></div>
+
+<!-- APP -->
+<div id="appLayout">
+    <aside class="sidebar">
+        <div class="sb-logo"><h1>ERLAJAR<span>NGAWAN</span></h1><p>Panel Pengajar</p></div>
+        <nav class="sb-nav">
+            <div class="sb-sec">Overview</div>
+            <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard"><span class="icon">📊</span> Dashboard</div>
+            <div class="sb-sec">Absensi Pribadi</div>
+            <div class="nav-item" onclick="showPage('absensaya')" id="nav-absensaya"><span class="icon">📷</span> Absen Saya</div>
+            <div class="sb-sec">Data Peserta</div>
+            <div class="nav-item" onclick="showPage('absensi')" id="nav-absensi"><span class="icon">🕐</span> Absensi Peserta</div>
+            <div class="nav-item" onclick="showPage('rekap')" id="nav-rekap"><span class="icon">🗓️</span> Rekap Bulanan</div>
+        </nav>
+        <div class="sb-foot">
+            <div class="admin-badge">
+                <div class="admin-av" id="adminInitial">A</div>
+                <div class="admin-info"><p id="adminName">Admin</p><small>Administrator</small></div>
+            </div>
+            <button class="btn-logout-sb" onclick="handleLogout()">🚪 Logout</button>
+        </div>
+    </aside>
+
+    <main class="main">
+
+        <!-- DASHBOARD -->
+        <div class="page active" id="page-dashboard">
+            <div class="pg-header"><h2>Dashboard Admin</h2><p>Ringkasan absensi — <span id="dashPeriodeLabel">bulan ini</span></p></div>
+
+            <!-- PERIOD BAR -->
+            <div class="period-bar">
+                <div class="period-bar-left">
+                    <span class="period-label">Tampilkan:</span>
+                    <div class="ptabs">
+                        <button class="ptab pt-harian active"  id="ptab-harian"   onclick="setPeriod('harian')">📅 Harian</button>
+                        <button class="ptab pt-mingguan" id="ptab-mingguan" onclick="setPeriod('mingguan')">📆 Mingguan</button>
+                        <button class="ptab pt-bulanan"  id="ptab-bulanan"  onclick="setPeriod('bulanan')">🗓️ Bulanan</button>
+                    </div>
+                </div>
+                <span class="period-info" id="periodInfoText">—</span>
+            </div>
+
+            <!-- STAT CARD -->
+            <div class="stats-grid">
+                <div class="scard"><span class="si">🕐</span><div class="sl">Absensi</div><div class="sv" id="stAbsensi" style="color:#f59e0b">-</div><div class="ss scard-period">-</div></div>
+            </div>
+
+            <!-- ABSENSI -->
+            <div class="pg-header" style="margin-bottom:14px;"><h2 style="font-size:15px;">🕐 Absensi — <span id="dashAbsensiPeriodeTitle">Hari Ini</span></h2></div>
+            <div class="tcard"><table>
+                <thead><tr><th>Tanggal</th><th>User</th><th>Tipe</th><th>Jam</th><th>View</th></tr></thead>
+                <tbody id="dAbsensi"><tr class="lr"><td colspan="5"><span class="sp"></span>Memuat...</td></tr></tbody>
+            </table></div>
+        </div>
+
+        <!-- ABSENSI SAYA (self check-in) -->
+        <div class="page" id="page-absensaya">
+            <div class="pg-header"><h2>Absensi Saya</h2><p>Rekam kehadiran Anda sebagai pengajar hari ini</p></div>
+
+            <div class="abs-today-card">
+                <div class="atc-head">
+                    <div>
+                        <div class="atc-title">Absensi Hari Ini</div>
+                        <div class="atc-date" id="apDate">-</div>
+                    </div>
+                    <button class="btn-absen-dash" onclick="bukaKameraPengajar()">📷 Absen</button>
+                </div>
+                <div class="atc-times">
+                    <div class="atc-t masuk">
+                        <div class="v" id="apMasuk">-</div>
+                        <div class="l">Masuk</div>
+                    </div>
+                    <div class="atc-t pulang">
+                        <div class="v" id="apPulang">-</div>
+                        <div class="l">Pulang</div>
+                    </div>
+                </div>
+                <div class="atc-status">
+                    <div class="atc-dot" id="apDot"></div>
+                    <div class="atc-stat-txt" id="apStatus">Memuat status...</div>
+                </div>
+            </div>
+
+            <div class="tcard">
+                <table>
+                    <thead><tr><th>Tanggal</th><th>Masuk</th><th>Foto</th><th>Pulang</th><th>Foto</th></tr></thead>
+                    <tbody id="apTbody"><tr class="lr"><td colspan="5"><span class="sp"></span>Memuat...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ABSENSI PESERTA (monitoring, admin/pengajar melihat data peserta) -->
+        <div class="page" id="page-absensi">
+            <div class="pg-header"><h2>Data Absensi Peserta</h2><p>Rekap kehadiran semua peserta</p></div>
+            <div class="fbar">
+                <label>User:</label><select id="aFU"><option value="">-- Semua --</option></select>
+                <label>Dari:</label><input type="date" id="aFD">
+                <label>s/d:</label><input type="date" id="aFS">
+                <button class="btn-f" onclick="loadAbsensi()">🔍 Tampilkan</button>
+            </div>
+            <div class="tcard"><table>
+                <thead><tr><th>Tanggal</th><th>User</th><th>Tipe</th><th>Jam</th><th>View</th></tr></thead>
+                <tbody id="aTable"><tr class="lr"><td colspan="5"><span class="sp"></span>Memuat...</td></tr></tbody>
+            </table></div>
+        </div>
+
+        <!-- REKAP BULANAN (matriks kehadiran peserta) -->
+        <div class="page" id="page-rekap">
+            <div class="pg-header"><h2>Rekap Bulanan</h2><p>Matriks kehadiran peserta per bulan</p></div>
+
+            <div class="fbar">
+                <label>Bulan:</label><input type="month" id="rkBulan">
+                <button class="btn-f" onclick="loadRekapPengajar()">🔍 Tampilkan</button>
+            </div>
+
+            <div class="rekap-legend"><span><span class="lg-ok">07:15</span> Jam Masuk/Keluar</span><span><span class="lg-no">✗</span> Tidak Absen</span></div>
+
+            <div class="rekap-wrap">
+                <table class="rekap-mtx" id="rekapTable">
+                    <thead><tr><th class="mtx-name">Nama</th></tr></thead>
+                    <tbody><tr><td colspan="1" style="padding:20px;color:#94a3b8;">Memuat...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<canvas id="canvas" style="display:none;"></canvas>
+
+<!-- MODAL KAMERA (Absen Saya) -->
+<div class="m-bottom" id="modalKam">
+    <div class="msheet">
+        <div class="mhead"><h3>📷 Foto Absensi</h3><button onclick="tutupKameraPengajar()">✕</button></div>
+        <div class="mbody">
+            <div id="cam-area">
+                <video id="video" autoplay playsinline></video>
+                <div class="cam-btns">
+                    <button class="btn-masuk"  id="btnMasuk"  onclick="prosesAbsensiPengajar('MASUK')">✅ ABSEN MASUK</button>
+                    <button class="btn-pulang" id="btnPulang" onclick="prosesAbsensiPengajar('PULANG')">🏠 ABSEN PULANG</button>
+                    <div   class="msg-done"    id="msgDone">🎉 Absensi hari ini sudah lengkap!</div>
+                </div>
+            </div>
+            <div class="cam-loading" id="camLoading">
+                <div id="cam-spin"></div>
+                <p id="cam-status">Memproses...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL FOTO ABSENSI -->
+<div class="overlay" id="modalFoto" onclick="closeModal('modalFoto')">
+    <div class="mbox" style="max-width:380px;" onclick="event.stopPropagation()">
+        <div class="mhead"><h3>Foto Absensi</h3><button onclick="closeModal('modalFoto')">✕</button></div>
+        <div class="mbody" style="text-align:center;"><img id="mFotoImg" src="" style="max-width:100%;border-radius:10px;border:1px solid #e2e8f0;"></div>
+    </div>
+</div>
+
+<script>
+const API  = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+const AUTH = 'admin';
+const TA   = 'absensi_peserta_ngawan';
+const TAP  = 'absensi_pengajar';
+const R2   = 'https://lidan.co.id/api/upload_r2_lidan';
+const ASSETS = 'https://assets.lidan.co.id/';
+
+let allUsers   = [];
+let adminUser  = '';
+let dashPeriod = 'harian'; // 'harian' | 'mingguan' | 'bulanan'
+let stream         = null;
+let hariIniPengajar = { masuk:false, pulang:false };
+
+// Helper: format tanggal lokal (bukan UTC) ke YYYY-MM-DD
+function localDate(d) {
+    const dt = d || new Date();
+    return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+}
+
+// Helper: hitung range tanggal berdasar periode
+function getPeriodRange(period) {
+    const now = new Date();
+    const today = localDate(now);
+    const bln   = now.getMonth() + 1;
+    const thn   = now.getFullYear();
+
+    if (period === 'harian') {
+        return { type:'harian', today, bln, thn, tgl: now.getDate(),
+            label: 'Hari Ini (' + today + ')',
+            shortLabel: 'Hari Ini' };
+    }
+    if (period === 'mingguan') {
+        // Senin s/d Minggu minggu ini
+        const day = now.getDay(); // 0=Sun
+        const diffMon = (day === 0) ? -6 : 1 - day;
+        const mon = new Date(now); mon.setDate(now.getDate() + diffMon);
+        const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+        const fmt = d => localDate(d);
+        return { type:'mingguan', dateFrom: fmt(mon), dateTo: fmt(sun),
+            label: fmt(mon) + ' s/d ' + fmt(sun),
+            shortLabel: 'Minggu Ini' };
+    }
+    // bulanan
+    return { type:'bulanan', bln, thn,
+        label: 'Bulan ' + bln + '/' + thn,
+        shortLabel: 'Bulan Ini' };
+}
+
+function setPeriod(period) {
+    dashPeriod = period;
+    ['harian','mingguan','bulanan'].forEach(p => {
+        const el = document.getElementById('ptab-' + p);
+        if (el) el.classList.toggle('active', p === period);
+    });
+    loadDashboard();
+}
+
+// ===== HELPERS =====
+const api = q => fetch(API + q, { headers: { 'X-Custom-Auth': AUTH } }).then(r => r.json());
+const loading = (id, cols) => document.getElementById(id).innerHTML = `<tr class="lr"><td colspan="${cols}"><span class="sp"></span>Memuat...</td></tr>`;
+
+// ===== AUTH =====
+async function handleLogin() {
+    const u   = document.getElementById('l_user').value.trim();
+    const p   = document.getElementById('l_pass').value.trim();
+    const rem = document.getElementById('l_rem').checked;
+    if (!u || !p) return;
+    const errEl = document.getElementById('loginError');
+    errEl.style.display = 'none';
+    errEl.style.color = '#ef4444';
+
+    const res = await api(`?table=pengajar_ngawan&x_01_eq=${u}&x_02_eq=${p}`);
+    if (res.success && res.data?.length > 0) {
+        const acc = res.data[0];
+        // ── Cek status approval admin ──
+        if (acc.x_03 !== 'approved') {
+            errEl.textContent = 'Akun Anda belum disetujui admin. Silakan tunggu approval.';
+            errEl.style.color = '#b45309';
+            errEl.style.display = 'block';
+            return;
+        }
+        adminUser = acc.x_01;
+        if (rem) {
+            // Simpan ke localStorage dengan expiry 1 bulan
+            const expire = Date.now() + 30 * 24 * 60 * 60 * 1000;
+            localStorage.setItem('ngawan_pengajar', JSON.stringify({ user: adminUser, expire }));
+        } else {
+            sessionStorage.setItem('ngawan_pengajar', adminUser);
+        }
+        showApp();
+    } else {
+        errEl.textContent = 'Username atau password salah!';
+        errEl.style.display = 'block';
+    }
+}
+/* ==============================
+   REGISTRASI PENGAJAR
+   ============================== */
+function switchAuthTabA(tab) {
+    document.getElementById('tabA-login').classList.toggle('active', tab==='login');
+    document.getElementById('tabA-reg').classList.toggle('active', tab==='reg');
+    document.getElementById('formLoginA').style.display = tab==='login' ? 'block' : 'none';
+    document.getElementById('formRegA').style.display   = tab==='reg'   ? 'block' : 'none';
+    document.getElementById('loginError').style.display = 'none';
+    document.getElementById('regErrA').style.display = 'none';
+    document.getElementById('regOkA').style.display = 'none';
+}
+
+async function doRegisterA() {
+    const u  = document.getElementById('r_user').value.trim();
+    const p  = document.getElementById('r_pass').value.trim();
+    const p2 = document.getElementById('r_pass2').value.trim();
+    const errEl = document.getElementById('regErrA');
+    const okEl  = document.getElementById('regOkA');
+    errEl.style.display='none'; okEl.style.display='none';
+
+    if (!u || !p || !p2) { errEl.textContent='Semua kolom wajib diisi!'; errEl.style.display='block'; return; }
+    if (u.length < 3)     { errEl.textContent='Username minimal 3 karakter!'; errEl.style.display='block'; return; }
+    if (p.length < 4)     { errEl.textContent='Password minimal 4 karakter!'; errEl.style.display='block'; return; }
+    if (p !== p2)         { errEl.textContent='Konfirmasi password tidak cocok!'; errEl.style.display='block'; return; }
+
+    try {
+        const cek = await api(`?table=pengajar_ngawan&x_01_eq=${u}&limit=1`);
+        if (cek.success && cek.data?.length > 0) {
+            errEl.textContent='Username sudah terdaftar, silakan pilih username lain.';
+            errEl.style.display='block';
+            return;
+        }
+
+        const res = await fetch(`${API}?table=pengajar_ngawan`, {
+            method:'POST',
+            headers:{ 'Content-Type':'application/json', 'X-Custom-Auth':AUTH },
+            body: JSON.stringify({ x_01:u, x_02:p, x_03:'pending' })
+        }).then(r=>r.json());
+
+        if (res.success) {
+            okEl.textContent='Registrasi berhasil! Akun Anda menunggu persetujuan admin sebelum bisa login.';
+            okEl.style.display='block';
+            document.getElementById('r_user').value='';
+            document.getElementById('r_pass').value='';
+            document.getElementById('r_pass2').value='';
+            setTimeout(()=>{ switchAuthTabA('login'); document.getElementById('l_user').value=u; }, 1800);
+        } else {
+            errEl.textContent = res.message || 'Registrasi gagal, coba lagi.';
+            errEl.style.display='block';
+        }
+    } catch(e) {
+        errEl.textContent='Terjadi kesalahan koneksi, coba lagi.';
+        errEl.style.display='block';
+    }
+}
+
+async function checkAuth() {
+    // Cek sessionStorage
+    const ss = sessionStorage.getItem('ngawan_pengajar');
+    if (ss) { await verifyThenShow(ss); return; }
+    // Cek localStorage (remember me) dengan validasi expiry
+    const ls = localStorage.getItem('ngawan_pengajar');
+    if (ls) {
+        try {
+            const data = JSON.parse(ls);
+            if (data.expire && Date.now() < data.expire) {
+                await verifyThenShow(data.user);
+                return;
+            } else {
+                // Expired - hapus
+                localStorage.removeItem('ngawan_pengajar');
+            }
+        } catch { localStorage.removeItem('ngawan_pengajar'); }
+    }
+}
+
+// Re-cek status approval ke DB sebelum membuka sesi tersimpan
+// (jika admin mencabut approval, sesi lama tidak lagi otomatis masuk)
+async function verifyThenShow(username) {
+    try {
+        const res = await api(`?table=pengajar_ngawan&x_01_eq=${username}&limit=1`);
+        const acc = res.success ? res.data?.[0] : null;
+        if (acc && acc.x_03 === 'approved') {
+            adminUser = username;
+            showApp();
+        } else {
+            sessionStorage.removeItem('ngawan_pengajar');
+            localStorage.removeItem('ngawan_pengajar');
+        }
+    } catch(e) {
+        // Gagal cek koneksi -> jangan paksa logout, biarkan user coba lagi
+        adminUser = username;
+        showApp();
+    }
+}
+function handleLogout() {
+    sessionStorage.removeItem('ngawan_pengajar');
+    localStorage.removeItem('ngawan_pengajar');
+    document.body.classList.remove('app-ready');
+    location.reload();
+}
+
+async function showApp() {
+    document.getElementById('loginPage').style.display  = 'none';
+    document.getElementById('appLayout').style.display  = 'flex';
+    document.body.classList.add('app-ready');
+    document.getElementById('adminName').textContent    = adminUser;
+    document.getElementById('adminInitial').textContent = adminUser.charAt(0).toUpperCase();
+    await loadAllUsers();
+    loadDashboard();
+}
+
+// ===== NAV =====
+function showPage(pg) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-'+pg).classList.add('active');
+    document.getElementById('nav-'+pg).classList.add('active');
+    // Close mobile sidebar
+    const sb = document.querySelector('.sidebar');
+    const ov = document.getElementById('sbOverlayAdm');
+    const btn = document.getElementById('btnBurger');
+    if (sb) sb.classList.remove('sb-open');
+    if (ov) ov.classList.remove('open');
+    if (btn) btn.classList.remove('open');
+    const map = { dashboard: loadDashboard, absensi: loadAbsensi, absensaya: initAbsenSaya, rekap: loadRekapPengajar };
+    if (map[pg]) map[pg]();
+}
+
+// ===== USERS (untuk filter dropdown) =====
+async function loadAllUsers() {
+    const res = await api(`?table=peserta_ngawan`);
+    if (res.success && res.data) {
+        allUsers = res.data;
+        const opts = allUsers.map(u => `<option value="${u.x_01}">${u.x_01}</option>`).join('');
+        document.getElementById('aFU').innerHTML = '<option value="">-- Semua --</option>' + opts;
+    }
+}
+
+// ===== DASHBOARD =====
+async function loadDashboard() {
+    const pr = getPeriodRange(dashPeriod);
+
+    // Update labels
+    document.getElementById('dashPeriodeLabel').textContent = pr.shortLabel;
+    document.getElementById('periodInfoText').textContent   = pr.label;
+    const absTitleEl = document.getElementById('dashAbsensiPeriodeTitle');
+    if (absTitleEl) absTitleEl.textContent = (dashPeriod==='harian') ? 'Hari Ini' : pr.shortLabel;
+    document.querySelectorAll('.scard-period').forEach(el => el.textContent = pr.shortLabel);
+
+    // Build query
+    let qAbs  = `?table=${TA}`;
+    if (pr.type === 'harian') {
+        qAbs  += `&x_02_eq=${pr.today}`;
+    } else if (pr.type === 'mingguan') {
+        qAbs  += `&x_02_gte=${pr.dateFrom}&x_02_lte=${pr.dateTo}`;
+    } else {
+        qAbs  += `&x_02_gte=${pr.thn}-${String(pr.bln).padStart(2,'0')}-01`;
+    }
+
+    const resAbs = await api(qAbs);
+    let absData  = resAbs.data || [];
+
+    // Filter mingguan client-side
+    if (pr.type === 'mingguan') {
+        absData = absData.filter(d => d.x_02 >= pr.dateFrom && d.x_02 <= pr.dateTo);
+    }
+
+    document.getElementById('stAbsensi').textContent = absData.length;
+
+    const absShow = absData.slice(0, 15)
+        .sort((a,b) => (b.x_02||'').localeCompare(a.x_02||''));
+    document.getElementById('dAbsensi').innerHTML = absShow.length
+        ? absShow.map(d => `<tr>
+            <td>${d.x_02||''}</td>
+            <td><span class="uchip"><span class="udot"></span>${d.x_01||'-'}</span></td>
+            <td><span class="badge b-${(d.x_05||'').toLowerCase()}">${d.x_05||'-'}</span></td>
+            <td><b>${d.x_03||'-'}</b></td>
+            <td>${d.x_04?`<img src="${ASSETS}${d.x_04}" class="foto-thumb" onclick="showFoto('${ASSETS}${d.x_04}')">`:'-'}</td>
+          </tr>`).join('')
+        : `<tr class="er"><td colspan="5">Tidak ada absensi ${pr.shortLabel.toLowerCase()}</td></tr>`;
+}
+
+// ===== ABSENSI =====
+async function loadAbsensi() {
+    const user=document.getElementById('aFU').value, dari=document.getElementById('aFD').value, sampai=document.getElementById('aFS').value;
+    let q=`?table=${TA}`; if(user) q+=`&x_01_eq=${user}`; if(dari) q+=`&x_02_gte=${dari}`; if(sampai) q+=`&x_02_lte=${sampai}`;
+    loading('aTable',5);
+    const res = await api(q);
+    const data = (res.data||[]).sort((a,b)=>(b.x_02||'').localeCompare(a.x_02||''));
+    document.getElementById('aTable').innerHTML = data.length
+        ? data.map(d => `<tr>
+            <td>${d.x_02||'-'}</td>
+            <td><span class="uchip"><span class="udot"></span>${d.x_01||'-'}</span></td>
+            <td><span class="badge b-${(d.x_05||'').toLowerCase()}">${d.x_05||'-'}</span></td>
+            <td><b>${d.x_03||'-'}</b></td>
+            <td>${d.x_04?`<img src="${ASSETS}${d.x_04}" class="foto-thumb" onclick="showFoto('${ASSETS}${d.x_04}')" title="Klik untuk lihat">`:'<span style="color:#94a3b8;font-size:11px;">-</span>'}</td></tr>`).join('')
+        : '<tr class="er"><td colspan="5">Tidak ada data absensi</td></tr>';
+}
+
+// ===== ABSENSI SAYA (self check-in pengajar) =====
+function initAbsenSaya() {
+    const now = new Date();
+    const BLN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    const HR  = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+    document.getElementById('apDate').textContent =
+        `${HR[now.getDay()]}, ${now.getDate()} ${BLN[now.getMonth()]} ${now.getFullYear()}`;
+    muatRiwayatPengajar();
+}
+
+async function muatRiwayatPengajar() {
+    const tbody = document.getElementById('apTbody');
+    try {
+        const res  = await api(`?table=${TAP}&x_01_eq=${adminUser}&limit=60`);
+        const data = res.data || [];
+        const grp  = {};
+        const _t = new Date();
+        const today = `${_t.getFullYear()}-${String(_t.getMonth()+1).padStart(2,'0')}-${String(_t.getDate()).padStart(2,'0')}`;
+        hariIniPengajar = { masuk:false, pulang:false };
+
+        data.forEach(d => {
+            if (!grp[d.x_02]) grp[d.x_02] = { m:'-', fm:'', p:'-', fp:'' };
+            if (d.x_05==='MASUK')  { grp[d.x_02].m=d.x_03; grp[d.x_02].fm=d.x_04; if(d.x_02===today) hariIniPengajar.masuk=true; }
+            if (d.x_05==='PULANG') { grp[d.x_02].p=d.x_03; grp[d.x_02].fp=d.x_04; if(d.x_02===today) hariIniPengajar.pulang=true; }
+        });
+
+        document.getElementById('apMasuk').textContent  = grp[today]?.m || '-';
+        document.getElementById('apPulang').textContent = grp[today]?.p || '-';
+        const dot = document.getElementById('apDot');
+        const stxt = document.getElementById('apStatus');
+        if (!hariIniPengajar.masuk) { dot.style.background='#fca5a5'; stxt.textContent='Belum absen masuk hari ini'; }
+        else if (!hariIniPengajar.pulang) { dot.style.background='#fcd34d'; stxt.textContent='Sudah masuk, belum pulang'; }
+        else { dot.style.background='#6ee7b7'; stxt.textContent='Absensi hari ini lengkap ✓'; }
+
+        const sorted = Object.keys(grp).sort((a,b)=>new Date(b)-new Date(a));
+        tbody.innerHTML = sorted.map(d => {
+            const r = grp[d];
+            return `<tr>
+                <td style="font-weight:700;">${d}</td>
+                <td style="color:#065f46;font-weight:700;">${r.m}</td>
+                <td>${r.fm ? `<img src="${ASSETS}${r.fm}" class="foto-thumb" onclick="showFoto('${ASSETS}${r.fm}')">` : '-'}</td>
+                <td style="color:#b45309;font-weight:700;">${r.p}</td>
+                <td>${r.fp ? `<img src="${ASSETS}${r.fp}" class="foto-thumb" onclick="showFoto('${ASSETS}${r.fp}')">` : '-'}</td>
+            </tr>`;
+        }).join('') || '<tr class="er"><td colspan="5">Belum ada riwayat absensi</td></tr>';
+    } catch(e) { console.error(e); }
+}
+
+async function bukaKameraPengajar() {
+    try {
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+        const res = await api(`?table=${TAP}&x_01_eq=${adminUser}&limit=60`);
+        hariIniPengajar = { masuk:false, pulang:false };
+        (res.data || []).forEach(d => {
+            if (d.x_02 === today) {
+                if (d.x_05 === 'MASUK')  hariIniPengajar.masuk  = true;
+                if (d.x_05 === 'PULANG') hariIniPengajar.pulang = true;
+            }
+        });
+    } catch(e) { console.error('[bukaKameraPengajar] gagal refresh status:', e); }
+
+    document.getElementById('cam-area').style.display   = 'block';
+    document.getElementById('camLoading').style.display = 'none';
+    document.getElementById('modalKam').classList.add('open');
+    updateBtnKameraPengajar();
+    navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ ideal:'user' } } })
+        .then(s => { stream=s; document.getElementById('video').srcObject=s; })
+        .catch(() => { alert('Gagal akses kamera'); tutupKameraPengajar(); });
+}
+
+function tutupKameraPengajar() {
+    document.getElementById('modalKam').classList.remove('open');
+    if (stream) { stream.getTracks().forEach(t=>t.stop()); stream=null; }
+}
+
+function updateBtnKameraPengajar() {
+    ['btnMasuk','btnPulang','msgDone'].forEach(id => document.getElementById(id).style.display='none');
+    if (!hariIniPengajar.masuk)       document.getElementById('btnMasuk').style.display  = 'block';
+    else if (!hariIniPengajar.pulang) document.getElementById('btnPulang').style.display = 'block';
+    else                              document.getElementById('msgDone').style.display   = 'block';
+}
+
+async function prosesAbsensiPengajar(tipe) {
+    document.getElementById('cam-area').style.display   = 'none';
+    document.getElementById('camLoading').style.display = 'block';
+    const st = document.getElementById('cam-status');
+    try {
+        const vid=document.getElementById('video'), cvs=document.getElementById('canvas');
+        const vw = vid.videoWidth  || 640;
+        const vh = vid.videoHeight || 480;
+        cvs.width=vw; cvs.height=vh;
+        const ctx=cvs.getContext('2d');
+        ctx.translate(vw,0); ctx.scale(-1,1);
+        ctx.drawImage(vid,0,0,vw,vh);
+        const blob = await new Promise(r=>cvs.toBlob(r,'image/jpeg',0.85));
+        const fn   = `absensi_pengajar/${adminUser}_${Date.now()}.jpg`;
+        st.textContent = 'Mengunggah foto...';
+        const fd = new FormData(); fd.append('file',blob); fd.append('customName',fn);
+        const r2 = await fetch(R2,{method:'POST',headers:{'X-Custom-Auth':AUTH},body:fd}).then(r=>r.json());
+        if (!r2.success) throw new Error('Gagal upload foto');
+        st.textContent = 'Mencatat ke database...';
+        const now = new Date();
+        await fetch(`${API}?table=${TAP}`, {
+            method:'POST', headers:{'Content-Type':'application/json','X-Custom-Auth':AUTH},
+            body: JSON.stringify({ x_01:adminUser, x_02:`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`, x_03:now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}), x_04:fn, x_05:tipe })
+        }).then(r=>r.json());
+        tutupKameraPengajar();
+        muatRiwayatPengajar();
+    } catch(e) {
+        alert('Error: '+e.message);
+        document.getElementById('cam-area').style.display   = 'block';
+        document.getElementById('camLoading').style.display = 'none';
+    }
+}
+
+// ===== REKAP BULANAN (matriks kehadiran peserta) =====
+async function loadRekapPengajar() {
+    const bulanVal = document.getElementById('rkBulan').value; // format YYYY-MM
+    const table = document.getElementById('rekapTable');
+    if (!bulanVal) return;
+    const [thn, bln] = bulanVal.split('-').map(Number);
+    const jumlahHari = new Date(thn, bln, 0).getDate();
+    const dariTgl   = `${bulanVal}-01`;
+    const sampaiTgl = `${bulanVal}-${String(jumlahHari).padStart(2,'0')}`;
+
+    table.querySelector('tbody').innerHTML = `<tr><td style="padding:20px;color:#94a3b8;">Memuat...</td></tr>`;
+
+    // Daftar nama = seluruh peserta approved (dari cache allUsers, sudah dimuat loadAllUsers())
+    const users = (allUsers || [])
+        .filter(u => u.x_03 === 'approved')
+        .map(u => u.x_01)
+        .sort((a,b) => a.localeCompare(b));
+
+    const res  = await api(`?table=${TA}&x_02_gte=${dariTgl}&x_02_lte=${sampaiTgl}&limit=3000`);
+    const data = res.data || [];
+
+    // Map: "user|tanggal" -> { m: jam masuk, p: jam pulang }
+    const jamMap = {};
+    data.forEach(d => {
+        if (!d.x_01 || !d.x_02) return;
+        const key = `${d.x_01}|${d.x_02}`;
+        if (!jamMap[key]) jamMap[key] = { m: null, p: null };
+        if (d.x_05 === 'MASUK')  jamMap[key].m = d.x_03;
+        if (d.x_05 === 'PULANG') jamMap[key].p = d.x_03;
+    });
+
+    // Header 2 baris: tanggal (colspan 2) + sub Masuk/Keluar
+    let theadHtml = '<tr><th class="mtx-name" rowspan="2">Nama</th>';
+    for (let t = 1; t <= jumlahHari; t++) theadHtml += `<th class="mtx-date" colspan="2">${t}</th>`;
+    theadHtml += '</tr><tr>';
+    for (let t = 1; t <= jumlahHari; t++) theadHtml += `<th class="mtx-sub">M</th><th class="mtx-sub">K</th>`;
+    theadHtml += '</tr>';
+    table.querySelector('thead').innerHTML = theadHtml;
+
+    if (!users.length) {
+        table.querySelector('tbody').innerHTML = `<tr><td style="padding:20px;color:#94a3b8;">Tidak ada data peserta yang disetujui</td></tr>`;
+        return;
+    }
+
+    table.querySelector('tbody').innerHTML = users.map(u => {
+        let row = `<tr><td class="mtx-name">${u}</td>`;
+        for (let t = 1; t <= jumlahHari; t++) {
+            const tgl = `${bulanVal}-${String(t).padStart(2,'0')}`;
+            const jam = jamMap[`${u}|${tgl}`] || { m: null, p: null };
+            row += `<td class="mtx-cell ${jam.m ? 'mtx-time' : 'mtx-absen'}">${jam.m || '✗'}</td>`;
+            row += `<td class="mtx-cell mtx-last ${jam.p ? 'mtx-time' : 'mtx-absen'}">${jam.p || '✗'}</td>`;
+        }
+        row += '</tr>';
+        return row;
+    }).join('');
+}
+
+// ===== MODAL / MISC =====
+function closeModal(id) { document.getElementById(id).style.display='none'; }
+function showFoto(url) { document.getElementById('mFotoImg').src=url; document.getElementById('modalFoto').style.display='flex'; }
+
+// ===== SIDEBAR MOBILE =====
+function toggleSidebarMobile() {
+    const sb = document.getElementById('sidebar') || document.querySelector('.sidebar');
+    const ov = document.getElementById('sbOverlayAdm');
+    const btn = document.getElementById('btnBurger');
+    if (sb) sb.classList.toggle('sb-open');
+    if (ov) ov.classList.toggle('open');
+    if (btn) btn.classList.toggle('open');
+}
+
+// ===== INIT =====
+window.onload = function() {
+    const today=localDate(new Date());
+    document.getElementById('aFD').value=today.slice(0,7)+'-01';
+    document.getElementById('aFS').value=today;
+    document.getElementById('rkBulan').value=today.slice(0,7);
+    checkAuth();
+};
+</script>
+</body>
+</html>
