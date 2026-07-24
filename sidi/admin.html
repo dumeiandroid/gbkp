@@ -111,6 +111,8 @@
         .act-revoke:hover { background: #fde68a; }
         .act-delete { background: #fee2e2; color: #b91c1c; }
         .act-delete:hover { background: #fecaca; }
+        .act-edit { background: #dbeafe; color: #1d4ed8; }
+        .act-edit:hover { background: #bfdbfe; }
 
         /* FILTER BAR (absensi) */
         .fbar select, .fbar input[type=date] { padding: 7px 11px; border: 1px solid #e2e8f0; border-radius: 7px; font-size: 13px; outline: none; background: #f8fafc; color: var(--dark); }
@@ -351,6 +353,26 @@
     </div>
 </div>
 
+<!-- MODAL EDIT AKUN -->
+<div class="overlay" id="modalEdit" onclick="closeModal('modalEdit')">
+    <div class="mbox2" onclick="event.stopPropagation()">
+        <div class="mhead2"><h3>Edit Akun</h3><button onclick="closeModal('modalEdit')">✕</button></div>
+        <div class="mbody2" style="text-align:left;">
+            <label style="display:block;font-size:12px;font-weight:700;color:#64748b;margin-bottom:4px;">Nama</label>
+            <input type="text" id="editNama" style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;margin-bottom:14px;">
+
+            <label style="display:block;font-size:12px;font-weight:700;color:#64748b;margin-bottom:4px;">Username</label>
+            <input type="text" id="editUsername" style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;margin-bottom:14px;">
+
+            <label style="display:block;font-size:12px;font-weight:700;color:#64748b;margin-bottom:4px;">Password baru <span style="font-weight:400;color:#94a3b8;">(kosongkan bila tidak diubah)</span></label>
+            <input type="text" id="editPassword" placeholder="••••••••" style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;margin-bottom:6px;">
+            <div id="editMsg" style="color:#b91c1c;font-size:12px;min-height:16px;margin-bottom:8px;"></div>
+
+            <button class="actbtn act-approve" style="width:100%;padding:10px;font-size:13px;" onclick="submitEditAkun()">💾 Simpan Perubahan</button>
+        </div>
+    </div>
+</div>
+
 <script>
 const API  = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
 const AUTH = 'admin';
@@ -513,8 +535,10 @@ function renderTable() {
                 : `<span class="badge b-pending">⏳ Menunggu</span>`;
             const actions = approved
                 ? `<button class="actbtn act-revoke" onclick="revokeAkun('${currentJenis}',${d.id_x})">⛔ Nonaktifkan</button>
+                   <button class="actbtn act-edit" onclick="openEditModal('${currentJenis}',${d.id_x},'${escAttr(d.x_04)}','${escAttr(d.x_01)}')">✏️ Edit</button>
                    <button class="actbtn act-delete" onclick="hapusAkun('${currentJenis}',${d.id_x},'${d.x_01}')">🗑️ Hapus</button>`
                 : `<button class="actbtn act-approve" onclick="approveAkun('${currentJenis}',${d.id_x})">✅ Setujui</button>
+                   <button class="actbtn act-edit" onclick="openEditModal('${currentJenis}',${d.id_x},'${escAttr(d.x_04)}','${escAttr(d.x_01)}')">✏️ Edit</button>
                    <button class="actbtn act-delete" onclick="hapusAkun('${currentJenis}',${d.id_x},'${d.x_01}')">🗑️ Tolak</button>`;
             return `<tr>
                 <td>${d.id_x}</td>
@@ -545,6 +569,55 @@ async function revokeAkun(tabel, id) {
         body: JSON.stringify({ x_03: 'pending' })
     }).then(r=>r.json());
     await loadAllData();
+}
+
+// ===== EDIT AKUN (nama / username / password) =====
+function escAttr(v) {
+    return String(v ?? '').replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;');
+}
+
+let editTarget = null; // { tabel, id }
+
+function openEditModal(tabel, id, nama, username) {
+    editTarget = { tabel, id };
+    document.getElementById('editNama').value = nama || '';
+    document.getElementById('editUsername').value = username || '';
+    document.getElementById('editPassword').value = '';
+    document.getElementById('editMsg').textContent = '';
+    document.getElementById('modalEdit').style.display = 'flex';
+}
+
+async function submitEditAkun() {
+    if (!editTarget) return;
+    const nama = document.getElementById('editNama').value.trim();
+    const username = document.getElementById('editUsername').value.trim();
+    const password = document.getElementById('editPassword').value;
+    const msgEl = document.getElementById('editMsg');
+
+    if (!nama || !username) {
+        msgEl.textContent = '⚠ Nama dan username tidak boleh kosong.';
+        return;
+    }
+
+    const payload = { x_04: nama, x_01: username };
+    if (password) payload.x_02 = password;
+
+    try {
+        const res = await fetch(`${API}?table=${editTarget.tabel}&id_x=${editTarget.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type':'application/json', 'X-Custom-Auth': AUTH },
+            body: JSON.stringify(payload)
+        }).then(r=>r.json());
+
+        if (res && res.success === false) {
+            msgEl.textContent = '⚠ Gagal menyimpan perubahan.';
+            return;
+        }
+        closeModal('modalEdit');
+        await loadAllData();
+    } catch (e) {
+        msgEl.textContent = '⚠ Gagal terhubung ke server.';
+    }
 }
 
 async function hapusAkun(tabel, id, username) {
