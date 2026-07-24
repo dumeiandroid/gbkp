@@ -188,8 +188,6 @@
         .cpw-msg.ok  { background: #d1fae5; color: #065f46; display: block; }
         .cpw-msg.err { background: #fee2e2; color: var(--red); display: block; }
         .btn-save-cpw { width: 100%; padding: 13px; background: var(--blue); color: #fff; border: none; border-radius: 9px; font-weight: 800; font-size: 14px; cursor: pointer; margin-top: 4px; font-family: inherit; }
-        .fg input[readonly] { background: #eef2f7; color: var(--muted); cursor: not-allowed; }
-        .fg small.hint { display: block; font-size: 11px; color: var(--muted); margin-top: 4px; }
 
         /* MODAL KAMERA */
         .m-bottom { position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 500; display: none; align-items: flex-end; justify-content: center; backdrop-filter: blur(4px); }
@@ -389,14 +387,12 @@
 <!-- MODAL GANTI PASSWORD -->
 <div class="m-overlay" id="modalChPw">
     <div class="mbox">
-        <div class="mhead"><h3>🔑 Ganti Profil & Password</h3><button class="x" onclick="tutupGantiPassword()">✕</button></div>
+        <div class="mhead"><h3>🔑 Ganti Password</h3><button class="x" onclick="tutupGantiPassword()">✕</button></div>
         <div class="mbody">
-            <div class="fg"><label>Nama Lengkap</label><input type="text" id="cpw_nama" placeholder="Masukkan nama lengkap..."></div>
-            <div class="fg"><label>Username</label><input type="text" id="cpw_username" readonly><small class="hint">Username tidak dapat diubah</small></div>
-            <div class="fg"><label>Password Lama</label><input type="password" id="cpw_lama" placeholder="Masukkan password lama untuk verifikasi..."></div>
-            <div class="fg"><label>Password Baru</label><input type="password" id="cpw_baru" placeholder="Kosongkan jika tidak ingin ganti password"></div>
+            <div class="fg"><label>Password Lama</label><input type="password" id="cpw_lama" placeholder="Masukkan password lama..."></div>
+            <div class="fg"><label>Password Baru</label><input type="password" id="cpw_baru" placeholder="Masukkan password baru..."></div>
             <div class="fg"><label>Konfirmasi Password Baru</label><input type="password" id="cpw_konfirm" placeholder="Ulangi password baru..."></div>
-            <button class="btn-save-cpw" id="btnSaveChPw" onclick="simpanGantiPassword()">💾 SIMPAN PERUBAHAN</button>
+            <button class="btn-save-cpw" id="btnSaveChPw" onclick="simpanGantiPassword()">💾 SIMPAN PASSWORD BARU</button>
             <div class="cpw-msg" id="cpwMsg"></div>
         </div>
     </div>
@@ -435,7 +431,6 @@ const TBLA = 'absensi_peserta_ngawan';
 const TBLU = 'peserta_ngawan';
 
 let me      = '';
-let meData  = {};
 let stream  = null;
 let hariIni = { masuk:false, pulang:false };
 
@@ -463,7 +458,7 @@ async function cekAuth() {
         gh();
         const acc = res.success ? res.data?.[0] : null;
         // Re-cek status approval tiap kali sesi dipulihkan
-        if (acc && acc.x_03 === 'approved') { meData = acc; startApp(); }
+        if (acc && acc.x_03 === 'approved') startApp();
         else { localStorage.removeItem('lidan_user'); sessionStorage.removeItem('lidan_user'); }
     } catch(e) { gh(); }
 }
@@ -490,7 +485,7 @@ async function doLogin() {
         }
         const store = rem ? localStorage : sessionStorage;
         store.setItem('lidan_user', u);
-        me = u; meData = acc; startApp();
+        me = u; startApp();
     } else {
         errEl.textContent = 'Username atau password salah!';
         errEl.style.display='block';
@@ -569,8 +564,6 @@ async function doRegister() {
    ============================== */
 function bukaGantiPassword() {
     ['cpw_lama','cpw_baru','cpw_konfirm'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('cpw_nama').value     = meData.x_04 || '';
-    document.getElementById('cpw_username').value = me;
     const msg=document.getElementById('cpwMsg'); msg.className='cpw-msg'; msg.textContent='';
     document.getElementById('btnSaveChPw').disabled=false;
     document.getElementById('modalChPw').classList.add('open');
@@ -578,41 +571,24 @@ function bukaGantiPassword() {
 function tutupGantiPassword() { document.getElementById('modalChPw').classList.remove('open'); }
 
 async function simpanGantiPassword() {
-    const nama=document.getElementById('cpw_nama').value.trim();
     const lama=document.getElementById('cpw_lama').value.trim();
     const baru=document.getElementById('cpw_baru').value.trim();
     const konfirm=document.getElementById('cpw_konfirm').value.trim();
     const msg=document.getElementById('cpwMsg');
-    if(!nama){ msg.className='cpw-msg err'; msg.textContent='Nama tidak boleh kosong!'; return; }
-    if(!lama){ msg.className='cpw-msg err'; msg.textContent='Password lama wajib diisi untuk verifikasi!'; return; }
-    const gantiPassword = !!(baru || konfirm);
-    if(gantiPassword){
-        if(baru.length<4){ msg.className='cpw-msg err'; msg.textContent='Password baru minimal 4 karakter!'; return; }
-        if(baru!==konfirm){ msg.className='cpw-msg err'; msg.textContent='Konfirmasi password baru tidak cocok!'; return; }
-    }
+    if(!lama||!baru||!konfirm){ msg.className='cpw-msg err'; msg.textContent='Semua kolom harus diisi!'; return; }
+    if(baru!==konfirm){ msg.className='cpw-msg err'; msg.textContent='Password baru tidak cocok!'; return; }
     gl('Memverifikasi...');
     try {
         const cek=await req(`?table=${TBLU}&x_01_eq=${me}&x_02_eq=${lama}&limit=1`);
         if(!cek.success||!cek.data?.length){ gh(); msg.className='cpw-msg err'; msg.textContent='Password lama salah!'; return; }
         const id=cek.data[0].id_x;
-        const payload = { x_04: nama };
-        if (gantiPassword) payload.x_02 = baru;
-        const res=await fetch(`${API}?table=${TBLU}&id_x=${id}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Custom-Auth':KEY},body:JSON.stringify(payload)}).then(r=>r.json());
+        const res=await fetch(`${API}?table=${TBLU}&id_x=${id}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Custom-Auth':KEY},body:JSON.stringify({x_02:baru})}).then(r=>r.json());
         gh();
         if(res.success){
-            meData.x_04 = nama;
-            document.getElementById('sbAv').textContent   = nama.charAt(0).toUpperCase();
-            document.getElementById('sbName').textContent = nama;
-            const dn = document.getElementById('dashName'); if (dn) dn.textContent = nama;
-            if (gantiPassword) {
-                msg.className='cpw-msg ok'; msg.textContent='Profil & password berhasil diubah! Silakan login ulang.';
-                document.getElementById('btnSaveChPw').disabled=true;
-                setTimeout(()=>{ doLogout(); },2000);
-            } else {
-                msg.className='cpw-msg ok'; msg.textContent='Nama berhasil diperbarui!';
-                setTimeout(()=>{ tutupGantiPassword(); },1200);
-            }
-        } else { msg.className='cpw-msg err'; msg.textContent='Gagal menyimpan perubahan. Coba lagi.'; }
+            msg.className='cpw-msg ok'; msg.textContent='Password berhasil diubah! Silakan login ulang.';
+            document.getElementById('btnSaveChPw').disabled=true;
+            setTimeout(()=>{ doLogout(); },2000);
+        } else { msg.className='cpw-msg err'; msg.textContent='Gagal menyimpan password. Coba lagi.'; }
     } catch(e){ gh(); msg.className='cpw-msg err'; msg.textContent='Error: '+e.message; }
 }
 
@@ -648,10 +624,9 @@ function toggleSidebar() {
 function startApp() {
     document.getElementById('loginPage').style.display = 'none';
     document.getElementById('appShell').style.display  = 'block';
-    const displayName = meData.x_04 || me;
-    document.getElementById('sbAv').textContent   = displayName.charAt(0).toUpperCase();
-    document.getElementById('sbName').textContent = displayName;
-    document.getElementById('dashName').textContent = displayName;
+    document.getElementById('sbAv').textContent   = me.charAt(0).toUpperCase();
+    document.getElementById('sbName').textContent = me;
+    document.getElementById('dashName').textContent = me;
     // Set date
     const now = new Date();
     const BLN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];

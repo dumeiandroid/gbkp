@@ -56,20 +56,6 @@
         .admin-info p { font-size: 13px; font-weight: 600; color: white; }
         .admin-info small { font-size: 10px; color: #64748b; }
         .btn-logout-sb { width: 100%; padding: 8px; background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2); border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
-        .btn-cpw-sb { width: 100%; padding: 8px; margin-bottom: 8px; background: rgba(37,99,235,0.12); color: #93c5fd; border: 1px solid rgba(37,99,235,0.25); border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
-        .btn-cpw-sb:hover { background: rgba(37,99,235,0.22); }
-
-        /* MODAL GANTI PASSWORD (PENGAJAR) */
-        .cpw-fg { margin-bottom: 14px; }
-        .cpw-fg label { display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .cpw-fg input { width: 100%; padding: 10px 13px; border: 1.5px solid #e2e8f0; border-radius: 9px; font-size: 14px; outline: none; transition: 0.2s; background: #f8fafc; font-family: inherit; color: var(--dark); }
-        .cpw-fg input:focus { border-color: var(--primary); background: #fff; }
-        .cpw-fg input[readonly] { background: #eef2f7; color: #94a3b8; cursor: not-allowed; }
-        .cpw-fg small.hint { display: block; font-size: 11px; color: #94a3b8; margin-top: 4px; }
-        .btn-save-cpw-p { width: 100%; padding: 13px; background: var(--primary); color: #fff; border: none; border-radius: 9px; font-weight: 800; font-size: 14px; cursor: pointer; margin-top: 4px; font-family: inherit; }
-        .cpw-msg { font-size: 12px; text-align: center; margin-top: 8px; padding: 8px; border-radius: 8px; display: none; }
-        .cpw-msg.ok  { background: #d1fae5; color: #065f46; display: block; }
-        .cpw-msg.err { background: #fee2e2; color: #ef4444; display: block; }
 
         /* MAIN */
         .main { margin-left: var(--sidebar-w); padding: 28px; min-height: 100vh; }
@@ -343,7 +329,6 @@
                 <div class="admin-av" id="adminInitial">A</div>
                 <div class="admin-info"><p id="adminName">Admin</p><small>Administrator</small></div>
             </div>
-            <button class="btn-cpw-sb" onclick="bukaGantiPasswordP()">🔑 Ganti Password</button>
             <button class="btn-logout-sb" onclick="handleLogout()">🚪 Logout</button>
         </div>
     </aside>
@@ -476,22 +461,6 @@
     </div>
 </div>
 
-<!-- MODAL GANTI PASSWORD -->
-<div class="overlay" id="modalCpwP">
-    <div class="mbox" style="max-width:400px;" onclick="event.stopPropagation()">
-        <div class="mhead"><h3>🔑 Ganti Profil & Password</h3><button onclick="tutupGantiPasswordP()">✕</button></div>
-        <div class="mbody">
-            <div class="cpw-fg"><label>Nama Lengkap</label><input type="text" id="cpwp_nama" placeholder="Masukkan nama lengkap..."></div>
-            <div class="cpw-fg"><label>Username</label><input type="text" id="cpwp_username" readonly><small class="hint">Username tidak dapat diubah</small></div>
-            <div class="cpw-fg"><label>Password Lama</label><input type="password" id="cpwp_lama" placeholder="Masukkan password lama untuk verifikasi..."></div>
-            <div class="cpw-fg"><label>Password Baru</label><input type="password" id="cpwp_baru" placeholder="Kosongkan jika tidak ingin ganti password"></div>
-            <div class="cpw-fg"><label>Konfirmasi Password Baru</label><input type="password" id="cpwp_konfirm" placeholder="Ulangi password baru..."></div>
-            <button class="btn-save-cpw-p" id="btnSaveCpwP" onclick="simpanGantiPasswordP()">💾 SIMPAN PERUBAHAN</button>
-            <div class="cpw-msg" id="cpwpMsg"></div>
-        </div>
-    </div>
-</div>
-
 <!-- MODAL FOTO ABSENSI -->
 <div class="overlay" id="modalFoto" onclick="closeModal('modalFoto')">
     <div class="mbox" style="max-width:380px;" onclick="event.stopPropagation()">
@@ -510,7 +479,6 @@ const ASSETS = 'https://assets.lidan.co.id/';
 
 let allUsers   = [];
 let adminUser  = '';
-let adminAcc   = {};
 let dashPeriod = 'harian'; // 'harian' | 'mingguan' | 'bulanan'
 let stream         = null;
 let hariIniPengajar = { masuk:false, pulang:false };
@@ -584,7 +552,6 @@ async function handleLogin() {
             return;
         }
         adminUser = acc.x_01;
-        adminAcc  = acc;
         if (rem) {
             // Simpan ke localStorage dengan expiry 1 bulan
             const expire = Date.now() + 30 * 24 * 60 * 60 * 1000;
@@ -683,7 +650,6 @@ async function verifyThenShow(username) {
         const acc = res.success ? res.data?.[0] : null;
         if (acc && acc.x_03 === 'approved') {
             adminUser = username;
-            adminAcc  = acc;
             showApp();
         } else {
             sessionStorage.removeItem('ngawan_pengajar');
@@ -702,62 +668,12 @@ function handleLogout() {
     location.reload();
 }
 
-/* ==============================
-   GANTI PASSWORD & PROFIL (PENGAJAR)
-   ============================== */
-function bukaGantiPasswordP() {
-    ['cpwp_lama','cpwp_baru','cpwp_konfirm'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('cpwp_nama').value     = adminAcc.x_04 || '';
-    document.getElementById('cpwp_username').value = adminUser;
-    const msg=document.getElementById('cpwpMsg'); msg.className='cpw-msg'; msg.textContent='';
-    document.getElementById('btnSaveCpwP').disabled=false;
-    document.getElementById('modalCpwP').style.display='flex';
-}
-function tutupGantiPasswordP() { document.getElementById('modalCpwP').style.display='none'; }
-
-async function simpanGantiPasswordP() {
-    const nama=document.getElementById('cpwp_nama').value.trim();
-    const lama=document.getElementById('cpwp_lama').value.trim();
-    const baru=document.getElementById('cpwp_baru').value.trim();
-    const konfirm=document.getElementById('cpwp_konfirm').value.trim();
-    const msg=document.getElementById('cpwpMsg');
-    if(!nama){ msg.className='cpw-msg err'; msg.textContent='Nama tidak boleh kosong!'; return; }
-    if(!lama){ msg.className='cpw-msg err'; msg.textContent='Password lama wajib diisi untuk verifikasi!'; return; }
-    const gantiPassword = !!(baru || konfirm);
-    if(gantiPassword){
-        if(baru.length<4){ msg.className='cpw-msg err'; msg.textContent='Password baru minimal 4 karakter!'; return; }
-        if(baru!==konfirm){ msg.className='cpw-msg err'; msg.textContent='Konfirmasi password baru tidak cocok!'; return; }
-    }
-    try {
-        const cek=await api(`?table=pengajar_ngawan&x_01_eq=${adminUser}&x_02_eq=${lama}&limit=1`);
-        if(!cek.success||!cek.data?.length){ msg.className='cpw-msg err'; msg.textContent='Password lama salah!'; return; }
-        const id=cek.data[0].id_x;
-        const payload = { x_04: nama };
-        if (gantiPassword) payload.x_02 = baru;
-        const res=await fetch(`${API}?table=pengajar_ngawan&id_x=${id}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Custom-Auth':AUTH},body:JSON.stringify(payload)}).then(r=>r.json());
-        if(res.success){
-            adminAcc.x_04 = nama;
-            document.getElementById('adminName').textContent    = nama;
-            document.getElementById('adminInitial').textContent = nama.charAt(0).toUpperCase();
-            if (gantiPassword) {
-                msg.className='cpw-msg ok'; msg.textContent='Profil & password berhasil diubah! Silakan login ulang.';
-                document.getElementById('btnSaveCpwP').disabled=true;
-                setTimeout(()=>{ handleLogout(); },2000);
-            } else {
-                msg.className='cpw-msg ok'; msg.textContent='Nama berhasil diperbarui!';
-                setTimeout(()=>{ tutupGantiPasswordP(); },1200);
-            }
-        } else { msg.className='cpw-msg err'; msg.textContent='Gagal menyimpan perubahan. Coba lagi.'; }
-    } catch(e){ msg.className='cpw-msg err'; msg.textContent='Error: '+e.message; }
-}
-
 async function showApp() {
     document.getElementById('loginPage').style.display  = 'none';
     document.getElementById('appLayout').style.display  = 'flex';
     document.body.classList.add('app-ready');
-    const displayNameP = adminAcc.x_04 || adminUser;
-    document.getElementById('adminName').textContent    = displayNameP;
-    document.getElementById('adminInitial').textContent = displayNameP.charAt(0).toUpperCase();
+    document.getElementById('adminName').textContent    = adminUser;
+    document.getElementById('adminInitial').textContent = adminUser.charAt(0).toUpperCase();
     await loadAllUsers();
     loadDashboard();
 }
