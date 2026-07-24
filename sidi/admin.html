@@ -130,6 +130,7 @@
         table.rekap-mtx thead tr:last-child th { top: 27px; font-size: 9px; }
         table.rekap-mtx th.mtx-date { border-right: 2px solid #e2e8f0; }
         table.rekap-mtx th.mtx-sub { font-size: 9px; color: #b0b8c4; padding: 4px 3px; }
+        table.rekap-mtx th.mtx-daylabel { display: block; font-size: 8px; font-weight: 500; color: #94a3b8; text-transform: none; margin-top: 1px; }
         table.rekap-mtx th.mtx-name, table.rekap-mtx td.mtx-name { position: sticky; left: 0; background: #f8fafc; z-index: 3; text-align: left; font-weight: 700; color: var(--dark); min-width: 150px; box-shadow: 1px 0 0 #e2e8f0; }
         table.rekap-mtx thead th.mtx-name { z-index: 4; }
         table.rekap-mtx td.mtx-cell { min-width: 42px; font-weight: 700; font-size: 11px; }
@@ -333,7 +334,7 @@
                 <button class="btn-f" onclick="loadRekapAdmin()">🔍 Tampilkan</button>
             </div>
 
-            <div class="rekap-legend"><span><span class="lg-ok">07:15</span> Jam Masuk/Keluar</span><span><span class="lg-no">✗</span> Tidak Absen</span></div>
+            <div class="rekap-legend" id="rekapLegend"><span><span class="lg-ok">07:15</span> Jam Masuk/Keluar</span><span><span class="lg-no">✗</span> Tidak Absen</span></div>
 
             <div class="rekap-wrap">
                 <table class="rekap-mtx" id="rekapTable">
@@ -374,6 +375,19 @@
 </div>
 
 <script>
+// ============================================================
+// KONFIGURASI JADWAL REKAP BULANAN — ubah nilai di sini saja
+// ============================================================
+const REKAP_CONFIG = {
+    tanggalMulai: '2026-01-01',   // tanggal mulai program Ngawan (format YYYY-MM-DD).
+                                   // Tanggal sebelum ini TIDAK ditampilkan sbg kolom rekap.
+    hariAktif:    [5, 6, 0],       // hari yg jadi kolom rekap (0=Minggu 1=Senin 2=Selasa 3=Rabu 4=Kamis 5=Jumat 6=Sabtu).
+                                   // Saat ini: Jumat, Sabtu, Minggu.
+    jamMasuk:     '07:15',        // jam masuk yg dijadwalkan (tampil di legend, informasi saja)
+    jamKeluar:    '10:00'         // jam keluar yg dijadwalkan (tampil di legend, informasi saja)
+};
+const HARI_LABEL = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+
 const API  = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
 const AUTH = 'admin';
 const TBL_ADMIN = 'admin_ngawan'; // tabel admin, diisi MANUAL langsung di database
@@ -683,16 +697,46 @@ function setRekapJenis(jenis) {
     loadRekapAdmin();
 }
 
+// Hitung daftar tanggal dalam bulan yg jadi kolom rekap, sesuai REKAP_CONFIG
+// (hanya hari-hari di hariAktif, dan hanya tanggal >= tanggalMulai)
+function getKolomTanggal(bulanVal) {
+    const [thn, bln] = bulanVal.split('-').map(Number);
+    const jumlahHari = new Date(thn, bln, 0).getDate();
+    const kolom = [];
+    for (let t = 1; t <= jumlahHari; t++) {
+        const tgl = `${bulanVal}-${String(t).padStart(2,'0')}`;
+        if (tgl < REKAP_CONFIG.tanggalMulai) continue;
+        const dow = new Date(thn, bln - 1, t).getDay();
+        if (!REKAP_CONFIG.hariAktif.includes(dow)) continue;
+        kolom.push({ tgl, tanggal: t, dow });
+    }
+    return kolom;
+}
+
 async function loadRekapAdmin() {
     const bulanVal = document.getElementById('rkBulan').value; // format YYYY-MM
     const table  = document.getElementById('rekapTable');
     if (!bulanVal) return;
-    const [thn, bln] = bulanVal.split('-').map(Number);
-    const jumlahHari = new Date(thn, bln, 0).getDate();
-    const dariTgl   = `${bulanVal}-01`;
-    const sampaiTgl = `${bulanVal}-${String(jumlahHari).padStart(2,'0')}`;
+    const dariTgl   = REKAP_CONFIG.tanggalMulai > `${bulanVal}-01` ? REKAP_CONFIG.tanggalMulai : `${bulanVal}-01`;
+    const [thnE, blnE] = bulanVal.split('-').map(Number);
+    const sampaiTgl = `${bulanVal}-${String(new Date(thnE, blnE, 0).getDate()).padStart(2,'0')}`;
+
+    // Update legend info jadwal dari config
+    const legend = document.getElementById('rekapLegend');
+    if (legend) {
+        const namaHari = REKAP_CONFIG.hariAktif.slice().sort().map(d => HARI_LABEL[d]).join(', ');
+        legend.innerHTML = `<span><span class="lg-ok">${REKAP_CONFIG.jamMasuk}</span> Jam Masuk/Keluar (dijadwalkan: ${REKAP_CONFIG.jamKeluar})</span><span><span class="lg-no">✗</span> Tidak Absen</span><span style="color:#94a3b8;">Hari aktif: ${namaHari}</span>`;
+    }
 
     table.querySelector('tbody').innerHTML = `<tr><td style="padding:20px;color:#94a3b8;">Memuat...</td></tr>`;
+
+    const kolom = getKolomTanggal(bulanVal);
+
+    if (sampaiTgl < REKAP_CONFIG.tanggalMulai) {
+        table.querySelector('thead').innerHTML = '<tr><th class="mtx-name">Nama</th></tr>';
+        table.querySelector('tbody').innerHTML = `<tr><td style="padding:20px;color:#94a3b8;">Bulan ini sebelum tanggal mulai program (${REKAP_CONFIG.tanggalMulai})</td></tr>`;
+        return;
+    }
 
     // Daftar nama = seluruh akun approved dari cache (approval), bukan hanya yg pernah absen
     const users = (dataCache[currentRekapJenis] || [])
@@ -714,13 +758,18 @@ async function loadRekapAdmin() {
         if (d.x_05 === 'PULANG') jamMap[key].p = d.x_03;
     });
 
-    // Header 2 baris: tanggal (colspan 2) + sub Masuk/Keluar
+    // Header 2 baris: tanggal (colspan 2, + label hari) + sub Masuk/Keluar
     let theadHtml = '<tr><th class="mtx-name" rowspan="2">Nama</th>';
-    for (let t = 1; t <= jumlahHari; t++) theadHtml += `<th class="mtx-date" colspan="2">${t}</th>`;
+    kolom.forEach(k => theadHtml += `<th class="mtx-date" colspan="2">${k.tanggal}<span class="mtx-daylabel">${HARI_LABEL[k.dow]}</span></th>`);
     theadHtml += '</tr><tr>';
-    for (let t = 1; t <= jumlahHari; t++) theadHtml += `<th class="mtx-sub">M</th><th class="mtx-sub">K</th>`;
+    kolom.forEach(() => theadHtml += `<th class="mtx-sub">M</th><th class="mtx-sub">K</th>`);
     theadHtml += '</tr>';
     table.querySelector('thead').innerHTML = theadHtml;
+
+    if (!kolom.length) {
+        table.querySelector('tbody').innerHTML = `<tr><td style="padding:20px;color:#94a3b8;">Tidak ada tanggal aktif pada bulan ini sesuai jadwal</td></tr>`;
+        return;
+    }
 
     if (!users.length) {
         table.querySelector('tbody').innerHTML = `<tr><td style="padding:20px;color:#94a3b8;">Tidak ada data ${jenisLabel(currentRekapJenis).toLowerCase()} yang disetujui</td></tr>`;
@@ -729,12 +778,11 @@ async function loadRekapAdmin() {
 
     table.querySelector('tbody').innerHTML = users.map(u => {
         let row = `<tr><td class="mtx-name">${u}</td>`;
-        for (let t = 1; t <= jumlahHari; t++) {
-            const tgl = `${bulanVal}-${String(t).padStart(2,'0')}`;
-            const jam = jamMap[`${u}|${tgl}`] || { m: null, p: null };
+        kolom.forEach(k => {
+            const jam = jamMap[`${u}|${k.tgl}`] || { m: null, p: null };
             row += `<td class="mtx-cell ${jam.m ? 'mtx-time' : 'mtx-absen'}">${jam.m || '✗'}</td>`;
             row += `<td class="mtx-cell mtx-last ${jam.p ? 'mtx-time' : 'mtx-absen'}">${jam.p || '✗'}</td>`;
-        }
+        });
         row += '</tr>';
         return row;
     }).join('');
