@@ -286,8 +286,8 @@
             </div>
 
             <div class="tcard"><table>
-                <thead><tr><th>ID</th><th>Nama</th><th>Username</th><th>Status</th><th>Aksi</th></tr></thead>
-                <tbody id="approvalTable"><tr class="lr"><td colspan="5"><span class="sp"></span>Memuat...</td></tr></tbody>
+                <thead><tr><th>ID</th><th>Username</th><th>Status</th><th>Aksi</th></tr></thead>
+                <tbody id="approvalTable"><tr class="lr"><td colspan="4"><span class="sp"></span>Memuat...</td></tr></tbody>
             </table></div>
         </div>
 
@@ -455,7 +455,7 @@ function toggleSidebarMobile() {
 
 // ===== LOAD DATA =====
 async function loadAllData() {
-    document.getElementById('approvalTable').innerHTML = '<tr class="lr"><td colspan="5"><span class="sp"></span>Memuat...</td></tr>';
+    document.getElementById('approvalTable').innerHTML = '<tr class="lr"><td colspan="4"><span class="sp"></span>Memuat...</td></tr>';
     const [resP, resG] = await Promise.all([
         api(`?table=peserta_ngawan&limit=500`),
         api(`?table=pengajar_ngawan&limit=500`)
@@ -518,13 +518,12 @@ function renderTable() {
                    <button class="actbtn act-delete" onclick="hapusAkun('${currentJenis}',${d.id_x},'${d.x_01}')">🗑️ Tolak</button>`;
             return `<tr>
                 <td>${d.id_x}</td>
-                <td>${d.x_04||'-'}</td>
                 <td><span class="uchip"><span class="udot"></span>${d.x_01||'-'}</span></td>
                 <td>${badge}</td>
                 <td>${actions}</td>
             </tr>`;
         }).join('')
-        : `<tr class="er"><td colspan="5">Tidak ada data ${jenisLabel(currentJenis).toLowerCase()} untuk filter ini</td></tr>`;
+        : `<tr class="er"><td colspan="4">Tidak ada data ${jenisLabel(currentJenis).toLowerCase()} untuk filter ini</td></tr>`;
 }
 
 // ===== AKSI APPROVAL =====
