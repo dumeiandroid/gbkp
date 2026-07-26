@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADMIN Ngawan - Panel Admin</title>
+    <!--
+      admin.html — Panel Admin (kewenangan tertinggi)
+      Tidak ada form registrasi di sini: akun admin dibuat MANUAL langsung di
+      tabel `admin_ngawan` (kolom x_01 = username, x_02 = password) lewat
+      database/NocoDB, bukan lewat aplikasi.
+      Tugas utama admin: menyetujui (approve) registrasi baru dari
+      peserta_ngawan (index.html) dan pengajar_ngawan (pengajar_ngawan.html)
+      sebelum akun-akun tersebut bisa login.
+    -->
+    <style>
+        :root {
+            --primary: #7c3aed; --primary-dark: #6d28d9;
+            --bg: #f1f5f9; --dark: #1e293b; --sidebar-w: 240px;
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--dark); }
+
+        /* LOGIN */
+        #loginPage { position: fixed; inset: 0; background: linear-gradient(135deg, #1e293b 0%, #7c3aed 100%); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        .login-card { background: white; padding: 40px; border-radius: 16px; width: 100%; max-width: 360px; box-shadow: 0 25px 50px rgba(0,0,0,0.3); }
+        .lc-logo { text-align: center; margin-bottom: 28px; }
+        .lc-logo h2 { font-size: 26px; font-weight: 900; color: var(--dark); }
+        .lc-logo h2 span { color: var(--primary); }
+        .lc-logo p { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin-top: 4px; }
+        .lc-badge { display:inline-block; margin-top:10px; font-size:10px; font-weight:800; letter-spacing:.5px; color:#7c3aed; background:#f3e8ff; padding:4px 10px; border-radius:20px; text-transform:uppercase; }
+        .lc-label { display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px; text-transform: uppercase; }
+        .lc-input { width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; outline: none; margin-bottom: 16px; transition: 0.2s; }
+        .lc-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(124,58,237,0.12); }
+        .btn-login { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; }
+        #loginError { color: #ef4444; font-size: 13px; text-align: center; margin-top: 12px; display: none; }
+        .lc-rem { display: flex; align-items: center; font-size: 12px; color: #64748b; margin-bottom: 14px; cursor: pointer; }
+
+        /* LAYOUT */
+        #appLayout { display: none; min-height: 100vh; }
+
+        /* SIDEBAR */
+        .sidebar { position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh; background: var(--dark); color: white; display: flex; flex-direction: column; z-index: 100; overflow-y: auto; }
+        .sb-logo { padding: 22px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .sb-logo h1 { font-size: 19px; font-weight: 900; }
+        .sb-logo h1 span { color: var(--primary); }
+        .sb-logo p { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+        .sb-nav { flex: 1; padding: 12px 0; }
+        .sb-sec { font-size: 10px; color: #475569; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 14px 20px 5px; }
+        .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; color: #94a3b8; font-size: 13px; font-weight: 500; cursor: pointer; transition: 0.2s; border-left: 3px solid transparent; }
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+        .nav-item.active { background: rgba(124,58,237,0.18); color: white; border-left-color: var(--primary); }
+        .nav-item .icon { font-size: 15px; width: 20px; text-align: center; }
+        .nav-item .cnt { margin-left:auto; background:var(--warning); color:#1e293b; font-size:10px; font-weight:800; padding:1px 7px; border-radius:20px; }
+        .sb-foot { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.08); }
+        .admin-badge { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .admin-av { width: 34px; height: 34px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
+        .admin-info p { font-size: 13px; font-weight: 600; color: white; }
+        .admin-info small { font-size: 10px; color: #64748b; }
+        .btn-logout-sb { width: 100%; padding: 8px; background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2); border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+        /* MAIN */
+        .main { margin-left: var(--sidebar-w); padding: 28px; min-height: 100vh; }
+        .pg-header { margin-bottom: 22px; }
+        .pg-header h2 { font-size: 21px; font-weight: 800; }
+        .pg-header p { font-size: 13px; color: #64748b; margin-top: 3px; }
+
+        /* STATS */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+        .scard { background: white; padding: 18px; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; }
+        .scard .si { font-size: 22px; float: right; }
+        .scard .sl { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .scard .sv { font-size: 26px; font-weight: 900; }
+        .scard .ss { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+
+        /* TABS (jenis akun) */
+        .ptabs { display: flex; background: #e2e8f0; border-radius: 10px; padding: 4px; gap: 3px; margin-bottom: 18px; width: fit-content; }
+        .ptab { padding: 8px 18px; border: none; border-radius: 7px; font-size: 13px; font-weight: 700; cursor: pointer; background: transparent; color: #64748b; transition: all 0.2s; font-family: inherit; }
+        .ptab:hover { color: var(--dark); }
+        .ptab.active { background: white; color: var(--primary); box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
+
+        /* FILTER STATUS */
+        .fbar { background: white; padding: 12px 16px; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+        .fchip { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; border: 1px solid #e2e8f0; color: #64748b; background: #f8fafc; transition:.2s; }
+        .fchip.active { background: var(--dark); color: white; border-color: var(--dark); }
+
+        /* TABLE */
+        .tcard { background: white; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; overflow: hidden; }
+        .tcard table { width: 100%; border-collapse: collapse; }
+        .tcard thead th { background: #f8fafc; padding: 11px 14px; text-align: left; font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+        .tcard tbody td { padding: 11px 14px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        .tcard tbody tr:last-child td { border-bottom: none; }
+        .tcard tbody tr:hover { background: #f8fafc; }
+        .lr td { text-align: center; padding: 36px; color: #94a3b8; font-size: 13px; }
+        .er td { text-align: center; padding: 40px; color: #94a3b8; }
+
+        /* BADGES STATUS */
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .b-pending  { background: #fef3c7; color: #b45309; }
+        .b-approved { background: #d1fae5; color: #065f46; }
+
+        .uchip { display: inline-flex; align-items: center; gap: 5px; background: #f1f5f9; padding: 3px 9px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .udot { width: 7px; height: 7px; border-radius: 50%; background: var(--primary); flex-shrink: 0; }
+
+        /* ACTION BUTTONS */
+        .actbtn { border: none; border-radius: 6px; padding: 6px 11px; font-size: 11px; font-weight: 700; cursor: pointer; margin-right: 5px; }
+        .act-approve { background: #d1fae5; color: #065f46; }
+        .act-approve:hover { background: #a7f3d0; }
+        .act-revoke { background: #fef3c7; color: #b45309; }
+        .act-revoke:hover { background: #fde68a; }
+        .act-delete { background: #fee2e2; color: #b91c1c; }
+        .act-delete:hover { background: #fecaca; }
+        .act-edit { background: #dbeafe; color: #1d4ed8; }
+        .act-edit:hover { background: #bfdbfe; }
+
+        /* FILTER BAR (absensi) */
+        .fbar select, .fbar input[type=date] { padding: 7px 11px; border: 1px solid #e2e8f0; border-radius: 7px; font-size: 13px; outline: none; background: #f8fafc; color: var(--dark); }
+        .fbar select:focus, .fbar input:focus { border-color: var(--primary); }
+        .fbar label { font-size: 12px; font-weight: 600; color: #64748b; }
+        .fbar input[type=month] { padding: 7px 11px; border: 1px solid #e2e8f0; border-radius: 7px; font-size: 13px; outline: none; background: #f8fafc; color: var(--dark); }
+        .fbar input[type=month]:focus { border-color: var(--primary); }
+
+        /* ===== REKAP MATRIX ===== */
+        .rekap-wrap { background: white; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; overflow-x: auto; }
+        table.rekap-mtx { border-collapse: collapse; font-size: 11px; white-space: nowrap; }
+        table.rekap-mtx th, table.rekap-mtx td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; text-align: center; padding: 6px 5px; }
+        table.rekap-mtx thead th { background: #f8fafc; color: #94a3b8; font-weight: 700; font-size: 10px; text-transform: uppercase; position: sticky; top: 0; z-index: 2; }
+        table.rekap-mtx thead tr:first-child th { top: 0; }
+        table.rekap-mtx thead tr:last-child th { top: 27px; font-size: 9px; }
+        table.rekap-mtx th.mtx-date { border-right: 2px solid #e2e8f0; }
+        table.rekap-mtx th.mtx-sub { font-size: 9px; color: #b0b8c4; padding: 4px 3px; }
+        table.rekap-mtx th.mtx-daylabel { display: block; font-size: 8px; font-weight: 500; color: #94a3b8; text-transform: none; margin-top: 1px; }
+        table.rekap-mtx th.mtx-name, table.rekap-mtx td.mtx-name { position: sticky; left: 0; background: #f8fafc; z-index: 3; text-align: left; font-weight: 700; color: var(--dark); min-width: 150px; box-shadow: 1px 0 0 #e2e8f0; }
+        table.rekap-mtx thead th.mtx-name { z-index: 4; }
+        table.rekap-mtx td.mtx-cell { min-width: 42px; font-weight: 700; font-size: 11px; }
+        table.rekap-mtx td.mtx-cell.mtx-last { border-right: 2px solid #e2e8f0; }
+        table.rekap-mtx td.mtx-time { color: #16a34a; background: #f0fdf4; }
+        table.rekap-mtx td.mtx-absen { color: #ef4444; background: #fef2f2; font-weight: 800; }
+        table.rekap-mtx tbody tr:hover td { background: #eef2ff; }
+        table.rekap-mtx tbody tr:hover td.mtx-name { background: #e0e7ff; }
+        .rekap-legend { display: flex; gap: 16px; align-items: center; margin: 10px 2px 14px; font-size: 12px; color: #64748b; font-weight: 600; }
+        .rekap-legend span.lg-ok { color: #16a34a; font-weight: 800; }
+        .rekap-legend span.lg-no { color: #ef4444; font-weight: 800; }
+        .btn-f { padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+        /* FOTO THUMB & MODAL */
+        .foto-thumb { width: 38px; height: 38px; object-fit: cover; border-radius: 6px; border: 1px solid #e2e8f0; cursor: pointer; }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 500; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(2px); }
+        .mbox2 { background: white; border-radius: 14px; width: 100%; max-width: 380px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.2); }
+        .mbox2 .mhead2 { padding: 18px 22px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+        .mbox2 .mhead2 h3 { font-size: 15px; font-weight: 800; }
+        .mbox2 .mhead2 button { background: none; border: none; font-size: 20px; cursor: pointer; color: #94a3b8; }
+        .mbox2 .mbody2 { padding: 22px; text-align: center; }
+        .mbox2 .mbody2 img { max-width: 100%; border-radius: 10px; border: 1px solid #e2e8f0; }
+
+        /* BADGE TIPE ABSENSI */
+        .b-masuk  { background: #d1fae5; color: #065f46; }
+        .b-pulang { background: #fef3c7; color: #b45309; }
+
+        /* SPINNER (reuse .sp) */
+        .sp { display: inline-block; width: 16px; height: 16px; border: 2px solid #e2e8f0; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 5px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ===== JADWAL & SOAL ===== */
+        .mbox-lg { background: white; border-radius: 14px; width: 100%; max-width: 720px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.2); }
+        .mbox-lg .mhead2 { padding: 18px 22px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: white; z-index: 2; }
+        .mbox-lg .mhead2 h3 { font-size: 15px; font-weight: 800; }
+        .mbox-lg .mhead2 button { background: none; border: none; font-size: 20px; cursor: pointer; color: #94a3b8; }
+        .mbox-lg .mbody2 { padding: 22px; }
+        .fgrid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+        .flabel { display: block; font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 4px; }
+        .finput { width: 100%; padding: 9px 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; margin-bottom: 14px; font-family: inherit; }
+        textarea.finput { resize: vertical; }
+        .soal-block { border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; margin-bottom: 12px; background: #f8fafc; position: relative; }
+        .soal-block .soal-no { font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 8px; }
+        .btn-rm-soal { position: absolute; top: 10px; right: 10px; background: #fee2e2; color: #b91c1c; border: none; border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: 700; cursor: pointer; }
+        .btn-add-soal { background: #f3e8ff; color: var(--primary); border: 1px dashed var(--primary); border-radius: 8px; padding: 10px; width: 100%; font-size: 13px; font-weight: 700; cursor: pointer; margin-bottom: 14px; }
+        .soal-opt-row { display: grid; grid-template-columns: 46px 1fr; gap: 6px; align-items: center; }
+        .soal-opt-row label { font-size: 12px; font-weight: 700; color: #64748b; display: flex; align-items: center; gap: 3px; }
+        .soal-view-q { border-bottom: 1px solid #f1f5f9; padding: 12px 0; }
+        .soal-view-q:last-child { border-bottom: none; }
+        .soal-view-q .sv-no { font-size: 11px; font-weight: 800; color: var(--primary); margin-bottom: 4px; }
+        .soal-view-q .sv-text { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+        .soal-view-opt { font-size: 12.5px; padding: 5px 10px; border-radius: 6px; margin-bottom: 4px; background: #f8fafc; }
+        .soal-view-opt.correct { background: #d1fae5; color: #065f46; font-weight: 700; }
+        .btn-jadwal-add { padding: 9px 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; }
+
+        /* PAGES */
+        .page { display: none; }
+        .page.active { display: block; }
+
+        @media (max-width: 900px) { .stats-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 640px) { .main { margin-left: 0; padding: 14px; } .stats-grid { grid-template-columns: 1fr 1fr; } }
+
+        /* ===== MOBILE HAMBURGER & RESPONSIVE SIDEBAR ===== */
+        .topbar-mobile {
+            display: none;
+            position: fixed; top: 0; left: 0; right: 0; height: 52px;
+            background: var(--dark); color: white; z-index: 10000;
+            align-items: center; justify-content: space-between;
+            padding: 0 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        body.app-ready .topbar-mobile { display: none; }
+        .topbar-mobile h1 { font-size: 15px; font-weight: 900; }
+        .topbar-mobile h1 span { color: var(--primary); }
+        .btn-burger { background: none; border: none; cursor: pointer; display: flex; flex-direction: column; gap: 5px; padding: 6px; }
+        .btn-burger span { display: block; width: 22px; height: 2px; background: white; border-radius: 2px; transition: all 0.3s ease; }
+        .btn-burger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .btn-burger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+        .btn-burger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+        .sb-overlay-adm { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 140; }
+        .sb-overlay-adm.open { display: block; }
+
+        @media (max-width: 768px) {
+            body.app-ready .topbar-mobile { display: flex; }
+            .sidebar { transform: translateX(-100%); transition: transform 0.3s ease; z-index: 150; top: 52px; height: calc(100vh - 52px); }
+            .sidebar.sb-open { transform: translateX(0); }
+            .main { margin-left: 0 !important; padding: 14px; padding-top: 64px !important; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .tcard table { font-size: 12px; }
+            .tcard thead th, .tcard tbody td { padding: 8px 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- LOGIN (khusus admin, tanpa registrasi — akun dibuat manual di tabel admin_ngawan) -->
+<div id="loginPage">
+    <div class="login-card">
+        <div class="lc-logo">
+            <h2>ADMIN<span>NGAWAN</span></h2>
+            <p>GBKP Runggun Bambu Raya</p>
+            <span class="lc-badge">🛡️ Admin Access</span>
+        </div>
+        <label class="lc-label">Username Admin</label>
+        <input class="lc-input" type="text" id="l_user" placeholder="Username...">
+        <label class="lc-label">Password</label>
+        <input class="lc-input" type="password" id="l_pass" placeholder="Password..." onkeydown="if(event.key==='Enter') handleLogin()">
+        <label class="lc-rem">
+            <input type="checkbox" id="l_rem" style="width:14px;height:14px;accent-color:var(--primary);vertical-align:middle;margin-right:5px;">
+            <span>Ingat Saya (30 hari)</span>
+        </label>
+        <button class="btn-login" onclick="handleLogin()">MASUK SEBAGAI ADMIN</button>
+        <p id="loginError">Username atau password salah!</p>
+    </div>
+</div>
+
+<!-- MOBILE TOPBAR -->
+<div class="topbar-mobile" id="mobileTopbar">
+    <button class="btn-burger" id="btnBurger" onclick="toggleSidebarMobile()">
+        <span></span><span></span><span></span>
+    </button>
+    <h1>ERLAJAR<span>NGAWAN</span></h1>
+    <div style="width:34px;"></div>
+</div>
+<div class="sb-overlay-adm" id="sbOverlayAdm" onclick="toggleSidebarMobile()"></div>
+
+<!-- APP -->
+<div id="appLayout">
+    <aside class="sidebar">
+        <div class="sb-logo"><h1>ERLAJAR<span>NGAWAN</span></h1><p>Panel Admin</p></div>
+        <nav class="sb-nav">
+            <div class="sb-sec">Approval Akun</div>
+            <div class="nav-item active" onclick="showPage('approval')" id="nav-approval">
+                <span class="icon">✅</span> Approval Registrasi
+                <span class="cnt" id="pendingCount" style="display:none;">0</span>
+            </div>
+            <div class="sb-sec">Monitoring</div>
+            <div class="nav-item" onclick="showPage('absensi')" id="nav-absensi">
+                <span class="icon">🕐</span> Absensi
+            </div>
+            <div class="nav-item" onclick="showPage('rekap')" id="nav-rekap">
+                <span class="icon">🗓️</span> Rekap Bulanan
+            </div>
+            <div class="sb-sec">Materi</div>
+            <div class="nav-item" onclick="showPage('jadwal')" id="nav-jadwal">
+                <span class="icon">📅</span> Jadwal
+            </div>
+        </nav>
+        <div class="sb-foot">
+            <div class="admin-badge">
+                <div class="admin-av" id="adminInitial">A</div>
+                <div class="admin-info"><p id="adminName">Admin</p><small>Administrator</small></div>
+            </div>
+            <button class="btn-logout-sb" onclick="handleLogout()">🚪 Logout</button>
+        </div>
+    </aside>
+
+    <main class="main">
+        <!-- APPROVAL -->
+        <div class="page active" id="page-approval">
+            <div class="pg-header"><h2>Approval Registrasi</h2><p>Setujui akun baru sebelum bisa digunakan untuk login</p></div>
+
+            <!-- STAT CARD -->
+            <div class="stats-grid">
+                <div class="scard"><span class="si">🧑‍🎓</span><div class="sl">Total Peserta</div><div class="sv" id="stTotalPeserta" style="color:#7c3aed">-</div><div class="ss">Erlajar Ngawan</div></div>
+                <div class="scard"><span class="si">⏳</span><div class="sl">Peserta Menunggu</div><div class="sv" id="stPendingPeserta" style="color:#f59e0b">-</div><div class="ss">Perlu disetujui</div></div>
+                <div class="scard"><span class="si">🧑‍🏫</span><div class="sl">Total Pengajar</div><div class="sv" id="stTotalPengajar" style="color:#7c3aed">-</div><div class="ss">Erlajar Ngawan</div></div>
+                <div class="scard"><span class="si">⏳</span><div class="sl">Pengajar Menunggu</div><div class="sv" id="stPendingPengajar" style="color:#f59e0b">-</div><div class="ss">Perlu disetujui</div></div>
+            </div>
+
+            <!-- TOGGLE JENIS AKUN -->
+            <div class="ptabs">
+                <button class="ptab active" id="ptab-peserta_ngawan" onclick="setJenis('peserta_ngawan')">🧑‍🎓 Peserta</button>
+                <button class="ptab" id="ptab-pengajar_ngawan" onclick="setJenis('pengajar_ngawan')">🧑‍🏫 Pengajar</button>
+            </div>
+
+            <!-- FILTER STATUS -->
+            <div class="fbar">
+                <span style="font-size:12px;font-weight:700;color:#64748b;">Status:</span>
+                <div class="fchip active" id="fstat-semua"    onclick="setFilterStatus('semua')">Semua</div>
+                <div class="fchip"        id="fstat-pending"  onclick="setFilterStatus('pending')">⏳ Menunggu</div>
+                <div class="fchip"        id="fstat-approved" onclick="setFilterStatus('approved')">✅ Disetujui</div>
+            </div>
+
+            <div class="tcard"><table>
+                <thead><tr><th>ID</th><th>Nama</th><th>Username</th><th>Status</th><th>Aksi</th></tr></thead>
+                <tbody id="approvalTable"><tr class="lr"><td colspan="5"><span class="sp"></span>Memuat...</td></tr></tbody>
+            </table></div>
+        </div>
+
+        <!-- ABSENSI -->
+        <div class="page" id="page-absensi">
+            <div class="pg-header"><h2>Data Absensi</h2><p>Rekap kehadiran peserta &amp; pengajar</p></div>
+
+            <!-- TOGGLE JENIS AKUN -->
+            <div class="ptabs">
+                <button class="ptab active" id="abtab-peserta_ngawan" onclick="setAbsJenis('peserta_ngawan')">🧑‍🎓 Peserta</button>
+                <button class="ptab" id="abtab-pengajar_ngawan" onclick="setAbsJenis('pengajar_ngawan')">🧑‍🏫 Pengajar</button>
+            </div>
+
+            <!-- FILTER -->
+            <div class="fbar">
+                <label>User:</label><select id="absFU"><option value="">-- Semua --</option></select>
+                <label>Dari:</label><input type="date" id="absFD">
+                <label>s/d:</label><input type="date" id="absFS">
+                <button class="btn-f" onclick="loadAbsensiAdmin()">🔍 Tampilkan</button>
+            </div>
+
+            <div class="tcard"><table>
+                <thead><tr><th>Tanggal</th><th>User</th><th>Tipe</th><th>Jam</th><th>Foto</th></tr></thead>
+                <tbody id="absTable"><tr class="lr"><td colspan="5"><span class="sp"></span>Memuat...</td></tr></tbody>
+            </table></div>
+        </div>
+
+        <!-- REKAP BULANAN (matriks kehadiran) -->
+        <div class="page" id="page-rekap">
+            <div class="pg-header"><h2>Rekap Bulanan</h2><p>Matriks kehadiran peserta &amp; pengajar per bulan</p></div>
+
+            <!-- TOGGLE JENIS AKUN -->
+            <div class="ptabs">
+                <button class="ptab active" id="rktab-peserta_ngawan" onclick="setRekapJenis('peserta_ngawan')">🧑‍🎓 Peserta</button>
+                <button class="ptab" id="rktab-pengajar_ngawan" onclick="setRekapJenis('pengajar_ngawan')">🧑‍🏫 Pengajar</button>
+            </div>
+
+            <!-- FILTER BULAN -->
+            <div class="fbar">
+                <label>Bulan:</label><input type="month" id="rkBulan">
+                <button class="btn-f" onclick="loadRekapAdmin()">🔍 Tampilkan</button>
+            </div>
+
+            <div class="rekap-legend" id="rekapLegend"><span><span class="lg-ok">07:15</span> Jam Masuk/Keluar</span><span><span class="lg-no">✗</span> Tidak Absen</span></div>
+
+            <div class="rekap-wrap">
+                <table class="rekap-mtx" id="rekapTable">
+                    <thead><tr><th class="mtx-name">Nama</th></tr></thead>
+                    <tbody><tr><td colspan="1" style="padding:20px;color:#94a3b8;">Memuat...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- JADWAL -->
+        <div class="page" id="page-jadwal">
+            <div class="pg-header"><h2>Jadwal & Materi</h2><p>Kelola jadwal pertemuan, materi, halaman buku, dan soal latihan</p></div>
+
+            <div class="fbar">
+                <button class="btn-jadwal-add" onclick="openJadwalForm()">➕ Tambah Jadwal</button>
+            </div>
+
+            <div class="tcard">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Tanggal</th>
+                            <th>Jam</th>
+                            <th>Pembawa Materi</th>
+                            <th>Materi</th>
+                            <th>Halaman Buku</th>
+                            <th>Soal</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="jadwalTable">
+                        <tr class="lr"><td colspan="8"><span class="sp"></span>Memuat...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- MODAL FOTO ABSENSI -->
+<div class="overlay" id="modalFoto" onclick="closeModal('modalFoto')">
+    <div class="mbox2" onclick="event.stopPropagation()">
+        <div class="mhead2"><h3>Foto Absensi</h3><button onclick="closeModal('modalFoto')">✕</button></div>
+        <div class="mbody2"><img id="mFotoImg" src=""></div>
+    </div>
+</div>
+
+<!-- MODAL EDIT AKUN -->
+<div class="overlay" id="modalEdit" onclick="closeModal('modalEdit')">
+    <div class="mbox2" onclick="event.stopPropagation()">
+        <div class="mhead2"><h3>Edit Akun</h3><button onclick="closeModal('modalEdit')">✕</button></div>
+        <div class="mbody2" style="text-align:left;">
+            <label style="display:block;font-size:12px;font-weight:700;color:#64748b;margin-bottom:4px;">Nama</label>
+            <input type="text" id="editNama" style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;margin-bottom:14px;">
+
+            <label style="display:block;font-size:12px;font-weight:700;color:#64748b;margin-bottom:4px;">Username</label>
+            <input type="text" id="editUsername" style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;margin-bottom:14px;">
+
+            <label style="display:block;font-size:12px;font-weight:700;color:#64748b;margin-bottom:4px;">Password baru <span style="font-weight:400;color:#94a3b8;">(kosongkan bila tidak diubah)</span></label>
+            <input type="text" id="editPassword" placeholder="••••••••" style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;margin-bottom:6px;">
+            <div id="editMsg" style="color:#b91c1c;font-size:12px;min-height:16px;margin-bottom:8px;"></div>
+
+            <button class="actbtn act-approve" style="width:100%;padding:10px;font-size:13px;" onclick="submitEditAkun()">💾 Simpan Perubahan</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL VIEW SOAL -->
+<div class="overlay" id="modalSoalView" onclick="closeModal('modalSoalView')">
+    <div class="mbox-lg" onclick="event.stopPropagation()">
+        <div class="mhead2"><h3>📋 Daftar Soal</h3><button onclick="closeModal('modalSoalView')">✕</button></div>
+        <div class="mbody2" id="soalViewBody"></div>
+    </div>
+</div>
+
+<!-- MODAL FORM JADWAL (Tambah / Edit) -->
+<div class="overlay" id="modalJadwalForm" onclick="closeModal('modalJadwalForm')">
+    <div class="mbox-lg" onclick="event.stopPropagation()">
+        <div class="mhead2"><h3 id="jfTitle">➕ Tambah Jadwal</h3><button onclick="closeModal('modalJadwalForm')">✕</button></div>
+        <div class="mbody2" style="text-align:left;">
+            <div class="fgrid2">
+                <div>
+                    <label class="flabel">Tanggal Pelaksanaan</label>
+                    <input type="date" id="jfTanggal" class="finput">
+                </div>
+                <div></div>
+                <div>
+                    <label class="flabel">Jam Masuk</label>
+                    <input type="time" id="jfJamMasuk" class="finput">
+                </div>
+                <div>
+                    <label class="flabel">Jam Keluar</label>
+                    <input type="time" id="jfJamKeluar" class="finput">
+                </div>
+            </div>
+
+            <label class="flabel">Pembawa Materi</label>
+            <select id="jfPembawa" class="finput">
+                <option value="">-- Pilih Pembawa Materi --</option>
+            </select>
+
+            <label class="flabel">Materi</label>
+            <input type="text" id="jfMateri" class="finput" placeholder="Judul / topik materi...">
+
+            <label class="flabel">Halaman Buku</label>
+            <input type="text" id="jfHalaman" class="finput" placeholder="cth: 12-18">
+
+            <label class="flabel">Soal (Pertanyaan & Pilihan Ganda)</label>
+            <div id="jfSoalList"></div>
+            <button type="button" class="btn-add-soal" onclick="addSoalBlock()">➕ Tambah Soal</button>
+
+            <div id="jfMsg" style="color:#b91c1c;font-size:12px;min-height:16px;margin-bottom:8px;"></div>
+            <button class="actbtn act-approve" style="width:100%;padding:10px;font-size:13px;" onclick="submitJadwalForm()">💾 Simpan Jadwal</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// KONFIGURASI JADWAL REKAP BULANAN — ubah nilai di sini saja
+// ============================================================
+const REKAP_CONFIG = {
+    tanggalMulai: '2026-07-25',   // tanggal mulai program Ngawan (format YYYY-MM-DD).
+                                   // Tanggal sebelum ini TIDAK ditampilkan sbg kolom rekap.
+    hariAktif:    [5, 6, 0],       // hari yg jadi kolom rekap (0=Minggu 1=Senin 2=Selasa 3=Rabu 4=Kamis 5=Jumat 6=Sabtu).
+                                   // Saat ini: Jumat, Sabtu, Minggu.
+    jamMasuk:     '15:00',        // jam masuk yg dijadwalkan (tampil di legend, informasi saja)
+    jamKeluar:    '17:00'         // jam keluar yg dijadwalkan (tampil di legend, informasi saja)
+};
+const HARI_LABEL = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+
+const API  = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+const AUTH = 'admin';
+const TBL_ADMIN = 'admin_ngawan'; // tabel admin, diisi MANUAL langsung di database
+const TBL_ABS = { peserta_ngawan: 'absensi_peserta_ngawan', pengajar_ngawan: 'absensi_pengajar' };
+const TBL_JADWAL = 'ngawan'; // nama tabel jadwal di database
+const ASSETS = 'https://assets.lidan.co.id/';
+
+let adminUser     = '';
+let currentJenis   = 'peserta_ngawan';   // 'peserta_ngawan' | 'pengajar_ngawan'
+let currentFilter  = 'semua';            // 'semua' | 'pending' | 'approved'
+let currentAbsJenis = 'peserta_ngawan';  // 'peserta_ngawan' | 'pengajar_ngawan'
+let currentRekapJenis = 'peserta_ngawan'; // 'peserta_ngawan' | 'pengajar_ngawan'
+let dataCache      = { peserta_ngawan: [], pengajar_ngawan: [] };
+
+// ===== JADWAL & SOAL state =====
+let dataJadwal      = [];   // cache data dari TBL_JADWAL
+let jadwalSoalBlocks = [];  // soal yg sedang diedit di form: [{soal,a,b,c,d,e,jawaban}]
+let jadwalEditId    = null; // null = mode tambah baru, angka = mode edit (id_x)
+
+// ===== HELPERS =====
+const api = q => fetch(API + q, { headers: { 'X-Custom-Auth': AUTH } }).then(r => r.json());
+const jenisLabel = j => j === 'peserta_ngawan' ? 'Peserta' : 'Pengajar';
+
+// ===== AUTH =====
+// Login admin memakai tabel admin_ngawan. Akun admin TIDAK didaftarkan lewat
+// aplikasi ini — tambahkan baris baru langsung di database (x_01=username,
+// x_02=password) bila perlu admin baru.
+async function handleLogin() {
+    const u   = document.getElementById('l_user').value.trim();
+    const p   = document.getElementById('l_pass').value.trim();
+    const rem = document.getElementById('l_rem').checked;
+    if (!u || !p) return;
+    document.getElementById('loginError').style.display = 'none';
+    const res = await api(`?table=${TBL_ADMIN}&x_01_eq=${u}&x_02_eq=${p}`);
+    if (res.success && res.data?.length > 0) {
+        adminUser = res.data[0].x_01;
+        if (rem) {
+            const expire = Date.now() + 30 * 24 * 60 * 60 * 1000;
+            localStorage.setItem('ngawan_admin', JSON.stringify({ user: adminUser, expire }));
+        } else {
+            sessionStorage.setItem('ngawan_admin', adminUser);
+        }
+        showApp();
+    } else {
+        document.getElementById('loginError').style.display = 'block';
+    }
+}
+
+function checkAuth() {
+    const ss = sessionStorage.getItem('ngawan_admin');
+    if (ss) { adminUser = ss; showApp(); return; }
+    const ls = localStorage.getItem('ngawan_admin');
+    if (ls) {
+        try {
+            const data = JSON.parse(ls);
+            if (data.expire && Date.now() < data.expire) {
+                adminUser = data.user;
+                showApp();
+                return;
+            } else {
+                localStorage.removeItem('ngawan_admin');
+            }
+        } catch { localStorage.removeItem('ngawan_admin'); }
+    }
+}
+
+function handleLogout() {
+    sessionStorage.removeItem('ngawan_admin');
+    localStorage.removeItem('ngawan_admin');
+    document.body.classList.remove('app-ready');
+    location.reload();
+}
+
+async function showApp() {
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('appLayout').style.display = 'flex';
+    document.body.classList.add('app-ready');
+    document.getElementById('adminName').textContent    = adminUser;
+    document.getElementById('adminInitial').textContent = adminUser.charAt(0).toUpperCase();
+    await loadAllData();
+}
+
+// ===== NAV =====
+function showPage(pg) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-'+pg).classList.add('active');
+    document.getElementById('nav-'+pg).classList.add('active');
+    const sb = document.querySelector('.sidebar');
+    const ov = document.getElementById('sbOverlayAdm');
+    const btn = document.getElementById('btnBurger');
+    if (sb) sb.classList.remove('sb-open');
+    if (ov) ov.classList.remove('open');
+    if (btn) btn.classList.remove('open');
+    if (pg === 'absensi') { populateAbsFilterUsers(); loadAbsensiAdmin(); }
+    if (pg === 'rekap')   { loadRekapAdmin(); }
+    if (pg === 'jadwal')  { loadJadwal(); }
+}
+
+function toggleSidebarMobile() {
+    const sb = document.querySelector('.sidebar');
+    const ov = document.getElementById('sbOverlayAdm');
+    const btn = document.getElementById('btnBurger');
+    if (sb) sb.classList.toggle('sb-open');
+    if (ov) ov.classList.toggle('open');
+    if (btn) btn.classList.toggle('open');
+}
+
+// ===== LOAD DATA =====
+async function loadAllData() {
+    document.getElementById('approvalTable').innerHTML = '<tr class="lr"><td colspan="5"><span class="sp"></span>Memuat...</td></tr>';
+    const [resP, resG] = await Promise.all([
+        api(`?table=peserta_ngawan&limit=500`),
+        api(`?table=pengajar_ngawan&limit=500`)
+    ]);
+    dataCache.peserta_ngawan  = resP.success ? (resP.data || []) : [];
+    dataCache.pengajar_ngawan = resG.success ? (resG.data || []) : [];
+    updateStats();
+    renderTable();
+}
+
+function updateStats() {
+    const peserta  = dataCache.peserta_ngawan;
+    const pengajar = dataCache.pengajar_ngawan;
+    const pendingP = peserta.filter(d => d.x_03 !== 'approved').length;
+    const pendingG = pengajar.filter(d => d.x_03 !== 'approved').length;
+
+    document.getElementById('stTotalPeserta').textContent    = peserta.length;
+    document.getElementById('stPendingPeserta').textContent  = pendingP;
+    document.getElementById('stTotalPengajar').textContent   = pengajar.length;
+    document.getElementById('stPendingPengajar').textContent = pendingG;
+
+    const totalPending = pendingP + pendingG;
+    const cnt = document.getElementById('pendingCount');
+    if (totalPending > 0) { cnt.textContent = totalPending; cnt.style.display = 'inline-block'; }
+    else cnt.style.display = 'none';
+}
+
+// ===== TOGGLE JENIS & FILTER =====
+function setJenis(jenis) {
+    currentJenis = jenis;
+    document.getElementById('ptab-peserta_ngawan').classList.toggle('active', jenis === 'peserta_ngawan');
+    document.getElementById('ptab-pengajar_ngawan').classList.toggle('active', jenis === 'pengajar_ngawan');
+    renderTable();
+}
+
+function setFilterStatus(filter) {
+    currentFilter = filter;
+    ['semua','pending','approved'].forEach(f => {
+        document.getElementById('fstat-'+f).classList.toggle('active', f === filter);
+    });
+    renderTable();
+}
+
+function renderTable() {
+    let rows = dataCache[currentJenis] || [];
+    if (currentFilter === 'pending')  rows = rows.filter(d => d.x_03 !== 'approved');
+    if (currentFilter === 'approved') rows = rows.filter(d => d.x_03 === 'approved');
+    rows = [...rows].sort((a,b) => (b.id_x||0) - (a.id_x||0));
+
+    document.getElementById('approvalTable').innerHTML = rows.length
+        ? rows.map(d => {
+            const approved = d.x_03 === 'approved';
+            const badge = approved
+                ? `<span class="badge b-approved">✅ Disetujui</span>`
+                : `<span class="badge b-pending">⏳ Menunggu</span>`;
+            const actions = approved
+                ? `<button class="actbtn act-revoke" onclick="revokeAkun('${currentJenis}',${d.id_x})">⛔ Nonaktifkan</button>
+                   <button class="actbtn act-edit" onclick="openEditModal('${currentJenis}',${d.id_x},'${escAttr(d.x_04)}','${escAttr(d.x_01)}')">✏️ Edit</button>
+                   <button class="actbtn act-delete" onclick="hapusAkun('${currentJenis}',${d.id_x},'${d.x_01}')">🗑️ Hapus</button>`
+                : `<button class="actbtn act-approve" onclick="approveAkun('${currentJenis}',${d.id_x})">✅ Setujui</button>
+                   <button class="actbtn act-edit" onclick="openEditModal('${currentJenis}',${d.id_x},'${escAttr(d.x_04)}','${escAttr(d.x_01)}')">✏️ Edit</button>
+                   <button class="actbtn act-delete" onclick="hapusAkun('${currentJenis}',${d.id_x},'${d.x_01}')">🗑️ Tolak</button>`;
+            return `<tr>
+                <td>${d.id_x}</td>
+                <td>${d.x_04||'-'}</td>
+                <td><span class="uchip"><span class="udot"></span>${d.x_01||'-'}</span></td>
+                <td>${badge}</td>
+                <td>${actions}</td>
+            </tr>`;
+        }).join('')
+        : `<tr class="er"><td colspan="5">Tidak ada data ${jenisLabel(currentJenis).toLowerCase()} untuk filter ini</td></tr>`;
+}
+
+// ===== AKSI APPROVAL =====
+async function approveAkun(tabel, id) {
+    await fetch(`${API}?table=${tabel}&id_x=${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type':'application/json', 'X-Custom-Auth': AUTH },
+        body: JSON.stringify({ x_03: 'approved' })
+    }).then(r=>r.json());
+    await loadAllData();
+}
+
+async function revokeAkun(tabel, id) {
+    if (!confirm('Nonaktifkan akun ini? User tidak akan bisa login sampai disetujui ulang.')) return;
+    await fetch(`${API}?table=${tabel}&id_x=${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type':'application/json', 'X-Custom-Auth': AUTH },
+        body: JSON.stringify({ x_03: 'pending' })
+    }).then(r=>r.json());
+    await loadAllData();
+}
+
+// ===== EDIT AKUN (nama / username / password) =====
+function escAttr(v) {
+    return String(v ?? '').replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;');
+}
+function escHtml(v) {
+    return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+let editTarget = null; // { tabel, id }
+
+function openEditModal(tabel, id, nama, username) {
+    editTarget = { tabel, id };
+    document.getElementById('editNama').value = nama || '';
+    document.getElementById('editUsername').value = username || '';
+    document.getElementById('editPassword').value = '';
+    document.getElementById('editMsg').textContent = '';
+    document.getElementById('modalEdit').style.display = 'flex';
+}
+
+async function submitEditAkun() {
+    if (!editTarget) return;
+    const nama = document.getElementById('editNama').value.trim();
+    const username = document.getElementById('editUsername').value.trim();
+    const password = document.getElementById('editPassword').value;
+    const msgEl = document.getElementById('editMsg');
+
+    if (!nama || !username) {
+        msgEl.textContent = '⚠ Nama dan username tidak boleh kosong.';
+        return;
+    }
+
+    const payload = { x_04: nama, x_01: username };
+    if (password) payload.x_02 = password;
+
+    try {
+        const res = await fetch(`${API}?table=${editTarget.tabel}&id_x=${editTarget.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type':'application/json', 'X-Custom-Auth': AUTH },
+            body: JSON.stringify(payload)
+        }).then(r=>r.json());
+
+        if (res && res.success === false) {
+            msgEl.textContent = '⚠ Gagal menyimpan perubahan.';
+            return;
+        }
+        closeModal('modalEdit');
+        await loadAllData();
+    } catch (e) {
+        msgEl.textContent = '⚠ Gagal terhubung ke server.';
+    }
+}
+
+async function hapusAkun(tabel, id, username) {
+    if (!confirm(`Hapus akun "${username}" secara permanen? Tindakan ini tidak bisa dibatalkan.`)) return;
+    await fetch(`${API}?table=${tabel}&id_x=${id}`, {
+        method: 'DELETE',
+        headers: { 'X-Custom-Auth': AUTH }
+    }).then(r=>r.json());
+    await loadAllData();
+}
+
+// ===== ABSENSI (peserta & pengajar) =====
+function setAbsJenis(jenis) {
+    currentAbsJenis = jenis;
+    document.getElementById('abtab-peserta_ngawan').classList.toggle('active', jenis === 'peserta_ngawan');
+    document.getElementById('abtab-pengajar_ngawan').classList.toggle('active', jenis === 'pengajar_ngawan');
+    document.getElementById('absFU').value = '';
+    populateAbsFilterUsers();
+    loadAbsensiAdmin();
+}
+
+// Dropdown user diisi dari data yang sudah dimuat loadAllData() (peserta_ngawan / pengajar_ngawan)
+function populateAbsFilterUsers() {
+    const list = dataCache[currentAbsJenis] || [];
+    const opts = list.map(u => `<option value="${u.x_01}">${u.x_01}</option>`).join('');
+    document.getElementById('absFU').innerHTML = '<option value="">-- Semua --</option>' + opts;
+}
+
+async function loadAbsensiAdmin() {
+    const tabel  = TBL_ABS[currentAbsJenis];
+    const user   = document.getElementById('absFU').value;
+    const dari   = document.getElementById('absFD').value;
+    const sampai = document.getElementById('absFS').value;
+
+    let q = `?table=${tabel}`;
+    if (user)   q += `&x_01_eq=${user}`;
+    if (dari)   q += `&x_02_gte=${dari}`;
+    if (sampai) q += `&x_02_lte=${sampai}`;
+
+    document.getElementById('absTable').innerHTML = '<tr class="lr"><td colspan="5"><span class="sp"></span>Memuat...</td></tr>';
+    const res  = await api(q);
+    const data = (res.data || []).sort((a,b) => (b.x_02||'').localeCompare(a.x_02||''));
+
+    document.getElementById('absTable').innerHTML = data.length
+        ? data.map(d => `<tr>
+            <td>${d.x_02||'-'}</td>
+            <td><span class="uchip"><span class="udot"></span>${d.x_01||'-'}</span></td>
+            <td><span class="badge b-${(d.x_05||'').toLowerCase()}">${d.x_05||'-'}</span></td>
+            <td><b>${d.x_03||'-'}</b></td>
+            <td>${d.x_04 ? `<img src="${ASSETS}${d.x_04}" class="foto-thumb" onclick="showFoto('${ASSETS}${d.x_04}')" title="Klik untuk lihat">` : '<span style="color:#94a3b8;font-size:11px;">-</span>'}</td>
+          </tr>`).join('')
+        : '<tr class="er"><td colspan="5">Tidak ada data absensi</td></tr>';
+}
+
+function closeModal(id) { document.getElementById(id).style.display='none'; }
+function showFoto(url) { document.getElementById('mFotoImg').src=url; document.getElementById('modalFoto').style.display='flex'; }
+
+// ===== REKAP BULANAN (matriks kehadiran) =====
+function setRekapJenis(jenis) {
+    currentRekapJenis = jenis;
+    document.getElementById('rktab-peserta_ngawan').classList.toggle('active', jenis === 'peserta_ngawan');
+    document.getElementById('rktab-pengajar_ngawan').classList.toggle('active', jenis === 'pengajar_ngawan');
+    loadRekapAdmin();
+}
+
+// Hitung daftar tanggal dalam bulan yg jadi kolom rekap, sesuai REKAP_CONFIG
+// (hanya hari-hari di hariAktif, dan hanya tanggal >= tanggalMulai)
+function getKolomTanggal(bulanVal) {
+    const [thn, bln] = bulanVal.split('-').map(Number);
+    const jumlahHari = new Date(thn, bln, 0).getDate();
+    const kolom = [];
+    for (let t = 1; t <= jumlahHari; t++) {
+        const tgl = `${bulanVal}-${String(t).padStart(2,'0')}`;
+        if (tgl < REKAP_CONFIG.tanggalMulai) continue;
+        const dow = new Date(thn, bln - 1, t).getDay();
+        if (!REKAP_CONFIG.hariAktif.includes(dow)) continue;
+        kolom.push({ tgl, tanggal: t, dow });
+    }
+    return kolom;
+}
+
+async function loadRekapAdmin() {
+    const bulanVal = document.getElementById('rkBulan').value; // format YYYY-MM
+    const table  = document.getElementById('rekapTable');
+    if (!bulanVal) return;
+    const dariTgl   = REKAP_CONFIG.tanggalMulai > `${bulanVal}-01` ? REKAP_CONFIG.tanggalMulai : `${bulanVal}-01`;
+    const [thnE, blnE] = bulanVal.split('-').map(Number);
+    const sampaiTgl = `${bulanVal}-${String(new Date(thnE, blnE, 0).getDate()).padStart(2,'0')}`;
+
+    // Update legend info jadwal dari config
+    const legend = document.getElementById('rekapLegend');
+    if (legend) {
+        const namaHari = REKAP_CONFIG.hariAktif.slice().sort().map(d => HARI_LABEL[d]).join(', ');
+        legend.innerHTML = `<span><span class="lg-ok">${REKAP_CONFIG.jamMasuk}</span> Jam Masuk/Keluar (dijadwalkan: ${REKAP_CONFIG.jamKeluar})</span><span><span class="lg-no">✗</span> Tidak Absen</span><span style="color:#94a3b8;">Hari aktif: ${namaHari}</span>`;
+    }
+
+    table.querySelector('tbody').innerHTML = `<tr><td style="padding:20px;color:#94a3b8;">Memuat...</td></tr>`;
+
+    const kolom = getKolomTanggal(bulanVal);
+
+    if (sampaiTgl < REKAP_CONFIG.tanggalMulai) {
+        table.querySelector('thead').innerHTML = '<tr><th class="mtx-name">Nama</th></tr>';
+        table.querySelector('tbody').innerHTML = `<tr><td style="padding:20px;color:#94a3b8;">Bulan ini sebelum tanggal mulai program (${REKAP_CONFIG.tanggalMulai})</td></tr>`;
+        return;
+    }
+
+    // Daftar nama = seluruh akun approved dari cache (approval), bukan hanya yg pernah absen
+    const users = (dataCache[currentRekapJenis] || [])
+        .filter(u => u.x_03 === 'approved')
+        .map(u => u.x_01)
+        .sort((a,b) => a.localeCompare(b));
+
+    const tabelAbs = TBL_ABS[currentRekapJenis];
+    const res  = await api(`?table=${tabelAbs}&x_02_gte=${dariTgl}&x_02_lte=${sampaiTgl}&limit=3000`);
+    const data = res.data || [];
+
+    // Map: "user|tanggal" -> { m: jam masuk, p: jam pulang }
+    const jamMap = {};
+    data.forEach(d => {
+        if (!d.x_01 || !d.x_02) return;
+        const key = `${d.x_01}|${d.x_02}`;
+        if (!jamMap[key]) jamMap[key] = { m: null, p: null };
+        if (d.x_05 === 'MASUK')  jamMap[key].m = d.x_03;
+        if (d.x_05 === 'PULANG') jamMap[key].p = d.x_03;
+    });
+
+    // Header 2 baris: tanggal (colspan 2, + label hari) + sub Masuk/Keluar
+    let theadHtml = '<tr><th class="mtx-name" rowspan="2">Nama</th>';
+    kolom.forEach(k => theadHtml += `<th class="mtx-date" colspan="2">${k.tanggal}<span class="mtx-daylabel">${HARI_LABEL[k.dow]}</span></th>`);
+    theadHtml += '</tr><tr>';
+    kolom.forEach(() => theadHtml += `<th class="mtx-sub">M</th><th class="mtx-sub">K</th>`);
+    theadHtml += '</tr>';
+    table.querySelector('thead').innerHTML = theadHtml;
+
+    if (!kolom.length) {
+        table.querySelector('tbody').innerHTML = `<tr><td style="padding:20px;color:#94a3b8;">Tidak ada tanggal aktif pada bulan ini sesuai jadwal</td></tr>`;
+        return;
+    }
+
+    if (!users.length) {
+        table.querySelector('tbody').innerHTML = `<tr><td style="padding:20px;color:#94a3b8;">Tidak ada data ${jenisLabel(currentRekapJenis).toLowerCase()} yang disetujui</td></tr>`;
+        return;
+    }
+
+    table.querySelector('tbody').innerHTML = users.map(u => {
+        let row = `<tr><td class="mtx-name">${u}</td>`;
+        kolom.forEach(k => {
+            const jam = jamMap[`${u}|${k.tgl}`] || { m: null, p: null };
+            row += `<td class="mtx-cell ${jam.m ? 'mtx-time' : 'mtx-absen'}">${jam.m || '✗'}</td>`;
+            row += `<td class="mtx-cell mtx-last ${jam.p ? 'mtx-time' : 'mtx-absen'}">${jam.p || '✗'}</td>`;
+        });
+        row += '</tr>';
+        return row;
+    }).join('');
+}
+
+// ===== JADWAL & MATERI =====
+async function loadJadwal() {
+    const tbody = document.getElementById('jadwalTable');
+    tbody.innerHTML = '<tr class="lr"><td colspan="8"><span class="sp"></span>Memuat...</td></tr>';
+    const res = await api(`?table=${TBL_JADWAL}&limit=1000`);
+    dataJadwal = res.success ? (res.data || []) : [];
+    renderJadwalTable();
+}
+
+function renderJadwalTable() {
+    const tbody = document.getElementById('jadwalTable');
+    const rows = [...dataJadwal].sort((a,b) => (a.id_x||0) - (b.id_x||0));
+    tbody.innerHTML = rows.length
+        ? rows.map((d, i) => {
+            let jumlahSoal = 0;
+            try { jumlahSoal = (JSON.parse(d.x_05 || '[]') || []).length; } catch { jumlahSoal = 0; }
+            return `<tr>
+                <td>${i + 1}</td>
+                <td>${d.x_06 || '-'}</td>
+                <td>${d.x_07 || '-'} - ${d.x_08 || '-'}</td>
+                <td>${d.x_02 || '-'}</td>
+                <td><b>${d.x_03 || '-'}</b></td>
+                <td>${d.x_04 || '-'}</td>
+                <td><button class="actbtn act-edit" title="Lihat Soal" onclick="viewSoal(${d.id_x})">👁️ ${jumlahSoal}</button></td>
+                <td>
+                    <button class="actbtn act-edit" title="Edit" onclick="openJadwalForm(${d.id_x})">✏️</button>
+                    <button class="actbtn act-delete" title="Hapus" onclick="hapusJadwal(${d.id_x})">🗑️</button>
+                </td>
+            </tr>`;
+        }).join('')
+        : '<tr class="er"><td colspan="8">Belum ada jadwal</td></tr>';
+}
+
+// ---- Popup lihat soal (read-only) ----
+function viewSoal(id) {
+    const d = dataJadwal.find(j => j.id_x === id);
+    if (!d) return;
+    let soal = [];
+    try { soal = JSON.parse(d.x_05 || '[]'); } catch { soal = []; }
+    const body = document.getElementById('soalViewBody');
+    const opts = ['a','b','c','d','e'];
+    body.innerHTML = soal.length
+        ? soal.map((s, i) => `
+            <div class="soal-view-q">
+                <div class="sv-no">Soal ${i+1}</div>
+                <div class="sv-text">${escHtml(s.soal || '-')}</div>
+                ${opts.map(o => `<div class="soal-view-opt ${s.jawaban === o ? 'correct' : ''}">${o.toUpperCase()}. ${escHtml(s[o] || '-')}${s.jawaban === o ? ' &nbsp;✓ Jawaban Benar' : ''}</div>`).join('')}
+            </div>`).join('')
+        : '<p style="color:#94a3b8;font-size:13px;">Tidak ada soal untuk jadwal ini.</p>';
+    document.getElementById('modalSoalView').style.display = 'flex';
+}
+
+// ---- Form tambah / edit jadwal ----
+function blankSoal() { return { soal:'', a:'', b:'', c:'', d:'', e:'', jawaban:'a' }; }
+
+function populateJadwalPembawaOptions(selected) {
+    const sel = document.getElementById('jfPembawa');
+    const pengajar = dataCache.pengajar_ngawan || [];
+    sel.innerHTML = '<option value="">-- Pilih Pembawa Materi --</option>' +
+        pengajar
+            .filter(d => d.x_04)
+            .map(d => `<option value="${d.x_04}">${d.x_04}</option>`)
+            .join('');
+    sel.value = selected || '';
+}
+
+function openJadwalForm(id) {
+    jadwalEditId = id || null;
+    document.getElementById('jfMsg').textContent = '';
+    document.getElementById('jfTitle').textContent = id ? '✏️ Edit Jadwal' : '➕ Tambah Jadwal';
+
+    if (id) {
+        const d = dataJadwal.find(j => j.id_x === id);
+        if (!d) return;
+        document.getElementById('jfTanggal').value   = d.x_06 || '';
+        document.getElementById('jfJamMasuk').value  = d.x_07 || '';
+        document.getElementById('jfJamKeluar').value = d.x_08 || '';
+        populateJadwalPembawaOptions(d.x_02 || '');
+        document.getElementById('jfMateri').value    = d.x_03 || '';
+        document.getElementById('jfHalaman').value   = d.x_04 || '';
+        try { jadwalSoalBlocks = JSON.parse(d.x_05 || '[]'); } catch { jadwalSoalBlocks = []; }
+        if (!Array.isArray(jadwalSoalBlocks) || !jadwalSoalBlocks.length) jadwalSoalBlocks = [blankSoal()];
+    } else {
+        document.getElementById('jfTanggal').value   = '';
+        document.getElementById('jfJamMasuk').value  = '';
+        document.getElementById('jfJamKeluar').value = '';
+        populateJadwalPembawaOptions('');
+        document.getElementById('jfMateri').value    = '';
+        document.getElementById('jfHalaman').value   = '';
+        jadwalSoalBlocks = Array.from({ length: 5 }, blankSoal);
+    }
+    renderSoalBlocks();
+    document.getElementById('modalJadwalForm').style.display = 'flex';
+}
+
+function renderSoalBlocks() {
+    const wrap = document.getElementById('jfSoalList');
+    wrap.innerHTML = jadwalSoalBlocks.map((s, i) => `
+        <div class="soal-block">
+            <div class="soal-no">Soal ${i+1}</div>
+            ${jadwalSoalBlocks.length > 1 ? `<button type="button" class="btn-rm-soal" onclick="removeSoalBlock(${i})">✕ Hapus</button>` : ''}
+            <label class="flabel">Pertanyaan</label>
+            <textarea class="finput" rows="2" oninput="updateSoalField(${i},'soal',this.value)" placeholder="Tulis pertanyaan...">${escHtml(s.soal)}</textarea>
+            ${['a','b','c','d','e'].map(o => `
+                <div class="soal-opt-row">
+                    <label><input type="radio" name="jawaban${i}" ${s.jawaban === o ? 'checked' : ''} onchange="updateSoalField(${i},'jawaban','${o}')"> ${o.toUpperCase()}</label>
+                    <input type="text" class="finput" style="margin-bottom:6px;" value="${escAttr(s[o])}" oninput="updateSoalField(${i},'${o}',this.value)" placeholder="Pilihan ${o.toUpperCase()}...">
+                </div>`).join('')}
+        </div>`).join('');
+}
+
+function updateSoalField(i, field, value) {
+    if (!jadwalSoalBlocks[i]) return;
+    jadwalSoalBlocks[i][field] = value;
+}
+
+function addSoalBlock() {
+    jadwalSoalBlocks.push(blankSoal());
+    renderSoalBlocks();
+}
+
+function removeSoalBlock(i) {
+    jadwalSoalBlocks.splice(i, 1);
+    renderSoalBlocks();
+}
+
+async function submitJadwalForm() {
+    const tanggal   = document.getElementById('jfTanggal').value;
+    const jamMasuk  = document.getElementById('jfJamMasuk').value;
+    const jamKeluar = document.getElementById('jfJamKeluar').value;
+    const pembawa   = document.getElementById('jfPembawa').value.trim();
+    const materi    = document.getElementById('jfMateri').value.trim();
+    const halaman   = document.getElementById('jfHalaman').value.trim();
+    const msgEl     = document.getElementById('jfMsg');
+
+    if (!tanggal || !pembawa || !materi) {
+        msgEl.textContent = '⚠ Tanggal, pembawa materi, dan materi wajib diisi.';
+        return;
+    }
+
+    const soalBersih = jadwalSoalBlocks.filter(s => (s.soal || '').trim());
+    const payload = {
+        x_02: pembawa,
+        x_03: materi,
+        x_04: halaman,
+        x_05: JSON.stringify(soalBersih),
+        x_06: tanggal,
+        x_07: jamMasuk,
+        x_08: jamKeluar
+    };
+
+    try {
+        if (jadwalEditId) {
+            const res = await fetch(`${API}?table=${TBL_JADWAL}&id_x=${jadwalEditId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type':'application/json', 'X-Custom-Auth': AUTH },
+                body: JSON.stringify(payload)
+            }).then(r=>r.json());
+            if (res && res.success === false) { msgEl.textContent = '⚠ Gagal menyimpan jadwal.'; return; }
+        } else {
+            const res = await fetch(`${API}?table=${TBL_JADWAL}`, {
+                method: 'POST',
+                headers: { 'Content-Type':'application/json', 'X-Custom-Auth': AUTH },
+                body: JSON.stringify(payload)
+            }).then(r=>r.json());
+            if (res && res.success === false) { msgEl.textContent = '⚠ Gagal menyimpan jadwal.'; return; }
+            // x_01 idealnya sama dengan id_x (baru diketahui setelah insert) — set otomatis bila server mengembalikan id-nya
+            const newId = res?.data?.id_x ?? res?.data?.[0]?.id_x ?? res?.id ?? null;
+            if (newId) {
+                await fetch(`${API}?table=${TBL_JADWAL}&id_x=${newId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type':'application/json', 'X-Custom-Auth': AUTH },
+                    body: JSON.stringify({ x_01: newId })
+                }).then(r=>r.json());
+            }
+        }
+        closeModal('modalJadwalForm');
+        await loadJadwal();
+    } catch (e) {
+        msgEl.textContent = '⚠ Gagal terhubung ke server.';
+    }
+}
+
+async function hapusJadwal(id) {
+    if (!confirm('Hapus jadwal ini secara permanen? Tindakan ini tidak bisa dibatalkan.')) return;
+    await fetch(`${API}?table=${TBL_JADWAL}&id_x=${id}`, {
+        method: 'DELETE',
+        headers: { 'X-Custom-Auth': AUTH }
+    }).then(r=>r.json());
+    await loadJadwal();
+}
+
+// ===== INIT =====
+window.onload = function() {
+    const today = new Date();
+    const pad = n => String(n).padStart(2,'0');
+    const iso = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+    document.getElementById('absFD').value = iso.slice(0,7)+'-01';
+    document.getElementById('absFS').value = iso;
+    document.getElementById('rkBulan').value = iso.slice(0,7);
+    checkAuth();
+};
+</script>
+</body>
+</html>
