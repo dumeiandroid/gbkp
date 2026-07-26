@@ -162,6 +162,30 @@
         .sp { display: inline-block; width: 16px; height: 16px; border: 2px solid #e2e8f0; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 5px; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        /* ===== JADWAL & SOAL ===== */
+        .mbox-lg { background: white; border-radius: 14px; width: 100%; max-width: 720px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.2); }
+        .mbox-lg .mhead2 { padding: 18px 22px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: white; z-index: 2; }
+        .mbox-lg .mhead2 h3 { font-size: 15px; font-weight: 800; }
+        .mbox-lg .mhead2 button { background: none; border: none; font-size: 20px; cursor: pointer; color: #94a3b8; }
+        .mbox-lg .mbody2 { padding: 22px; }
+        .fgrid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+        .flabel { display: block; font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 4px; }
+        .finput { width: 100%; padding: 9px 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; margin-bottom: 14px; font-family: inherit; }
+        textarea.finput { resize: vertical; }
+        .soal-block { border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; margin-bottom: 12px; background: #f8fafc; position: relative; }
+        .soal-block .soal-no { font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 8px; }
+        .btn-rm-soal { position: absolute; top: 10px; right: 10px; background: #fee2e2; color: #b91c1c; border: none; border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: 700; cursor: pointer; }
+        .btn-add-soal { background: #f3e8ff; color: var(--primary); border: 1px dashed var(--primary); border-radius: 8px; padding: 10px; width: 100%; font-size: 13px; font-weight: 700; cursor: pointer; margin-bottom: 14px; }
+        .soal-opt-row { display: grid; grid-template-columns: 46px 1fr; gap: 6px; align-items: center; }
+        .soal-opt-row label { font-size: 12px; font-weight: 700; color: #64748b; display: flex; align-items: center; gap: 3px; }
+        .soal-view-q { border-bottom: 1px solid #f1f5f9; padding: 12px 0; }
+        .soal-view-q:last-child { border-bottom: none; }
+        .soal-view-q .sv-no { font-size: 11px; font-weight: 800; color: var(--primary); margin-bottom: 4px; }
+        .soal-view-q .sv-text { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+        .soal-view-opt { font-size: 12.5px; padding: 5px 10px; border-radius: 6px; margin-bottom: 4px; background: #f8fafc; }
+        .soal-view-opt.correct { background: #d1fae5; color: #065f46; font-weight: 700; }
+        .btn-jadwal-add { padding: 9px 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; }
+
         /* PAGES */
         .page { display: none; }
         .page.active { display: block; }
@@ -250,6 +274,10 @@
             </div>
             <div class="nav-item" onclick="showPage('rekap')" id="nav-rekap">
                 <span class="icon">🗓️</span> Rekap Bulanan
+            </div>
+            <div class="sb-sec">Materi</div>
+            <div class="nav-item" onclick="showPage('jadwal')" id="nav-jadwal">
+                <span class="icon">📅</span> Jadwal
             </div>
         </nav>
         <div class="sb-foot">
@@ -343,6 +371,35 @@
                 </table>
             </div>
         </div>
+
+        <!-- JADWAL -->
+        <div class="page" id="page-jadwal">
+            <div class="pg-header"><h2>Jadwal & Materi</h2><p>Kelola jadwal pertemuan, materi, halaman buku, dan soal latihan</p></div>
+
+            <div class="fbar">
+                <button class="btn-jadwal-add" onclick="openJadwalForm()">➕ Tambah Jadwal</button>
+            </div>
+
+            <div class="tcard">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Tanggal</th>
+                            <th>Jam</th>
+                            <th>Pembawa Materi</th>
+                            <th>Materi</th>
+                            <th>Halaman Buku</th>
+                            <th>Soal</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="jadwalTable">
+                        <tr class="lr"><td colspan="8"><span class="sp"></span>Memuat...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </main>
 </div>
 
@@ -374,17 +431,67 @@
     </div>
 </div>
 
+<!-- MODAL VIEW SOAL -->
+<div class="overlay" id="modalSoalView" onclick="closeModal('modalSoalView')">
+    <div class="mbox-lg" onclick="event.stopPropagation()">
+        <div class="mhead2"><h3>📋 Daftar Soal</h3><button onclick="closeModal('modalSoalView')">✕</button></div>
+        <div class="mbody2" id="soalViewBody"></div>
+    </div>
+</div>
+
+<!-- MODAL FORM JADWAL (Tambah / Edit) -->
+<div class="overlay" id="modalJadwalForm" onclick="closeModal('modalJadwalForm')">
+    <div class="mbox-lg" onclick="event.stopPropagation()">
+        <div class="mhead2"><h3 id="jfTitle">➕ Tambah Jadwal</h3><button onclick="closeModal('modalJadwalForm')">✕</button></div>
+        <div class="mbody2" style="text-align:left;">
+            <div class="fgrid2">
+                <div>
+                    <label class="flabel">Tanggal Pelaksanaan</label>
+                    <input type="date" id="jfTanggal" class="finput">
+                </div>
+                <div></div>
+                <div>
+                    <label class="flabel">Jam Masuk</label>
+                    <input type="time" id="jfJamMasuk" class="finput">
+                </div>
+                <div>
+                    <label class="flabel">Jam Keluar</label>
+                    <input type="time" id="jfJamKeluar" class="finput">
+                </div>
+            </div>
+
+            <label class="flabel">Pembawa Materi</label>
+            <select id="jfPembawa" class="finput">
+                <option value="">-- Pilih Pembawa Materi --</option>
+            </select>
+
+            <label class="flabel">Materi</label>
+            <input type="text" id="jfMateri" class="finput" placeholder="Judul / topik materi...">
+
+            <label class="flabel">Halaman Buku</label>
+            <input type="text" id="jfHalaman" class="finput" placeholder="cth: 12-18">
+
+            <label class="flabel">Soal (Pertanyaan & Pilihan Ganda)</label>
+            <div id="jfSoalList"></div>
+            <button type="button" class="btn-add-soal" onclick="addSoalBlock()">➕ Tambah Soal</button>
+
+            <div id="jfMsg" style="color:#b91c1c;font-size:12px;min-height:16px;margin-bottom:8px;"></div>
+            <button class="actbtn act-approve" style="width:100%;padding:10px;font-size:13px;" onclick="submitJadwalForm()">💾 Simpan Jadwal</button>
+        </div>
+    </div>
+</div>
+
 <script>
 // ============================================================
 // KONFIGURASI JADWAL REKAP BULANAN — ubah nilai di sini saja
 // ============================================================
 const REKAP_CONFIG = {
-    tanggalMulai: '2026-01-01',   // tanggal mulai program Ngawan (format YYYY-MM-DD).
+    tanggalMulai: '2026-07-25',   // tanggal mulai program Ngawan (format YYYY-MM-DD).
                                    // Tanggal sebelum ini TIDAK ditampilkan sbg kolom rekap.
     hariAktif:    [5, 6, 0],       // hari yg jadi kolom rekap (0=Minggu 1=Senin 2=Selasa 3=Rabu 4=Kamis 5=Jumat 6=Sabtu).
                                    // Saat ini: Jumat, Sabtu, Minggu.
-    jamMasuk:     '07:15',        // jam masuk yg dijadwalkan (tampil di legend, informasi saja)
-    jamKeluar:    '10:00'         // jam keluar yg dijadwalkan (tampil di legend, informasi saja)
+    jamMasuk:     '15:00',        // jam masuk yg dijadwalkan (tampil di legend, informasi saja)
+    jamKeluar:    '17:00'         // jam keluar yg dijadwalkan (tampil di legend, informasi saja)
 };
 const HARI_LABEL = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
 
@@ -392,6 +499,7 @@ const API  = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
 const AUTH = 'admin';
 const TBL_ADMIN = 'admin_ngawan'; // tabel admin, diisi MANUAL langsung di database
 const TBL_ABS = { peserta_ngawan: 'absensi_peserta_ngawan', pengajar_ngawan: 'absensi_pengajar' };
+const TBL_JADWAL = 'ngawan'; // nama tabel jadwal di database
 const ASSETS = 'https://assets.lidan.co.id/';
 
 let adminUser     = '';
@@ -400,6 +508,11 @@ let currentFilter  = 'semua';            // 'semua' | 'pending' | 'approved'
 let currentAbsJenis = 'peserta_ngawan';  // 'peserta_ngawan' | 'pengajar_ngawan'
 let currentRekapJenis = 'peserta_ngawan'; // 'peserta_ngawan' | 'pengajar_ngawan'
 let dataCache      = { peserta_ngawan: [], pengajar_ngawan: [] };
+
+// ===== JADWAL & SOAL state =====
+let dataJadwal      = [];   // cache data dari TBL_JADWAL
+let jadwalSoalBlocks = [];  // soal yg sedang diedit di form: [{soal,a,b,c,d,e,jawaban}]
+let jadwalEditId    = null; // null = mode tambah baru, angka = mode edit (id_x)
 
 // ===== HELPERS =====
 const api = q => fetch(API + q, { headers: { 'X-Custom-Auth': AUTH } }).then(r => r.json());
@@ -478,6 +591,7 @@ function showPage(pg) {
     if (btn) btn.classList.remove('open');
     if (pg === 'absensi') { populateAbsFilterUsers(); loadAbsensiAdmin(); }
     if (pg === 'rekap')   { loadRekapAdmin(); }
+    if (pg === 'jadwal')  { loadJadwal(); }
 }
 
 function toggleSidebarMobile() {
@@ -588,6 +702,9 @@ async function revokeAkun(tabel, id) {
 // ===== EDIT AKUN (nama / username / password) =====
 function escAttr(v) {
     return String(v ?? '').replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;');
+}
+function escHtml(v) {
+    return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 let editTarget = null; // { tabel, id }
@@ -786,6 +903,198 @@ async function loadRekapAdmin() {
         row += '</tr>';
         return row;
     }).join('');
+}
+
+// ===== JADWAL & MATERI =====
+async function loadJadwal() {
+    const tbody = document.getElementById('jadwalTable');
+    tbody.innerHTML = '<tr class="lr"><td colspan="8"><span class="sp"></span>Memuat...</td></tr>';
+    const res = await api(`?table=${TBL_JADWAL}&limit=1000`);
+    dataJadwal = res.success ? (res.data || []) : [];
+    renderJadwalTable();
+}
+
+function renderJadwalTable() {
+    const tbody = document.getElementById('jadwalTable');
+    const rows = [...dataJadwal].sort((a,b) => (a.id_x||0) - (b.id_x||0));
+    tbody.innerHTML = rows.length
+        ? rows.map((d, i) => {
+            let jumlahSoal = 0;
+            try { jumlahSoal = (JSON.parse(d.x_05 || '[]') || []).length; } catch { jumlahSoal = 0; }
+            return `<tr>
+                <td>${i + 1}</td>
+                <td>${d.x_06 || '-'}</td>
+                <td>${d.x_07 || '-'} - ${d.x_08 || '-'}</td>
+                <td>${d.x_02 || '-'}</td>
+                <td><b>${d.x_03 || '-'}</b></td>
+                <td>${d.x_04 || '-'}</td>
+                <td><button class="actbtn act-edit" title="Lihat Soal" onclick="viewSoal(${d.id_x})">👁️ ${jumlahSoal}</button></td>
+                <td>
+                    <button class="actbtn act-edit" title="Edit" onclick="openJadwalForm(${d.id_x})">✏️</button>
+                    <button class="actbtn act-delete" title="Hapus" onclick="hapusJadwal(${d.id_x})">🗑️</button>
+                </td>
+            </tr>`;
+        }).join('')
+        : '<tr class="er"><td colspan="8">Belum ada jadwal</td></tr>';
+}
+
+// ---- Popup lihat soal (read-only) ----
+function viewSoal(id) {
+    const d = dataJadwal.find(j => j.id_x === id);
+    if (!d) return;
+    let soal = [];
+    try { soal = JSON.parse(d.x_05 || '[]'); } catch { soal = []; }
+    const body = document.getElementById('soalViewBody');
+    const opts = ['a','b','c','d','e'];
+    body.innerHTML = soal.length
+        ? soal.map((s, i) => `
+            <div class="soal-view-q">
+                <div class="sv-no">Soal ${i+1}</div>
+                <div class="sv-text">${escHtml(s.soal || '-')}</div>
+                ${opts.map(o => `<div class="soal-view-opt ${s.jawaban === o ? 'correct' : ''}">${o.toUpperCase()}. ${escHtml(s[o] || '-')}${s.jawaban === o ? ' &nbsp;✓ Jawaban Benar' : ''}</div>`).join('')}
+            </div>`).join('')
+        : '<p style="color:#94a3b8;font-size:13px;">Tidak ada soal untuk jadwal ini.</p>';
+    document.getElementById('modalSoalView').style.display = 'flex';
+}
+
+// ---- Form tambah / edit jadwal ----
+function blankSoal() { return { soal:'', a:'', b:'', c:'', d:'', e:'', jawaban:'a' }; }
+
+function populateJadwalPembawaOptions(selected) {
+    const sel = document.getElementById('jfPembawa');
+    const pengajar = dataCache.pengajar_ngawan || [];
+    sel.innerHTML = '<option value="">-- Pilih Pembawa Materi --</option>' +
+        pengajar
+            .filter(d => d.x_04)
+            .map(d => `<option value="${d.x_04}">${d.x_04}</option>`)
+            .join('');
+    sel.value = selected || '';
+}
+
+function openJadwalForm(id) {
+    jadwalEditId = id || null;
+    document.getElementById('jfMsg').textContent = '';
+    document.getElementById('jfTitle').textContent = id ? '✏️ Edit Jadwal' : '➕ Tambah Jadwal';
+
+    if (id) {
+        const d = dataJadwal.find(j => j.id_x === id);
+        if (!d) return;
+        document.getElementById('jfTanggal').value   = d.x_06 || '';
+        document.getElementById('jfJamMasuk').value  = d.x_07 || '';
+        document.getElementById('jfJamKeluar').value = d.x_08 || '';
+        populateJadwalPembawaOptions(d.x_02 || '');
+        document.getElementById('jfMateri').value    = d.x_03 || '';
+        document.getElementById('jfHalaman').value   = d.x_04 || '';
+        try { jadwalSoalBlocks = JSON.parse(d.x_05 || '[]'); } catch { jadwalSoalBlocks = []; }
+        if (!Array.isArray(jadwalSoalBlocks) || !jadwalSoalBlocks.length) jadwalSoalBlocks = [blankSoal()];
+    } else {
+        document.getElementById('jfTanggal').value   = '';
+        document.getElementById('jfJamMasuk').value  = '';
+        document.getElementById('jfJamKeluar').value = '';
+        populateJadwalPembawaOptions('');
+        document.getElementById('jfMateri').value    = '';
+        document.getElementById('jfHalaman').value   = '';
+        jadwalSoalBlocks = Array.from({ length: 5 }, blankSoal);
+    }
+    renderSoalBlocks();
+    document.getElementById('modalJadwalForm').style.display = 'flex';
+}
+
+function renderSoalBlocks() {
+    const wrap = document.getElementById('jfSoalList');
+    wrap.innerHTML = jadwalSoalBlocks.map((s, i) => `
+        <div class="soal-block">
+            <div class="soal-no">Soal ${i+1}</div>
+            ${jadwalSoalBlocks.length > 1 ? `<button type="button" class="btn-rm-soal" onclick="removeSoalBlock(${i})">✕ Hapus</button>` : ''}
+            <label class="flabel">Pertanyaan</label>
+            <textarea class="finput" rows="2" oninput="updateSoalField(${i},'soal',this.value)" placeholder="Tulis pertanyaan...">${escHtml(s.soal)}</textarea>
+            ${['a','b','c','d','e'].map(o => `
+                <div class="soal-opt-row">
+                    <label><input type="radio" name="jawaban${i}" ${s.jawaban === o ? 'checked' : ''} onchange="updateSoalField(${i},'jawaban','${o}')"> ${o.toUpperCase()}</label>
+                    <input type="text" class="finput" style="margin-bottom:6px;" value="${escAttr(s[o])}" oninput="updateSoalField(${i},'${o}',this.value)" placeholder="Pilihan ${o.toUpperCase()}...">
+                </div>`).join('')}
+        </div>`).join('');
+}
+
+function updateSoalField(i, field, value) {
+    if (!jadwalSoalBlocks[i]) return;
+    jadwalSoalBlocks[i][field] = value;
+}
+
+function addSoalBlock() {
+    jadwalSoalBlocks.push(blankSoal());
+    renderSoalBlocks();
+}
+
+function removeSoalBlock(i) {
+    jadwalSoalBlocks.splice(i, 1);
+    renderSoalBlocks();
+}
+
+async function submitJadwalForm() {
+    const tanggal   = document.getElementById('jfTanggal').value;
+    const jamMasuk  = document.getElementById('jfJamMasuk').value;
+    const jamKeluar = document.getElementById('jfJamKeluar').value;
+    const pembawa   = document.getElementById('jfPembawa').value.trim();
+    const materi    = document.getElementById('jfMateri').value.trim();
+    const halaman   = document.getElementById('jfHalaman').value.trim();
+    const msgEl     = document.getElementById('jfMsg');
+
+    if (!tanggal || !pembawa || !materi) {
+        msgEl.textContent = '⚠ Tanggal, pembawa materi, dan materi wajib diisi.';
+        return;
+    }
+
+    const soalBersih = jadwalSoalBlocks.filter(s => (s.soal || '').trim());
+    const payload = {
+        x_02: pembawa,
+        x_03: materi,
+        x_04: halaman,
+        x_05: JSON.stringify(soalBersih),
+        x_06: tanggal,
+        x_07: jamMasuk,
+        x_08: jamKeluar
+    };
+
+    try {
+        if (jadwalEditId) {
+            const res = await fetch(`${API}?table=${TBL_JADWAL}&id_x=${jadwalEditId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type':'application/json', 'X-Custom-Auth': AUTH },
+                body: JSON.stringify(payload)
+            }).then(r=>r.json());
+            if (res && res.success === false) { msgEl.textContent = '⚠ Gagal menyimpan jadwal.'; return; }
+        } else {
+            const res = await fetch(`${API}?table=${TBL_JADWAL}`, {
+                method: 'POST',
+                headers: { 'Content-Type':'application/json', 'X-Custom-Auth': AUTH },
+                body: JSON.stringify(payload)
+            }).then(r=>r.json());
+            if (res && res.success === false) { msgEl.textContent = '⚠ Gagal menyimpan jadwal.'; return; }
+            // x_01 idealnya sama dengan id_x (baru diketahui setelah insert) — set otomatis bila server mengembalikan id-nya
+            const newId = res?.data?.id_x ?? res?.data?.[0]?.id_x ?? res?.id ?? null;
+            if (newId) {
+                await fetch(`${API}?table=${TBL_JADWAL}&id_x=${newId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type':'application/json', 'X-Custom-Auth': AUTH },
+                    body: JSON.stringify({ x_01: newId })
+                }).then(r=>r.json());
+            }
+        }
+        closeModal('modalJadwalForm');
+        await loadJadwal();
+    } catch (e) {
+        msgEl.textContent = '⚠ Gagal terhubung ke server.';
+    }
+}
+
+async function hapusJadwal(id) {
+    if (!confirm('Hapus jadwal ini secara permanen? Tindakan ini tidak bisa dibatalkan.')) return;
+    await fetch(`${API}?table=${TBL_JADWAL}&id_x=${id}`, {
+        method: 'DELETE',
+        headers: { 'X-Custom-Auth': AUTH }
+    }).then(r=>r.json());
+    await loadJadwal();
 }
 
 // ===== INIT =====
