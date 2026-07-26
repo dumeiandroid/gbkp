@@ -458,7 +458,6 @@ const KEY  = 'admin';
 const TBLA = 'absensi_peserta_ngawan';
 const TBLU = 'peserta_ngawan';
 const TBLJ = 'ngawan'; // tabel jadwal & materi Ngawan
-const RADIUS_DEFAULT_METER = 200; // fallback radius (meter) jika x_10 kosong/tidak valid, lokasi diambil dari x_09, radius dari x_10
 
 let me      = '';
 let meData  = {};
@@ -692,7 +691,7 @@ function startApp() {
 /* ==============================
    JADWAL STATUS (cek ada/tidaknya jadwal hari ini & keterlambatan)
    ============================== */
-let jadwalStatus = { ada:false, terlambat:false, jamMasuk:null, materi:null, pengajar:null, next:null, rows:[], lokasi:null, radiusMeter:RADIUS_DEFAULT_METER, lokasiOk:true, jarakMeter:null, lokasiPesan:null };
+let jadwalStatus = { ada:false, terlambat:false, jamMasuk:null, materi:null, pengajar:null, next:null, rows:[] };
 
 function formatTanggalIndo(dateStr) {
     const BLN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
@@ -700,42 +699,6 @@ function formatTanggalIndo(dateStr) {
     const [y,m,d] = dateStr.split('-').map(Number);
     const dt = new Date(y, m-1, d);
     return `${HR[dt.getDay()]}, ${d} ${BLN[m-1]} ${y}`;
-}
-
-// Parse "3.516639, 98.631588" -> { lat, lng }
-function parseLokasi(str) {
-    if (!str) return null;
-    const parts = String(str).split(',').map(s => parseFloat(s.trim()));
-    if (parts.length !== 2 || parts.some(n => isNaN(n))) return null;
-    return { lat: parts[0], lng: parts[1] };
-}
-
-// Rumus Haversine -> jarak dalam meter
-function hitungJarakMeter(lat1, lng1, lat2, lng2) {
-    const R = 6371000;
-    const toRad = d => d * Math.PI / 180;
-    const dLat = toRad(lat2 - lat1);
-    const dLng = toRad(lng2 - lng1);
-    const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng/2)**2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-}
-
-// Ambil koordinat GPS user saat ini
-function ambilLokasiUser() {
-    return new Promise((resolve, reject) => {
-        if (!navigator.geolocation) { reject(new Error('Perangkat/browser tidak mendukung deteksi lokasi.')); return; }
-        navigator.geolocation.getCurrentPosition(
-            pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-            err => {
-                let msg = 'Gagal mengambil lokasi Anda.';
-                if (err.code === 1) msg = 'Izin akses lokasi ditolak. Aktifkan izin lokasi di browser untuk melakukan absensi.';
-                else if (err.code === 2) msg = 'Lokasi tidak tersedia. Pastikan GPS/lokasi perangkat aktif.';
-                else if (err.code === 3) msg = 'Waktu permintaan lokasi habis. Coba lagi.';
-                reject(new Error(msg));
-            },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-        );
-    });
 }
 
 async function cekJadwalStatus() {
@@ -750,37 +713,18 @@ async function cekJadwalStatus() {
         const jadwalHariIni = rows.find(d => d.x_06 === today);
         const nextJadwal    = rows.find(d => d.x_06 > today);
 
-        jadwalStatus = { ada:false, terlambat:false, jamMasuk:null, materi:null, pengajar:null, next:nextJadwal||null, rows, lokasi:null, radiusMeter:RADIUS_DEFAULT_METER, lokasiOk:true, jarakMeter:null, lokasiPesan:null };
+        jadwalStatus = { ada:false, terlambat:false, jamMasuk:null, materi:null, pengajar:null, next:nextJadwal||null, rows };
 
         if (jadwalHariIni) {
             jadwalStatus.ada      = true;
             jadwalStatus.materi   = jadwalHariIni.x_03 || null;
             jadwalStatus.pengajar = jadwalHariIni.x_02 || null;
             jadwalStatus.jamMasuk = jadwalHariIni.x_07 || null;
-            jadwalStatus.lokasi   = parseLokasi(jadwalHariIni.x_09);
-            const radiusParsed    = parseFloat(jadwalHariIni.x_10);
-            jadwalStatus.radiusMeter = (!isNaN(radiusParsed) && radiusParsed > 0) ? radiusParsed : RADIUS_DEFAULT_METER;
             if (jadwalStatus.jamMasuk) {
                 const [hh, mm] = jadwalStatus.jamMasuk.split(':').map(Number);
                 const batas = new Date();
                 batas.setHours(hh, (mm||0) + 5, 0, 0);
                 if (now > batas) jadwalStatus.terlambat = true;
-            }
-
-            // Cek radius lokasi secara proaktif (menentukan aktif/tidaknya tombol Absen)
-            if (jadwalStatus.lokasi) {
-                try {
-                    const posisi = await ambilLokasiUser();
-                    const jarak  = hitungJarakMeter(posisi.lat, posisi.lng, jadwalStatus.lokasi.lat, jadwalStatus.lokasi.lng);
-                    jadwalStatus.jarakMeter = Math.round(jarak);
-                    if (jarak > jadwalStatus.radiusMeter) {
-                        jadwalStatus.lokasiOk    = false;
-                        jadwalStatus.lokasiPesan = `📍 Anda berada di luar radius lokasi Ngawan (jarak sekitar ${jadwalStatus.jarakMeter} meter, maksimal ${jadwalStatus.radiusMeter} meter). Silakan mendekat ke lokasi untuk melakukan absensi.`;
-                    }
-                } catch(e) {
-                    jadwalStatus.lokasiOk    = false;
-                    jadwalStatus.lokasiPesan = `📍 ${e.message}`;
-                }
             }
         }
     } catch(e) { console.error('[cekJadwalStatus]', e); }
@@ -791,11 +735,8 @@ function buildJadwalPesanHTML() {
     if (jadwalStatus.ada) {
         let html = `📖 Materi: <b>${jadwalStatus.materi || '-'}</b><br>🧑‍🏫 Pengajar: <b>${jadwalStatus.pengajar || '-'}</b>`;
         if (jadwalStatus.jamMasuk) html += `<br>⏰ Jam Masuk: <b>${jadwalStatus.jamMasuk}</b>`;
-        if (jadwalStatus.lokasi)  html += `<br>📍 Absen hanya dapat dilakukan dalam radius <b>${jadwalStatus.radiusMeter} meter</b> dari lokasi Ngawan.`;
         if (jadwalStatus.terlambat) {
             html += `<br><span style="color:#ef4444;font-weight:700;">⚠️ Anda sudah terlambat lebih dari 5 menit dari jam masuk dan tidak bisa melakukan absensi lagi. Silakan hadir di jadwal berikutnya dan pastikan datang tepat waktu.</span>`;
-        } else if (!jadwalStatus.lokasiOk && jadwalStatus.lokasiPesan) {
-            html += `<br><span style="color:#ef4444;font-weight:700;">${jadwalStatus.lokasiPesan}</span>`;
         }
         return html;
     } else {
@@ -812,16 +753,14 @@ function buildJadwalPesanHTML() {
 }
 
 function updateAbsenButtons() {
-    const boleh = jadwalStatus.ada && !jadwalStatus.terlambat && jadwalStatus.lokasiOk;
+    const boleh = jadwalStatus.ada && !jadwalStatus.terlambat;
     document.querySelectorAll('.btn-absen-dash, .btn-absen-full').forEach(btn => {
         btn.disabled = !boleh;
         btn.style.opacity  = boleh ? '1' : '0.5';
         btn.style.cursor   = boleh ? 'pointer' : 'not-allowed';
         btn.title = boleh ? '' : (!jadwalStatus.ada
             ? 'Tidak ada jadwal Ngawan hari ini'
-            : jadwalStatus.terlambat
-                ? 'Sudah terlambat lebih dari 5 menit, tidak bisa absen lagi'
-                : (jadwalStatus.lokasiPesan || 'Lokasi tidak memenuhi syarat untuk absen'));
+            : 'Sudah terlambat lebih dari 5 menit, tidak bisa absen lagi');
     });
 }
 
@@ -951,10 +890,9 @@ async function muatRiwayat() {
    (dicek dulu: harus ada jadwal hari ini & belum lewat 5 menit dari jam masuk)
    ============================== */
 async function bukaKamera() {
-    // Cek dulu status jadwal hari ini (ada/tidak, terlambat/tidak, dalam radius lokasi/tidak)
-    gl('Memeriksa jadwal & lokasi...');
+    // Cek dulu status jadwal hari ini (ada/tidak, terlambat/tidak)
+    gl('Memeriksa jadwal hari ini...');
     await cekJadwalStatus();
-    updateAbsenButtons();
     gh();
 
     if (!jadwalStatus.ada) {
@@ -963,14 +901,12 @@ async function bukaKamera() {
             ? ` Jadwal terdekat: ${formatTanggalIndo(jadwalStatus.next.x_06)}${jadwalStatus.next.x_07 ? ' pukul ' + jadwalStatus.next.x_07 : ''}.`
             : ' Belum ada jadwal berikutnya yang tersedia.';
         alert(pesan);
+        updateAbsenButtons();
         return;
     }
     if (jadwalStatus.terlambat) {
         alert('Anda sudah terlambat lebih dari 5 menit dari jam masuk dan tidak bisa melakukan absensi lagi. Silakan hadir di jadwal berikutnya dan pastikan datang tepat waktu.');
-        return;
-    }
-    if (!jadwalStatus.lokasiOk) {
-        alert(jadwalStatus.lokasiPesan || 'Lokasi Anda tidak memenuhi syarat untuk melakukan absensi.');
+        updateAbsenButtons();
         return;
     }
 
