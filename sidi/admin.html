@@ -143,6 +143,12 @@
         .rekap-legend span.lg-ok { color: #16a34a; font-weight: 800; }
         .rekap-legend span.lg-no { color: #ef4444; font-weight: 800; }
         .btn-f { padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; }
+        .btn-f:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+        /* PAGINATION ABSENSI PER TANGGAL */
+        .abs-pagination { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+        .abs-pagination .abs-pg-info { font-size: 13px; font-weight: 700; color: var(--dark); }
+        .abs-pagination .abs-pg-info small { display: block; font-size: 11px; font-weight: 600; color: #94a3b8; }
 
         /* FOTO THUMB & MODAL */
         .foto-thumb { width: 38px; height: 38px; object-fit: cover; border-radius: 6px; border: 1px solid #e2e8f0; cursor: pointer; }
@@ -344,6 +350,9 @@
                 <thead><tr><th>Tanggal</th><th>User</th><th>Tipe</th><th>Jam</th><th>Foto</th></tr></thead>
                 <tbody id="absTable"><tr class="lr"><td colspan="5"><span class="sp"></span>Memuat...</td></tr></tbody>
             </table></div>
+
+            <!-- PAGINATION PER TANGGAL (tanggal terbaru ditampilkan lebih dulu) -->
+            <div class="abs-pagination" id="absPagination"></div>
         </div>
 
         <!-- REKAP BULANAN (matriks kehadiran) -->
@@ -356,13 +365,12 @@
                 <button class="ptab" id="rktab-pengajar_ngawan" onclick="setRekapJenis('pengajar_ngawan')">🧑‍🏫 Pengajar</button>
             </div>
 
-            <!-- FILTER BULAN -->
+            <!-- REFRESH (kolom tanggal otomatis mengikuti tabel jadwal ngawan) -->
             <div class="fbar">
-                <label>Bulan:</label><input type="month" id="rkBulan">
-                <button class="btn-f" onclick="loadRekapAdmin()">🔍 Tampilkan</button>
+                <button class="btn-f" onclick="loadRekapAdmin()">🔄 Refresh</button>
             </div>
 
-            <div class="rekap-legend" id="rekapLegend"><span><span class="lg-ok">07:15</span> Jam Masuk/Keluar</span><span><span class="lg-no">✗</span> Tidak Absen</span></div>
+            <div class="rekap-legend" id="rekapLegend"><span><span class="lg-ok">15:00</span> Jam Masuk/Keluar</span><span><span class="lg-no">✗</span> Tidak Absen</span></div>
 
             <div class="rekap-wrap">
                 <table class="rekap-mtx" id="rekapTable">
@@ -483,16 +491,10 @@
 
 <script>
 // ============================================================
-// KONFIGURASI JADWAL REKAP BULANAN — ubah nilai di sini saja
+// REKAP BULANAN — kolom tanggal & jam masuk/keluar kini diambil
+// LANGSUNG dari tabel jadwal "ngawan" (bukan config manual lagi).
+// Kolom hanya dibuat utk baris jadwal yg Halaman Buku (x_04)-nya terisi.
 // ============================================================
-const REKAP_CONFIG = {
-    tanggalMulai: '2026-07-25',   // tanggal mulai program Ngawan (format YYYY-MM-DD).
-                                   // Tanggal sebelum ini TIDAK ditampilkan sbg kolom rekap.
-    hariAktif:    [5, 6, 0],       // hari yg jadi kolom rekap (0=Minggu 1=Senin 2=Selasa 3=Rabu 4=Kamis 5=Jumat 6=Sabtu).
-                                   // Saat ini: Jumat, Sabtu, Minggu.
-    jamMasuk:     '15:00',        // jam masuk yg dijadwalkan (tampil di legend, informasi saja)
-    jamKeluar:    '17:00'         // jam keluar yg dijadwalkan (tampil di legend, informasi saja)
-};
 const HARI_LABEL = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
 
 const API  = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
@@ -777,6 +779,10 @@ function populateAbsFilterUsers() {
     document.getElementById('absFU').innerHTML = '<option value="">-- Semua --</option>' + opts;
 }
 
+let absDataAll   = [];  // seluruh baris hasil query terakhir (belum dipisah per tanggal)
+let absDates     = [];  // daftar tanggal unik hasil query terakhir, terurut TERBARU -> TERLAMA
+let absPageIndex = 0;   // index halaman (tanggal) yg sedang ditampilkan (0 = tanggal terbaru)
+
 async function loadAbsensiAdmin() {
     const tabel  = TBL_ABS[currentAbsJenis];
     const user   = document.getElementById('absFU').value;
@@ -789,18 +795,51 @@ async function loadAbsensiAdmin() {
     if (sampai) q += `&x_02_lte=${sampai}`;
 
     document.getElementById('absTable').innerHTML = '<tr class="lr"><td colspan="5"><span class="sp"></span>Memuat...</td></tr>';
-    const res  = await api(q);
-    const data = (res.data || []).sort((a,b) => (b.x_02||'').localeCompare(a.x_02||''));
+    document.getElementById('absPagination').innerHTML = '';
 
-    document.getElementById('absTable').innerHTML = data.length
-        ? data.map(d => `<tr>
-            <td>${d.x_02||'-'}</td>
-            <td><span class="uchip"><span class="udot"></span>${d.x_01||'-'}</span></td>
-            <td><span class="badge b-${(d.x_05||'').toLowerCase()}">${d.x_05||'-'}</span></td>
-            <td><b>${d.x_03||'-'}</b></td>
-            <td>${d.x_04 ? `<img src="${ASSETS}${d.x_04}" class="foto-thumb" onclick="showFoto('${ASSETS}${d.x_04}')" title="Klik untuk lihat">` : '<span style="color:#94a3b8;font-size:11px;">-</span>'}</td>
-          </tr>`).join('')
-        : '<tr class="er"><td colspan="5">Tidak ada data absensi</td></tr>';
+    const res  = await api(q);
+    absDataAll = (res.data || []).sort((a,b) => (b.x_02||'').localeCompare(a.x_02||'')); // tanggal terbaru dulu
+
+    // Daftar tanggal unik, otomatis ikut urutan terbaru->terlama krn absDataAll sudah di-sort di atas
+    absDates = [...new Set(absDataAll.map(d => d.x_02).filter(Boolean))];
+    absPageIndex = 0; // selalu mulai dari tanggal terbaru tiap kali data baru dimuat
+    renderAbsPage();
+}
+
+// Render 1 halaman = 1 tanggal, sesuai absPageIndex
+function renderAbsPage() {
+    const tbody = document.getElementById('absTable');
+    const pag   = document.getElementById('absPagination');
+
+    if (!absDates.length) {
+        tbody.innerHTML = '<tr class="er"><td colspan="5">Tidak ada data absensi</td></tr>';
+        pag.innerHTML = '';
+        return;
+    }
+
+    const tglAktif = absDates[absPageIndex];
+    const rows = absDataAll.filter(d => d.x_02 === tglAktif);
+
+    tbody.innerHTML = rows.map(d => `<tr>
+        <td>${d.x_02||'-'}</td>
+        <td><span class="uchip"><span class="udot"></span>${d.x_01||'-'}</span></td>
+        <td><span class="badge b-${(d.x_05||'').toLowerCase()}">${d.x_05||'-'}</span></td>
+        <td><b>${d.x_03||'-'}</b></td>
+        <td>${d.x_04 ? `<img src="${ASSETS}${d.x_04}" class="foto-thumb" onclick="showFoto('${ASSETS}${d.x_04}')" title="Klik untuk lihat">` : '<span style="color:#94a3b8;font-size:11px;">-</span>'}</td>
+      </tr>`).join('');
+
+    pag.innerHTML = `
+        <button class="btn-f" onclick="absGantiHalaman(-1)" ${absPageIndex <= 0 ? 'disabled' : ''}>‹ Lebih Baru</button>
+        <span class="abs-pg-info">${tglAktif}<small>Tanggal ${absPageIndex + 1} dari ${absDates.length}</small></span>
+        <button class="btn-f" onclick="absGantiHalaman(1)" ${absPageIndex >= absDates.length - 1 ? 'disabled' : ''}>Lebih Lama ›</button>
+    `;
+}
+
+function absGantiHalaman(delta) {
+    const next = absPageIndex + delta;
+    if (next < 0 || next >= absDates.length) return;
+    absPageIndex = next;
+    renderAbsPage();
 }
 
 function closeModal(id) { document.getElementById(id).style.display='none'; }
@@ -814,44 +853,52 @@ function setRekapJenis(jenis) {
     loadRekapAdmin();
 }
 
-// Hitung daftar tanggal dalam bulan yg jadi kolom rekap, sesuai REKAP_CONFIG
-// (hanya hari-hari di hariAktif, dan hanya tanggal >= tanggalMulai)
-function getKolomTanggal(bulanVal) {
-    const [thn, bln] = bulanVal.split('-').map(Number);
-    const jumlahHari = new Date(thn, bln, 0).getDate();
-    const kolom = [];
-    for (let t = 1; t <= jumlahHari; t++) {
-        const tgl = `${bulanVal}-${String(t).padStart(2,'0')}`;
-        if (tgl < REKAP_CONFIG.tanggalMulai) continue;
-        const dow = new Date(thn, bln - 1, t).getDay();
-        if (!REKAP_CONFIG.hariAktif.includes(dow)) continue;
-        kolom.push({ tgl, tanggal: t, dow });
-    }
-    return kolom;
+// Tanggal hari ini (format YYYY-MM-DD, mengikuti waktu lokal perangkat)
+function tglHariIni() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+// Cek apakah jam (HH:MM) pada tanggal tgl sudah lewat dibanding waktu sekarang
+function jamSudahLewat(tgl, jam) {
+    if (!jam) return true; // kalau jam tidak diset di jadwal, anggap sudah lewat (tampilkan apa adanya)
+    const [h, m] = jam.split(':').map(Number);
+    const target = new Date(tgl + 'T00:00:00');
+    target.setHours(h || 0, m || 0, 0, 0);
+    return new Date() >= target;
+}
+
+// Kolom rekap = tanggal2 dari tabel jadwal "ngawan", HANYA yg Halaman Buku (x_04) terisi.
+// Diurutkan dari tanggal paling awal s/d paling akhir (seluruh jadwal, bukan per-bulan).
+function getKolomTanggalDariJadwal(jadwalRows) {
+    return jadwalRows
+        .filter(d => d.x_06 && String(d.x_04 || '').trim() !== '')
+        .map(d => {
+            const p = d.x_06.split('-').map(Number);
+            const dow = new Date(p[0], p[1] - 1, p[2]).getDay();
+            return { tgl: d.x_06, tanggal: p[2], dow, jamMasuk: d.x_07 || '', jamKeluar: d.x_08 || '' };
+        })
+        .sort((a, b) => a.tgl.localeCompare(b.tgl));
 }
 
 async function loadRekapAdmin() {
-    const bulanVal = document.getElementById('rkBulan').value; // format YYYY-MM
-    const table  = document.getElementById('rekapTable');
-    if (!bulanVal) return;
-    const dariTgl   = REKAP_CONFIG.tanggalMulai > `${bulanVal}-01` ? REKAP_CONFIG.tanggalMulai : `${bulanVal}-01`;
-    const [thnE, blnE] = bulanVal.split('-').map(Number);
-    const sampaiTgl = `${bulanVal}-${String(new Date(thnE, blnE, 0).getDate()).padStart(2,'0')}`;
-
-    // Update legend info jadwal dari config
-    const legend = document.getElementById('rekapLegend');
-    if (legend) {
-        const namaHari = REKAP_CONFIG.hariAktif.slice().sort().map(d => HARI_LABEL[d]).join(', ');
-        legend.innerHTML = `<span><span class="lg-ok">${REKAP_CONFIG.jamMasuk}</span> Jam Masuk/Keluar (dijadwalkan: ${REKAP_CONFIG.jamKeluar})</span><span><span class="lg-no">✗</span> Tidak Absen</span><span style="color:#94a3b8;">Hari aktif: ${namaHari}</span>`;
-    }
-
+    const table = document.getElementById('rekapTable');
     table.querySelector('tbody').innerHTML = `<tr><td style="padding:20px;color:#94a3b8;">Memuat...</td></tr>`;
 
-    const kolom = getKolomTanggal(bulanVal);
+    // Kolom tanggal diambil langsung dari tabel jadwal ngawan (bukan config manual)
+    const resJadwal   = await api(`?table=${TBL_JADWAL}&limit=1000`);
+    const jadwalRows  = resJadwal.success ? (resJadwal.data || []) : [];
+    dataJadwal = jadwalRows; // sinkronkan juga dgn cache halaman Jadwal
+    const kolom = getKolomTanggalDariJadwal(jadwalRows);
 
-    if (sampaiTgl < REKAP_CONFIG.tanggalMulai) {
+    const legend = document.getElementById('rekapLegend');
+    if (legend) {
+        legend.innerHTML = `<span><span class="lg-ok">15:00</span> Jam Masuk/Keluar</span><span><span class="lg-no">✗</span> Tidak Absen</span><span style="color:#94a3b8;">Tanggal hari ini/mendatang kosong sampai jam absen terlewati</span>`;
+    }
+
+    if (!kolom.length) {
         table.querySelector('thead').innerHTML = '<tr><th class="mtx-name">Nama</th></tr>';
-        table.querySelector('tbody').innerHTML = `<tr><td style="padding:20px;color:#94a3b8;">Bulan ini sebelum tanggal mulai program (${REKAP_CONFIG.tanggalMulai})</td></tr>`;
+        table.querySelector('tbody').innerHTML = `<tr><td style="padding:20px;color:#94a3b8;">Belum ada jadwal dengan Halaman Buku terisi</td></tr>`;
         return;
     }
 
@@ -861,8 +908,10 @@ async function loadRekapAdmin() {
         .map(u => u.x_01)
         .sort((a,b) => a.localeCompare(b));
 
-    const tabelAbs = TBL_ABS[currentRekapJenis];
-    const res  = await api(`?table=${tabelAbs}&x_02_gte=${dariTgl}&x_02_lte=${sampaiTgl}&limit=3000`);
+    const tabelAbs  = TBL_ABS[currentRekapJenis];
+    const dariTgl   = kolom[0].tgl;
+    const sampaiTgl = kolom[kolom.length - 1].tgl;
+    const res  = await api(`?table=${tabelAbs}&x_02_gte=${dariTgl}&x_02_lte=${sampaiTgl}&limit=5000`);
     const data = res.data || [];
 
     // Map: "user|tanggal" -> { m: jam masuk, p: jam pulang }
@@ -883,22 +932,32 @@ async function loadRekapAdmin() {
     theadHtml += '</tr>';
     table.querySelector('thead').innerHTML = theadHtml;
 
-    if (!kolom.length) {
-        table.querySelector('tbody').innerHTML = `<tr><td style="padding:20px;color:#94a3b8;">Tidak ada tanggal aktif pada bulan ini sesuai jadwal</td></tr>`;
-        return;
-    }
-
     if (!users.length) {
         table.querySelector('tbody').innerHTML = `<tr><td style="padding:20px;color:#94a3b8;">Tidak ada data ${jenisLabel(currentRekapJenis).toLowerCase()} yang disetujui</td></tr>`;
         return;
     }
 
+    const hariIni = tglHariIni();
+
     table.querySelector('tbody').innerHTML = users.map(u => {
         let row = `<tr><td class="mtx-name">${u}</td>`;
         kolom.forEach(k => {
-            const jam = jamMap[`${u}|${k.tgl}`] || { m: null, p: null };
-            row += `<td class="mtx-cell ${jam.m ? 'mtx-time' : 'mtx-absen'}">${jam.m || '✗'}</td>`;
-            row += `<td class="mtx-cell mtx-last ${jam.p ? 'mtx-time' : 'mtx-absen'}">${jam.p || '✗'}</td>`;
+            const jam      = jamMap[`${u}|${k.tgl}`] || { m: null, p: null };
+            const belumTiba = k.tgl > hariIni; // tanggal setelah hari ini -> selalu kosong dulu
+
+            // Kolom MASUK: kosong jika tanggal blm tiba, atau hari ini tapi jam masuk blm lewat
+            if (belumTiba || (k.tgl === hariIni && !jamSudahLewat(k.tgl, k.jamMasuk))) {
+                row += `<td class="mtx-cell"></td>`;
+            } else {
+                row += `<td class="mtx-cell ${jam.m ? 'mtx-time' : 'mtx-absen'}">${jam.m || '✗'}</td>`;
+            }
+
+            // Kolom KELUAR: kosong jika tanggal blm tiba, atau hari ini tapi jam pulang blm lewat
+            if (belumTiba || (k.tgl === hariIni && !jamSudahLewat(k.tgl, k.jamKeluar))) {
+                row += `<td class="mtx-cell mtx-last"></td>`;
+            } else {
+                row += `<td class="mtx-cell mtx-last ${jam.p ? 'mtx-time' : 'mtx-absen'}">${jam.p || '✗'}</td>`;
+            }
         });
         row += '</tr>';
         return row;
@@ -1104,7 +1163,6 @@ window.onload = function() {
     const iso = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
     document.getElementById('absFD').value = iso.slice(0,7)+'-01';
     document.getElementById('absFS').value = iso;
-    document.getElementById('rkBulan').value = iso.slice(0,7);
     checkAuth();
 };
 </script>

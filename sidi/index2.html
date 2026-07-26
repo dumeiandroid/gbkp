@@ -136,8 +136,6 @@
         .atc-head { display: flex; justify-content: space-between; align-items: flex-start; }
         .atc-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
         .atc-date  { font-size: 14px; font-weight: 800; color: #fff; }
-        .atc-materi { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.75); margin-top: 4px; display: flex; flex-direction: column; gap: 2px; }
-        .atc-materi b { color: #fff; font-weight: 800; }
         .btn-absen-dash { padding: 9px 16px; background: linear-gradient(135deg, #5b5ef4, #7c3aed); color: #fff; border: none; border-radius: 9px; font-weight: 800; font-size: 13px; cursor: pointer; font-family: inherit; white-space: nowrap; box-shadow: 0 4px 12px rgba(91,94,244,0.4); }
         .atc-times { display: flex; gap: 16px; }
         .atc-t { background: rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 16px; flex: 1; text-align: center; }
@@ -168,16 +166,6 @@
         table.abs-tbl td { padding: 9px 12px; border-bottom: 1px solid #f8fafc; vertical-align: middle; }
         table.abs-tbl tr:last-child td { border: none; }
         .abs-foto { width: 38px; height: 48px; object-fit: cover; object-position: center top; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; }
-
-        /* ========== TABEL JADWAL (dashboard) ========== */
-        .jd-wrap { max-width: 720px; margin-top: 16px; }
-        table.jd-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
-        table.jd-tbl th { background: var(--bg); padding: 9px 12px; text-align: left; font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; border-bottom: 1px solid var(--border); white-space: nowrap; }
-        table.jd-tbl td { padding: 9px 12px; border-bottom: 1px solid #f8fafc; vertical-align: middle; }
-        table.jd-tbl tr:last-child td { border: none; }
-        table.jd-tbl tr.jd-row-today td { background: #eef2ff; }
-        .jd-done  { color: #16a34a; font-weight: 900; font-size: 14px; }
-        .jd-today { display: inline-flex; align-items: center; gap: 4px; background: #6366f1; color: #fff; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
 
         /* ========== MODAL (shared) ========== */
         .m-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.6); z-index: 500; display: none; align-items: center; justify-content: center; padding: 16px; backdrop-filter: blur(4px); }
@@ -335,7 +323,6 @@
                     <div>
                         <div class="atc-title">Absensi Hari Ini</div>
                         <div class="atc-date" id="dashDate">-</div>
-                        <div class="atc-materi" id="dashMateri">-</div>
                     </div>
                     <button class="btn-absen-dash" onclick="bukaKamera()">📷 Absen</button>
                 </div>
@@ -352,16 +339,6 @@
                 <div class="atc-status">
                     <div class="atc-dot" id="dashAbsDot"></div>
                     <div class="atc-stat-txt" id="dashAbsStatus">Belum absen hari ini</div>
-                </div>
-            </div>
-
-            <div class="jd-wrap tcard">
-                <div class="tcard-head">🗓️ Jadwal Ngawan</div>
-                <div style="overflow-x:auto;">
-                    <table class="jd-tbl">
-                        <thead><tr><th>Tanggal</th><th>Pengajar</th><th>Materi</th><th style="text-align:center;">Status</th></tr></thead>
-                        <tbody id="jadwalTbody"><tr><td colspan="4" style="text-align:center;padding:20px;color:#94a3b8;"><span class="spin"></span></td></tr></tbody>
-                    </table>
                 </div>
             </div>
         </div>
@@ -384,7 +361,6 @@
                             <div class="l">Pulang</div>
                         </div>
                     </div>
-                    <div id="absJadwalMsg" style="font-size:13px;line-height:1.6;margin-top:10px;color:#475569;"></div>
                     <button class="btn-absen-full" style="width:100%;margin-top:10px;" onclick="bukaKamera()">📷 ABSEN SEKARANG</button>
                 </div>
             </div>
@@ -457,7 +433,6 @@ const CDN  = 'https://assets.lidan.co.id/';
 const KEY  = 'admin';
 const TBLA = 'absensi_peserta_ngawan';
 const TBLU = 'peserta_ngawan';
-const TBLJ = 'ngawan'; // tabel jadwal & materi Ngawan
 
 let me      = '';
 let meData  = {};
@@ -689,81 +664,8 @@ function startApp() {
 }
 
 /* ==============================
-   JADWAL STATUS (cek ada/tidaknya jadwal hari ini & keterlambatan)
+   DASHBOARD
    ============================== */
-let jadwalStatus = { ada:false, terlambat:false, jamMasuk:null, materi:null, pengajar:null, next:null, rows:[] };
-
-function formatTanggalIndo(dateStr) {
-    const BLN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-    const HR  = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
-    const [y,m,d] = dateStr.split('-').map(Number);
-    const dt = new Date(y, m-1, d);
-    return `${HR[dt.getDay()]}, ${d} ${BLN[m-1]} ${y}`;
-}
-
-async function cekJadwalStatus() {
-    const now = new Date();
-    const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-    try {
-        const resJ = await req(`?table=${TBLJ}&limit=1000`);
-        const rows = (resJ.data || [])
-            .filter(d => d.x_06)
-            .sort((a,b) => a.x_06.localeCompare(b.x_06));
-
-        const jadwalHariIni = rows.find(d => d.x_06 === today);
-        const nextJadwal    = rows.find(d => d.x_06 > today);
-
-        jadwalStatus = { ada:false, terlambat:false, jamMasuk:null, materi:null, pengajar:null, next:nextJadwal||null, rows };
-
-        if (jadwalHariIni) {
-            jadwalStatus.ada      = true;
-            jadwalStatus.materi   = jadwalHariIni.x_03 || null;
-            jadwalStatus.pengajar = jadwalHariIni.x_02 || null;
-            jadwalStatus.jamMasuk = jadwalHariIni.x_07 || null;
-            if (jadwalStatus.jamMasuk) {
-                const [hh, mm] = jadwalStatus.jamMasuk.split(':').map(Number);
-                const batas = new Date();
-                batas.setHours(hh, (mm||0) + 5, 0, 0);
-                if (now > batas) jadwalStatus.terlambat = true;
-            }
-        }
-    } catch(e) { console.error('[cekJadwalStatus]', e); }
-    return jadwalStatus;
-}
-
-function buildJadwalPesanHTML() {
-    if (jadwalStatus.ada) {
-        let html = `📖 Materi: <b>${jadwalStatus.materi || '-'}</b><br>🧑‍🏫 Pengajar: <b>${jadwalStatus.pengajar || '-'}</b>`;
-        if (jadwalStatus.jamMasuk) html += `<br>⏰ Jam Masuk: <b>${jadwalStatus.jamMasuk}</b>`;
-        if (jadwalStatus.terlambat) {
-            html += `<br><span style="color:#ef4444;font-weight:700;">⚠️ Anda sudah terlambat lebih dari 5 menit dari jam masuk dan tidak bisa melakukan absensi lagi. Silakan hadir di jadwal berikutnya dan pastikan datang tepat waktu.</span>`;
-        }
-        return html;
-    } else {
-        let html = `⚠️ Hari ini tidak ada jadwal Ngawan.`;
-        if (jadwalStatus.next) {
-            html += `<br>🗓️ Jadwal terdekat: <b>${formatTanggalIndo(jadwalStatus.next.x_06)}</b>`;
-            if (jadwalStatus.next.x_03) html += ` — Materi: <b>${jadwalStatus.next.x_03}</b>`;
-            if (jadwalStatus.next.x_07) html += ` — Jam: <b>${jadwalStatus.next.x_07}</b>`;
-        } else {
-            html += `<br>Belum ada jadwal berikutnya yang tersedia.`;
-        }
-        return html;
-    }
-}
-
-function updateAbsenButtons() {
-    const boleh = jadwalStatus.ada && !jadwalStatus.terlambat;
-    document.querySelectorAll('.btn-absen-dash, .btn-absen-full').forEach(btn => {
-        btn.disabled = !boleh;
-        btn.style.opacity  = boleh ? '1' : '0.5';
-        btn.style.cursor   = boleh ? 'pointer' : 'not-allowed';
-        btn.title = boleh ? '' : (!jadwalStatus.ada
-            ? 'Tidak ada jadwal Ngawan hari ini'
-            : 'Sudah terlambat lebih dari 5 menit, tidak bisa absen lagi');
-    });
-}
-
 async function initDashboard() {
     const now = new Date();
     const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
@@ -793,47 +695,6 @@ async function initDashboard() {
         document.getElementById('abs-masuk').textContent  = masukJam;
         document.getElementById('abs-pulang').textContent = pulangJam;
     } catch(e) { console.error(e); }
-
-    loadJadwalDashboard(today);
-}
-
-/* ==============================
-   JADWAL & MATERI (dari tabel ngawan)
-   ============================== */
-async function loadJadwalDashboard(today) {
-    const tbody    = document.getElementById('jadwalTbody');
-    const elMateri = document.getElementById('dashMateri');
-    try {
-        await cekJadwalStatus();
-        const rows = jadwalStatus.rows;
-
-        // Materi & pengajar hari ini (atau info jadwal terdekat) utk card Absensi Hari Ini
-        if (elMateri) elMateri.innerHTML = buildJadwalPesanHTML();
-
-        // Sinkronkan pesan & tombol di halaman Absensi juga
-        const elAbsMsg = document.getElementById('absJadwalMsg');
-        if (elAbsMsg) elAbsMsg.innerHTML = buildJadwalPesanHTML();
-        updateAbsenButtons();
-
-        // Tabel jadwal lengkap
-        if (tbody) {
-            tbody.innerHTML = rows.length
-                ? rows.map(d => {
-                    const isToday = d.x_06 === today;
-                    const isPast  = d.x_06 < today;
-                    let status = '';
-                    if (isToday)     status = '<span class="jd-today">📍 Hari Ini</span>';
-                    else if (isPast) status = '<span class="jd-done">✓</span>';
-                    return `<tr class="${isToday ? 'jd-row-today' : ''}">
-                        <td>${d.x_06}</td>
-                        <td>${d.x_02 || '-'}</td>
-                        <td>${d.x_03 || '-'}</td>
-                        <td style="text-align:center;">${status}</td>
-                    </tr>`;
-                }).join('')
-                : '<tr><td colspan="4" style="text-align:center;padding:20px;color:#94a3b8;">Belum ada jadwal</td></tr>';
-        }
-    } catch(e) { console.error(e); }
 }
 
 /* ==============================
@@ -846,11 +707,6 @@ function initAbsensi() {
     document.getElementById('abs-tanggal').textContent =
         `${HR[now.getDay()]}, ${now.getDate()} ${BLN[now.getMonth()]} ${now.getFullYear()}`;
     muatRiwayat();
-    cekJadwalStatus().then(() => {
-        const elAbsMsg = document.getElementById('absJadwalMsg');
-        if (elAbsMsg) elAbsMsg.innerHTML = buildJadwalPesanHTML();
-        updateAbsenButtons();
-    });
 }
 
 async function muatRiwayat() {
@@ -887,29 +743,9 @@ async function muatRiwayat() {
 
 /* ==============================
    KAMERA & PROSES ABSENSI
-   (dicek dulu: harus ada jadwal hari ini & belum lewat 5 menit dari jam masuk)
+   (tanpa syarat apapun — langsung buka kamera)
    ============================== */
 async function bukaKamera() {
-    // Cek dulu status jadwal hari ini (ada/tidak, terlambat/tidak)
-    gl('Memeriksa jadwal hari ini...');
-    await cekJadwalStatus();
-    gh();
-
-    if (!jadwalStatus.ada) {
-        let pesan = 'Hari ini tidak ada jadwal Ngawan.';
-        pesan += jadwalStatus.next
-            ? ` Jadwal terdekat: ${formatTanggalIndo(jadwalStatus.next.x_06)}${jadwalStatus.next.x_07 ? ' pukul ' + jadwalStatus.next.x_07 : ''}.`
-            : ' Belum ada jadwal berikutnya yang tersedia.';
-        alert(pesan);
-        updateAbsenButtons();
-        return;
-    }
-    if (jadwalStatus.terlambat) {
-        alert('Anda sudah terlambat lebih dari 5 menit dari jam masuk dan tidak bisa melakukan absensi lagi. Silakan hadir di jadwal berikutnya dan pastikan datang tepat waktu.');
-        updateAbsenButtons();
-        return;
-    }
-
     // Refresh status absensi hari ini (masuk/pulang) secara real-time
     gl('Memeriksa status absensi...');
     try {
